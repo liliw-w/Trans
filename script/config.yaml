@@ -1,0 +1,26 @@
+CHRS="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22".split()
+SUBS="1 2 3 4 5 6 7 8 9 10".split()
+MODULE
+
+
+dir_data: /project2/xuanyao/llw/breastcancerTCGA/txt_file/
+dir_w: /scratch/midway2/liliw1/TCGA/
+dir_script: /scratch/midway2/liliw1/script/
+
+file_covariates: covariates.txt
+file_ex: ex.rdata
+file_ex_var_regressed: ex_var_regressed.rds
+file_gene_meta: gene.meta.txt
+file_pseudogenes: pseudogenes.txt
+file_mappability: mappability.txt
+file_cross_mappable_genes: cross_mappable_genes.rds
+file_genes_rm_info: genes_rm_info.txt
+file_coexp_module: coexp.module.rds
+file_sample_name: sample.name.txt
+
+
+script_covariates: regress.out.covariates.R
+script_remove_gene: low.quality.genes.R
+script_coexp_module: coexp.module.R
+script_prep_bed: prep.bed.R
+
