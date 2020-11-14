@@ -1,0 +1,116 @@
+configfile: "config.yaml"
+
+MODULE=list(range(1, config['Nmodule']+1))
+CHRS=list(range(1, config['Nchr']+1))
+
+rule all:
+  input:
+    expand('FDR/signals.module{module}.chr{chr}.txt',chr=CHRS,module=MODULE),
+    'FDR/signals.txt'
+
+rule sample_name:
+  input: config['dir_data']+config['geno_prefix']+'22'+config['geno_suffix']+'.fam'
+  output: 'result/'+config['file_sample_name']
+  shell: 'cat {input} | cut -d" " -f1 > {output}'
+  
+rule prep_bed:
+  input:
+    file_sample_name='result/'+config['file_sample_name'],
+    file_covariates=config['dir_data']+config['file_covariates'],
+    file_gene_meta=config['dir_data']+config['file_gene_meta'],
+    file_coexp_module='result/'+config['file_coexp_module'],
+    file_ex=config['dir_data']+config['file_ex']
+  output: expand('result/expression.module{module}.bed.gz', module=MODULE)
+  params:
+    data_type='obs', dir_out='result/'
+  script:
+    'script/'+config['script_prep_bed']
+
+rule z:
+  input:
+    expression_bed='result/expression.module{module}.bed.gz',
+    file_covariates=config['dir_data']+config['file_covariates']
+  output:
+    file_z='z/z.module{module}.chr{chr}.txt.gz'
+  params:
+    plink_prefix_path=config['dir_data']+config['geno_prefix']+'{chr}'+config['geno_suffix'],
+    prefix='module{module}.chr{chr}',
+    dir_script='script/'
+  shell: 'bash '+'script/'+config['script_z']+' {params.plink_prefix_path} {input.expression_bed} {input.file_covariates} {params.prefix} {params.dir_script} {output.file_z}'
+
+rule p:
+  input:
+    file_ex_var_regressed='result/'+config['file_ex_var_regressed'],
+    file_gene_meta=config['dir_data']+config['file_gene_meta'],
+    file_coexp_module='result/'+config['file_coexp_module'],
+    file_z='z/z.module{module}.chr{chr}.txt.gz'
+  output:
+    file_p='p/p.module{module}.chr{chr}.rds'
+  params:
+    dir_script='script/', chr='{chr}', module='{module}'
+  script:
+    'script/'+config['script_p']
+
+rule prep_bed_null:
+  input:
+    file_sample_name='result/'+config['file_sample_name'],
+    file_covariates=config['dir_data']+config['file_covariates'],
+    file_gene_meta=config['dir_data']+config['file_gene_meta'],
+    file_coexp_module='result/'+config['file_coexp_module'],
+    file_ex=config['dir_data']+config['file_ex']
+  output:
+    expand('result/expression.null.module{module}.bed.gz', module=MODULE),
+    file_covariates_null='result/'+config['file_covariates_null']
+  params:
+    data_type='null', dir_out='result/'
+  script:
+    'script/'+config['script_prep_bed']
+
+rule z_null:
+  input:
+    expression_bed='result/expression.null.module{module}.bed.gz',
+    file_covariates='result/'+config['file_covariates_null']
+  output:
+    file_z='z/z.null.module{module}.chr{chr}.txt.gz'
+  params:
+    plink_prefix_path=config['dir_data']+'chr{chr}_QCed',
+    prefix='module{module}.chr{chr}.null',
+    dir_script='script/'
+  shell: 'bash '+'script/'+config['script_z']+' {params.plink_prefix_path} {input.expression_bed} {input.file_covariates} {params.prefix} {params.dir_script} {output.file_z}'
+
+
+rule p_null:
+  input:
+    file_ex_var_regressed='result/'+config['file_ex_var_regressed'],
+    file_gene_meta=config['dir_data']+config['file_gene_meta'],
+    file_coexp_module='result/'+config['file_coexp_module'],
+    file_z='z/z.null.module{module}.chr{chr}.txt.gz'
+  output:
+    file_p='p/p.null.module{module}.chr{chr}.rds'
+  params:
+    dir_script='script/', chr='{chr}', module='{module}'
+  script:
+    'script/'+config['script_p']
+
+
+rule FDR:
+  input:
+    file_p='p/p.module{module}.chr{chr}.rds',
+    file_p_null='p/p.null.module{module}.chr{chr}.rds'
+  output:
+    file_q='FDR/q.module{module}.chr{chr}.txt',
+    file_signals=temp('FDR/signals.module{module}.chr{chr}.txt')
+  params:
+    module='{module}', fdr_level=config['fdr_level'], Nmodule=config['Nmodule'], Nchr=config['Nchr']
+  script:
+    'script/'+config['script_q']
+
+rule aggregate:
+  input:
+    expand('FDR/signals.module{module}.chr{chr}.txt',chr=CHRS,module=MODULE)
+  output:
+    'FDR/signals.txt'
+  shell:
+    """
+	  cat {input} | awk "BEGIN{{printf "snp\\tp\\tq\\n"}}{{print \$0}}" > {output}
+	  """

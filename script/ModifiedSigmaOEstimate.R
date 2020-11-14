@@ -2,7 +2,7 @@
 # This is a pre-computation step for PCMeta
 # input: the correlation matrix among Z-scores
 # output: the SigmaMeta matrix 
-ModifiedSigmaOEstimate = function(Sigma,p.method,simNum=2000,method = "davies"){
+ModifiedSigmaOEstimate = function(Sigma,p.method="TruncPCO",simNum=2000,method = "davies"){
   
   X.PCMinP = rep(NA,simNum)
   X.PCFisher = rep(NA,simNum)

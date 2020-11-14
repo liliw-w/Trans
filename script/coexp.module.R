@@ -1,23 +1,26 @@
-# minModuleSize = 20
+#rm(list = ls())
 
-rm(list = ls())
-
+input1 = snakemake@input[['file_ex_var_regressed']]
+input2 = snakemake@input[['file_genes_rm_info']]
+output1 = snakemake@output[['file_coexp_module']]
+minModuleSize = snakemake@params[['minModuleSize']]
 
 library(WGCNA)
 
 
 # Data preparation
-datExpr = readRDS(snakemake@input[['file_ex_var_regressed']])
-rm_info = read.table(snakemake@input[['file_genes_rm_info']],
+datExpr = readRDS(input1)
+rm_info = read.table(input2,
                      header = TRUE, row.names = NULL,
-                     stringsAsFactors = FALSE)
+                     sep = "\t",
+                     stringsAsFactors = FALSE, check.names = FALSE)
 ind_remove = rm_info$ind_remove; names(ind_remove) = rm_info$gene
 datExpr = datExpr[, !ind_remove]
 
 
 # Run WGCNA
 ### Parameter specification ###
-minModuleSize = 20
+minModuleSize = minModuleSize
 MEDissThres = 0.15
 if_plot_adjacency_mat_parameter_selection = F
 if_plot_only_tree = F
@@ -60,6 +63,9 @@ mergedMEs = merge$newMEs
 moduleLabels = match(mergedColors, c("grey", standardColors(100)))-1
 names(moduleLabels) = colnames(datExpr)
 
+print(table(moduleLabels))
+cat("Number of modules:", max(moduleLabels), "\n")
+
 # Save results
 result = list(moduleColors = mergedColors,
               moduleLabels = moduleLabels,
@@ -69,5 +75,4 @@ result = list(moduleColors = mergedColors,
               old_MEs = MEs,
               geneTree = geneTree,
               ind_remove = ind_remove)
-saveRDS(result, file = snakemake@output[['file_coexp_module']])
-
+saveRDS(result, file = output1)

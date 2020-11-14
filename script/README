@@ -1,0 +1,42 @@
+# check TCGA, histogram of p.null
+# plot log-pvalue range of signals
+# Why z.tensor different in diff runs?
+
+To-do's:
+# check files file_covariates & file_gene_meta strictly satisfy the file requirements.
+# need to take another look at low.quality.genes.R. 1. gene.name may have no '|' (doesn't matter); 2. maybe no genes on chrX or Y (doesn't matter).
+
+
+Input files:
+# All text files should be \t separated.
+/project2/xuanyao/llw/TCGA:
+data/
+  plink_prefix_path=config['dir_data']+config['geno_prefix']+'{chr}'+config['geno_suffix']; snp meta file (bim) shoud have "chr22", "chr:pos" as the first two cols.
+  geno_prefix: chr; geno_suffix: _QCed
+  file_covariates: covariates.txt #\t separated; row: covariates; column: samples; with arbitrary rownames; with header as sample names.
+  file_gene_meta: gene.meta.txt #\t separated; should include all genes!!!; four columns; with header: gene (ex's col name), chr (chr22), start, end; no rowname.
+  file_ex: ex.rdata # include two objects: ex and gnames; make sure genes not in file_gene_meta are deleted from ex and gnames!!!
+  file_pseudogenes: pseudogenes.txt
+  file_mappability: mappability.txt
+  file_cross_mappable_genes: cross.mappable.genes.rds
+
+
+/scratch/midway2/liliw1/TCGA/:
+script/
+  regress.out.covariates.R
+  low.quality.genes.R
+  coexp.module.R
+  prep.bed.R
+  z.sh
+  make.zmat.R
+  p.R
+  q.R
+  davies.R; liu.R; liumod.R; ModifiedSigmaOEstimate.R; ModifiedPCOMerged.R; qfc.cpp; qfc.o; qfc.so
+
+cluster_config.yaml
+config.yaml
+Snakefile.sh
+Snakefile0
+Snakefile
+
+README

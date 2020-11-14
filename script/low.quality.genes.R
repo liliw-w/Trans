@@ -1,56 +1,60 @@
-# dir.data is the directory where gene meta files are stored.
-# Files should include:
-#  1. gene.meta.txt: gene meta file, with header: gene, chr, start, end
-#  2. pseudogenes.txt: two columns, separated by \t.
-#  3. mappability.txt: two columns, separated by \t.
-
-rm(list = ls())
-
+#rm(list = ls())
 #parameter = commandArgs(trailingOnly = T)
 #dir.data = parameter[1]
+
+input1 = snakemake@input[['file_ex_var_regressed']]
+input2 = snakemake@input[['file_gene_meta']]
+input3 = snakemake@input[['file_pseudogenes']]
+input4 = snakemake@input[['file_mappability']]
+input5 = snakemake@input[['file_cross_mappable_genes']]
+output1 = snakemake@output[["file_genes_rm_info"]]
 
 options(stringsAsFactors = FALSE)
 
 ### Data preparation
-datExpr = readRDS(snakemake@input[['file_ex_var_regressed']])
+datExpr = readRDS(input1)
 gene.name = sapply(colnames(datExpr), function(x) strsplit(x, "\\|")[[1]][1])
 
 
 # remove genes on chromosome X & Y
-gene.meta = read.table(snakemake@input[['file_gene_meta']],
+gene.meta = read.table(input2, sep ="\t",
                        header = TRUE, row.names = NULL, stringsAsFactors = FALSE)
 rownames(gene.meta) = gene.meta$gene
-ind_chrX = gene.meta[colnames(datExpr), "chr"] == "chrX" | gene.meta[colnames(datExpr), "chr"] == "chrY"
+
+chr.auto = paste0("chr", 1:22)
+ind_chrXY = !(gene.meta[colnames(datExpr), "chr"] %in% chr.auto)
 
 # remove pseudogenes
-pseudogenes = read.table(snakemake@input[['file_pseudogenes']], sep ="\t", stringsAsFactors = F)
+pseudogenes = read.table(input3, sep ="\t", stringsAsFactors = F)
 ind_pseudo = gene.name %in% unique(pseudogenes[, 1])
 
 # remove low mappability genes
-mappability = read.table(snakemake@input[['file_mappability']], sep ="\t", stringsAsFactors = F)
+mappability = read.table(input4, sep ="\t", stringsAsFactors = F)
 ind_map = gene.name %in% unique(mappability[, 2])
 
 # remove cross-mappable genes
-cross_mappability = readRDS(snakemake@input[['file_cross_mappable_genes']])
+cross_mappability = readRDS(input5)
 cross_map_genes = unique(names(cross_mappability[!is.na(cross_mappability)]))
 ind_cross_map = gene.name %in% cross_map_genes
 
-ind_remove = ind_chrX | ind_pseudo | ind_map | ind_cross_map
+ind_remove = ind_chrXY | ind_pseudo | ind_map | ind_cross_map
 
-sum(ind_chrX)
-sum(ind_pseudo)
-sum(ind_map)
-sum(ind_cross_map)
-sum(ind_remove)
+cat("All genes:", ncol(datExpr), "\n")
+cat("XY genes:", sum(ind_chrXY), "\n")
+cat("pseodo genes:", sum(ind_pseudo), "\n")
+cat("low map genes:", sum(ind_map), "\n")
+cat("cross map genes:", sum(ind_cross_map), "\n")
+cat("Remove genes:", sum(ind_remove), "\n")
+cat("Left genes:", ncol(datExpr)-sum(ind_remove), "\n")
 
 
 write.table(as.matrix(data.frame("gene" = colnames(datExpr),
                                  "gene.name" = gene.name,
                                  "ind_remove" = ind_remove,
-                                 "ind_chrX" = ind_chrX,
+                                 "ind_chrXY" = ind_chrXY,
                                  "pseudo" = ind_pseudo,
                                  "lowmap" = ind_map,
                                  "crossmap" = ind_cross_map)),
-            snakemake@output[["file_genes_rm_info"]],
+            output1,
             sep = "\t",
             row.names = FALSE, col.names = TRUE, quote = FALSE)

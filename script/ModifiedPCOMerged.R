@@ -1,4 +1,4 @@
-ModifiedPCOMerged = function(Z.mat,Sigma,SigmaO,p.method,method = "davies"){
+ModifiedPCOMerged = function(Z.mat,Sigma,SigmaO,p.method="TruncPCO",method = "davies"){
   ## avoid Z.mat is a row vector which won't work later
   ## Z.mat should be a column vector object, not a 1*K matrix 
   
@@ -24,15 +24,18 @@ ModifiedPCOMerged = function(Z.mat,Sigma,SigmaO,p.method,method = "davies"){
   PC.p = pchisq(PC.std,df=1,lower.tail = FALSE)
   p.min = apply(PC.p, 2, min)
   p.PCMinP = 1- (1-p.min)^K
+  cat("PCMinP done.", "\n")
   
   ## 2: PCFisher
   PC.Fisher.stat = -2*colSums(log(PC.p))
   p.PCFisher = pchisq(PC.Fisher.stat,df=2*K,lower.tail = FALSE)
+  cat("PCFisher done.", "\n")
   
   ## 3: PCLC
   PCLC.stat = colSums(PC.vec * w.vec)
   PCLC.stat.std = PCLC.stat^2/sum(w.vec)
   p.PCLC = pchisq(PCLC.stat.std,df=1,lower.tail = FALSE)
+  cat("PCLC done.", "\n")
   
   ## 4: WI
   T.WI = colSums((PC.vec)^2)
@@ -49,10 +52,12 @@ ModifiedPCOMerged = function(Z.mat,Sigma,SigmaO,p.method,method = "davies"){
   }else if(method=="liumod"){
     p.WI = liumod(T.WI,lambdas)
   }else {stop("Please specify a valid method: davies, liu, liumod.\n")}
+  cat("WI done.", "\n")
   
   ## 5: Wald
   T.Wald = colSums(PC.std)
   p.Wald = pchisq(T.Wald,df=K,lower.tail=FALSE)
+  cat("Wald done.", "\n")
   
   
   ## 6: VC
@@ -71,6 +76,7 @@ ModifiedPCOMerged = function(Z.mat,Sigma,SigmaO,p.method,method = "davies"){
   }else if(method=="liumod"){
     p.VC = liumod(T.VC, wt.VC)
   }else {stop("Please specify a valid method: davies, liu, liumod.\n")}
+  cat("VC done.", "\n")
   
   
   ## PCO
@@ -85,5 +91,7 @@ ModifiedPCOMerged = function(Z.mat,Sigma,SigmaO,p.method,method = "davies"){
   pval = sapply(qnorm(T.minp),
                  function(x) 1-mvtnorm::pmvnorm(lower = rep(x, K.X), upper = upper_bound,
                                                 mean = mv.mean, sigma = SigmaO)[1])
+  cat("PCO done.", "\n")
+  
   return(pval)
 }

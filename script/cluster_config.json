@@ -1,0 +1,39 @@
+{
+    "__default__" :
+    {
+        "job-name": "{rule}",
+        "partition": "broadwl",
+        "time": "2:00:00",
+        "nodes": "1",
+        "mem": "5G",
+        "output": "o.SnakeLog", #o.%J.txt #"logs_slurm/{rule}.{wildcards}.out"
+        "error": "e.SnakeLog", #e.%J.txt
+        "email-type": "FAIL",
+        "email": "liliw1@uchicago.edu",
+        "ntasks-per-node": "1"        
+    },
+    "z" :
+    {
+        "job-name": "{rule}.{wildcards.module}.{wildcards.chr}",
+        "time": "12:00:00",
+        "mem": "30G"
+    },
+    "z_null" :
+    {
+        "job-name": "zn.{wildcards.module}.{wildcards.chr}",
+        "time": "12:00:00",
+        "mem": "30G"
+    },
+    "p" :
+    {
+        "job-name": "{rule}.{wildcards.module}.{wildcards.chr}",
+        "time": "12:00:00",
+        "mem": "20G"
+    },
+    "p_null" :
+    {
+        "job-name": "pn.{wildcards.module}.{wildcards.chr}",
+        "time": "12:00:00",
+        "mem": "20G"
+    }
+}
