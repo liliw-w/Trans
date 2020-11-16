@@ -1,6 +1,12 @@
 # check TCGA, histogram of p.null
 # plot log-pvalue range of signals
 # Why z.tensor different in diff runs?
+# GTEx:
+  #sample name: don't extract from fam file but from exp bed file, as exp and geno have diff samples. change code. sanple name is in ex.rdata with ex and gnames in the data file. no need to generate sanple name in pipeline. change prep.bed.R, no need to read sample name, which is automatically loaded by loading ex.rdata.
+  #ex.rdata: ex, gnames, snames. make the latter two as col and row names of ex. and modify relavant code.
+  #covariates?
+  #tensorqtl extract samples from geno file?
+
 
 To-do's:
 # check files file_covariates & file_gene_meta strictly satisfy the file requirements.
@@ -31,8 +37,11 @@ script/
   make.zmat.R
   p.R
   q.R
+  post.sh
+  signals.uniq.R
   davies.R; liu.R; liumod.R; ModifiedSigmaOEstimate.R; ModifiedPCOMerged.R; qfc.cpp; qfc.o; qfc.so
-
+logs/
+postanalysis/
 cluster_config.yaml
 config.yaml
 Snakefile.sh

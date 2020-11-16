@@ -25,3 +25,4 @@ script_prep_bed: prep.bed.R
 script_z: z.sh
 script_p: p.R
 script_q: q.R
+script_post: post.sh

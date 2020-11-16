@@ -6,7 +6,7 @@ CHRS=list(range(1, config['Nchr']+1))
 rule all:
   input:
     expand('FDR/signals.module{module}.chr{chr}.txt',chr=CHRS,module=MODULE),
-    'FDR/signals.txt'
+    'postanalysis/indep.signals.txt'
 
 rule sample_name:
   input: config['dir_data']+config['geno_prefix']+'22'+config['geno_suffix']+'.fam'
@@ -73,10 +73,10 @@ rule z_null:
   output:
     file_z='z/z.null.module{module}.chr{chr}.txt.gz'
   params:
-    plink_prefix_path=config['dir_data']+'chr{chr}_QCed',
+    plink_prefix_path=config['dir_data']+config['geno_prefix']+'{chr}'+config['geno_suffix'],
     prefix='module{module}.chr{chr}.null',
     dir_script='script/'
-  shell: 'bash '+'script/'+config['script_z']+' {params.plink_prefix_path} {input.expression_bed} {input.file_covariates} {params.prefix} {params.dir_script} {output.file_z}'
+  shell: 'bash script/'+config['script_z']+' {params.plink_prefix_path} {input.expression_bed} {input.file_covariates} {params.prefix} {params.dir_script} {output.file_z}'
 
 
 rule p_null:
@@ -114,3 +114,8 @@ rule aggregate:
     """
 	  cat {input} | awk "BEGIN{{printf "snp\\tp\\tq\\n"}}{{print \$0}}" > {output}
 	  """
+rule post:
+  input: 'FDR/signals.txt'
+  output: sig_uniq='postanalysis/LD.prun.in.txt', sig_indp='postanalysis/indep.signals.txt'
+  params: dir_data=config['dir_data'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
+  shell: 'bash script/'+config['script_post']+' {input} {output.sig_uniq} {output.sig_indp} {params.dir_data} {params.geno_prefix} {params.geno_suffix}'
