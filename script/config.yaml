@@ -1,9 +1,10 @@
-minModuleSize: 20
 Nmodule: ???
+dir_data: ???
+
+minModuleSize: 20
 Nchr: 22
 fdr_level: 0.05
 
-dir_data: ???
 geno_prefix: chr
 geno_suffix: _QCed
 file_covariates: covariates.txt
@@ -26,3 +27,5 @@ script_z: z.sh
 script_p: p.R
 script_q: q.R
 script_post: post.sh
+script_q_chr: q.chr.R
+script_q_chr_module: q.chr.module.R

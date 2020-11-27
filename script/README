@@ -1,5 +1,5 @@
 # check TCGA, histogram of p.null
-# plot log-pvalue range of signals
+# plot log-pvalue range of signals; distribution of signals on chr? plot these signals v.s. -logp, annotated by nearest genes?
 # Why z.tensor different in diff runs?
 # GTEx:
   #sample name: don't extract from fam file but from exp bed file, as exp and geno have diff samples. change code. sanple name is in ex.rdata with ex and gnames in the data file. no need to generate sanple name in pipeline. change prep.bed.R, no need to read sample name, which is automatically loaded by loading ex.rdata.
@@ -39,9 +39,14 @@ script/
   q.R
   post.sh
   signals.uniq.R
+  plot.R
+  q.chr.R
+  q.chr.module.R
+  near.gene.R
   davies.R; liu.R; liumod.R; ModifiedSigmaOEstimate.R; ModifiedPCOMerged.R; qfc.cpp; qfc.o; qfc.so
 logs/
 postanalysis/
+plots/
 cluster_config.yaml
 config.yaml
 Snakefile.sh

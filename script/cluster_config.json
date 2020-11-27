@@ -6,8 +6,8 @@
       "time": "2:00:00",
       "nodes": "1",
       "mem": "5G",
-      "output": "o.SnakeLog", #o.%J.txt #"logs_slurm/{rule}.{wildcards}.out"
-      "error": "e.SnakeLog", #e.%J.txt
+      "output": "logs/%J.{rule}.log", #o.%J.txt #"logs_slurm/{rule}.{wildcards}.out"
+      "error": "logs/%J.{rule}.log", #e.%J.txt
       "email-type": "FAIL",
       "email": "liliw1@uchicago.edu",
       "ntasks-per-node": "1"        
@@ -43,5 +43,11 @@
       "mem": "20G",
       "output": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log",
       "error": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log"
+    },
+  "FDR_chr_module" :
+    {
+      "job-name": "FDR.chr.module",
+      "time": "5:00:00",
+      "mem": "50G"
     }
 }

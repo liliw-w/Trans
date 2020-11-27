@@ -5,8 +5,10 @@ CHRS=list(range(1, config['Nchr']+1))
 
 rule all:
   input:
-    expand('FDR/signals.module{module}.chr{chr}.txt',chr=CHRS,module=MODULE),
-    'postanalysis/indep.signals.txt'
+    expand('FDR/q.module{module}.chr{chr}.txt',chr=CHRS,module=MODULE),
+    'postanalysis/indep.signals.txt',
+    'postanalysis/indep.signals.chr.txt',
+    'postanalysis/indep.signals.chr.module.txt'
 
 rule sample_name:
   input: config['dir_data']+config['geno_prefix']+'22'+config['geno_suffix']+'.fam'
@@ -114,8 +116,54 @@ rule aggregate:
     """
 	  cat {input} | awk "BEGIN{{printf "snp\\tp\\tq\\n"}}{{print \$0}}" > {output}
 	  """
+
 rule post:
   input: 'FDR/signals.txt'
   output: sig_uniq='postanalysis/LD.prun.in.txt', sig_indp='postanalysis/indep.signals.txt'
   params: dir_data=config['dir_data'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
   shell: 'bash script/'+config['script_post']+' {input} {output.sig_uniq} {output.sig_indp} {params.dir_data} {params.geno_prefix} {params.geno_suffix}'
+  
+
+rule FDR_chr:
+  input:
+    file_p=expand('p/p.module{module}.chr{chr}.rds',chr=CHRS, module="{module}"),
+    file_p_null=expand('p/p.null.module{module}.chr{chr}.rds',chr=CHRS, module="{module}")
+  output:
+    file_signals=temp('FDR/signals.chr.module{module}.txt')
+  params:
+    module='{module}', fdr_level=config['fdr_level'], Nmodule=config['Nmodule'], Nchr=config['Nchr']
+  script:
+    'script/'+config['script_q_chr']
+
+rule aggregate_chr:
+  input:
+    expand('FDR/signals.chr.module{module}.txt',module=MODULE)
+  output:
+    'FDR/signals.chr.txt'
+  shell:
+    """
+	  cat {input} | awk "BEGIN{{printf "snp\\tp\\tq\\n"}}{{print \$0}}" > {output}
+	  """
+
+rule FDR_chr_module:
+  input:
+    file_p=expand('p/p.module{module}.chr{chr}.rds',chr=CHRS,module=MODULE),
+    file_p_null=expand('p/p.null.module{module}.chr{chr}.rds',chr=CHRS,module=MODULE)
+  output:
+    file_signals='FDR/signals.chr.module.txt'
+  params:
+    fdr_level=config['fdr_level'], Nmodule=config['Nmodule'], Nchr=config['Nchr']
+  script:
+    'script/'+config['script_q_chr_module']
+    
+rule post_chr:
+  input: 'postanalysis/indep.signals.txt', sig='FDR/signals.chr.txt'
+  output: sig_uniq='postanalysis/LD.prun.in.chr.txt', sig_indp='postanalysis/indep.signals.chr.txt'
+  params: dir_data=config['dir_data'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
+  shell: 'bash script/'+config['script_post']+' {input.sig} {output.sig_uniq} {output.sig_indp} {params.dir_data} {params.geno_prefix} {params.geno_suffix}'
+
+rule post_chr_module:
+  input: 'postanalysis/indep.signals.txt', 'postanalysis/indep.signals.chr.txt', sig='FDR/signals.chr.module.txt'
+  output: sig_uniq='postanalysis/LD.prun.in.chr.module.txt', sig_indp='postanalysis/indep.signals.chr.module.txt'
+  params: dir_data=config['dir_data'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
+  shell: 'bash script/'+config['script_post']+' {input.sig} {output.sig_uniq} {output.sig_indp} {params.dir_data} {params.geno_prefix} {params.geno_suffix}'
