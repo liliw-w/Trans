@@ -6,8 +6,8 @@
       "time": "2:00:00",
       "nodes": "1",
       "mem": "5G",
-      "output": "logs/%J.{rule}.log", #o.%J.txt #"logs_slurm/{rule}.{wildcards}.out"
-      "error": "logs/%J.{rule}.log", #e.%J.txt
+      "output": "logs/{rule}.log"
+      "error": "logs/{rule}.log"
       "email-type": "FAIL",
       "email": "liliw1@uchicago.edu",
       "ntasks-per-node": "1"        
@@ -17,36 +17,36 @@
       "job-name": "{rule}.{wildcards.module}.{wildcards.chr}",
       "time": "12:00:00",
       "mem": "40G",
-      "output": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log",
-      "error": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log"
+      "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
+      "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
     },
   "z_null" :
     {
-      "job-name": "zn.{wildcards.module}.{wildcards.chr}",
+      "job-name": "zn.{wildcards.module}.{wildcards.chr}.{wildcards.perm}",
       "time": "12:00:00",
       "mem": "40G",
-      "output": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log",
-      "error": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log"
+      "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
+      "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
     },
   "p" :
     {
       "job-name": "{rule}.{wildcards.module}.{wildcards.chr}",
       "time": "12:00:00",
       "mem": "20G",
-      "output": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log",
-      "error": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log"
+      "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
+      "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
     },
   "p_null" :
     {
-      "job-name": "pn.{wildcards.module}.{wildcards.chr}",
+      "job-name": "pn.{wildcards.module}.{wildcards.chr}.{wildcards.perm}",
       "time": "12:00:00",
       "mem": "20G",
-      "output": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log",
-      "error": "logs/%J.{rule}.{wildcards.module}.{wildcards.chr}.log"
+      "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
+      "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
     },
   "FDR_chr_module" :
     {
-      "job-name": "FDR.chr.module",
+      "job-name": "FDR.chr.module.{wildcards.perm}",
       "time": "5:00:00",
       "mem": "50G"
     }

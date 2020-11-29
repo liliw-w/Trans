@@ -14,7 +14,7 @@ rule sample_name:
   input: config['dir_data']+config['geno_prefix']+'22'+config['geno_suffix']+'.fam'
   output: 'result/'+config['file_sample_name']
   shell: 'cat {input} | cut -d" " -f1 > {output}'
-  
+
 rule prep_bed:
   input:
     file_sample_name='result/'+config['file_sample_name'],
@@ -22,9 +22,10 @@ rule prep_bed:
     file_gene_meta=config['dir_data']+config['file_gene_meta'],
     file_coexp_module='result/'+config['file_coexp_module'],
     file_ex=config['dir_data']+config['file_ex']
-  output: expand('result/expression.module{module}.bed.gz', module=MODULE)
+  output:
+    file_exp=expand('result/expression.module{module}.bed.gz', module=MODULE)
   params:
-    data_type='obs', dir_out='result/'
+    data_type='obs'
   script:
     'script/'+config['script_prep_bed']
 
@@ -61,17 +62,17 @@ rule prep_bed_null:
     file_coexp_module='result/'+config['file_coexp_module'],
     file_ex=config['dir_data']+config['file_ex']
   output:
-    expand('result/expression.null.module{module}.bed.gz', module=MODULE),
-    file_covariates_null='result/'+config['file_covariates_null']
+    file_exp=expand('result/expression.null.module{module}.bed.gz', module=MODULE),
+    file_covariates_null='result/covariates.null.txt'
   params:
-    data_type='null', dir_out='result/'
+    data_type='null'
   script:
     'script/'+config['script_prep_bed']
 
 rule z_null:
   input:
     expression_bed='result/expression.null.module{module}.bed.gz',
-    file_covariates='result/'+config['file_covariates_null']
+    file_covariates='result/covariates.null.txt'
   output:
     file_z='z/z.null.module{module}.chr{chr}.txt.gz'
   params:
@@ -122,7 +123,7 @@ rule post:
   output: sig_uniq='postanalysis/LD.prun.in.txt', sig_indp='postanalysis/indep.signals.txt'
   params: dir_data=config['dir_data'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
   shell: 'bash script/'+config['script_post']+' {input} {output.sig_uniq} {output.sig_indp} {params.dir_data} {params.geno_prefix} {params.geno_suffix}'
-  
+
 
 rule FDR_chr:
   input:
@@ -155,7 +156,7 @@ rule FDR_chr_module:
     fdr_level=config['fdr_level'], Nmodule=config['Nmodule'], Nchr=config['Nchr']
   script:
     'script/'+config['script_q_chr_module']
-    
+
 rule post_chr:
   input: 'postanalysis/indep.signals.txt', sig='FDR/signals.chr.txt'
   output: sig_uniq='postanalysis/LD.prun.in.chr.txt', sig_indp='postanalysis/indep.signals.chr.txt'

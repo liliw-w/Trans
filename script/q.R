@@ -8,22 +8,35 @@
 input1 = snakemake@input[['file_p']]
 input2 = snakemake@input[['file_p_null']]
 output1 = snakemake@output[['file_q']]
-output2 = snakemake@output[['file_signals']]
-module = as.numeric(snakemake@params[['module']])
-fdr.level = as.numeric(snakemake@params[['fdr_level']])/as.numeric(snakemake@params[['Nmodule']])/as.numeric(snakemake@params[['Nchr']])
+#fdr.level = as.numeric(snakemake@params[['fdr_level']])
+
+str(input1)
+str(input2)
+
+require(data.table)
+
+p.obs = rbindlist(lapply(input1, function(x) 
+{tmp_y=readRDS(x);
+as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)}))
+
+p.null = rbindlist(lapply(input2, function(x) 
+{tmp_y=readRDS(x);
+as.data.table(setNames(tmp_y, paste0("n", strsplit(x, '.', fixed = T)[[1]][3], ":", names(tmp_y))), keep.rownames=T)}))
 
 
-p.obs = readRDS(input1)
-p.null = readRDS(input2)
+p.obs.rank = frank(p.obs, V2)
+names(p.obs.rank) = p.obs$V1
+name.obs.smallp = p.obs$V1[p.obs$V2 < 10^(-4)]
 
-names(p.obs) = paste0("C", module, ":", names(p.obs))
-p.obs.rank = rank(p.obs)
-all.rank = rank(c(p.obs, p.null))
-q = pmin(all.rank[names(p.obs)]/p.obs.rank[names(p.obs)]-1, 1)
 
-res = data.frame("snp" = names(p.obs), "p" = p.obs, "q" = q[names(p.obs)])
+all.rank = frank(rbindlist(list(p.obs, p.null)), V2)
+names(all.rank) = c(p.obs$V1, p.null$V1)
 
-write.table(res, output1,
-            sep = "\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
-write.table(res[res$q < fdr.level, ], output2,
-            sep = "\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+q = pmin(all.rank[name.obs.smallp]/p.obs.rank[name.obs.smallp]-1, 1)
+
+res = data.frame("snp" = name.obs.smallp, "p" = p.obs$V2[p.obs$V2 < 10^(-4)], "q" = q)
+
+saveRDS(res, output1)
+
+#fwrite(res[q<fdr.level, ], output1,
+#       sep = "\t", row.names = FALSE, col.names = FALSE)

@@ -1,5 +1,6 @@
 Nmodule: ???
 dir_data: ???
+Nperm: 1
 
 minModuleSize: 20
 Nchr: 22
@@ -18,7 +19,6 @@ file_ex_var_regressed: ex.var.regressed.rds
 file_genes_rm_info: genes.rm.info.txt
 file_coexp_module: coexp.module.rds
 file_sample_name: sample.name.txt
-file_covariates_null: covariates.null.txt
 script_covariates: regress.out.covariates.R
 script_remove_gene: low.quality.genes.R
 script_coexp_module: coexp.module.R
@@ -27,5 +27,4 @@ script_z: z.sh
 script_p: p.R
 script_q: q.R
 script_post: post.sh
-script_q_chr: q.chr.R
-script_q_chr_module: q.chr.module.R
+script_average_perm: average.perm.R
