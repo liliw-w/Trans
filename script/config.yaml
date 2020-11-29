@@ -1,6 +1,10 @@
 Nmodule: ???
 dir_data: ???
-Nperm: 1
+Nperm: 5
+
+fdr_thre: ???
+fdr_thre_chr: ???
+fdr_thre_chr_module: ???
 
 minModuleSize: 20
 Nchr: 22
