@@ -18,7 +18,7 @@ rule prep_bed_null:
     file_coexp_module='result/'+config['file_coexp_module'],
     file_ex=config['dir_data']+config['file_ex']
   output:
-    file_expression=temp(expand('result/expression.null.module{module}.perm{perm}.bed.gz', module=MODULE, perm="{perm}")),
+    file_expression=temp(expand('result/expression.null.module{module}.perm{perm}.bed.gz', module=MODULE, allow_missing=True)),
     file_covariates_null=temp('result/covariates.null.perm{perm}.txt')
   params:
     data_type='null'
@@ -45,7 +45,7 @@ rule p_null:
     file_coexp_module='result/'+config['file_coexp_module'],
     file_z='z/z.null.module{module}.chr{chr}.perm{perm}.txt.gz'
   output:
-    file_p=temp('p/p.null.module{module}.chr{chr}.perm{perm}.rds')
+    file_p='p/p.null.module{module}.chr{chr}.perm{perm}.rds'
   params:
     dir_script='script/', chr='{chr}', module='{module}'
   script:
@@ -57,13 +57,13 @@ rule FDR:
     file_p='p/p.module{module}.chr{chr}.rds',
     file_p_null='p/p.null.module{module}.chr{chr}.perm{perm}.rds'
   output:
-    file_q=temp('FDR/q.module{module}.chr{chr}.perm{perm}.rds')
+    file_q='FDR/q.module{module}.chr{chr}.perm{perm}.rds'
   script:
     'script/'+config['script_q']
 
 rule average_perm:
   input:
-    file_q=expand('FDR/q.module{module}.chr{chr}.perm{perm}.rds', chr="{chr}", module="{module}", perm=PERM)
+    file_q=expand('FDR/q.module{module}.chr{chr}.perm{perm}.rds', perm=PERM, allow_missing=True)
   output:
     file_signals=temp('FDR/signals.module{module}.chr{chr}.perm'+"config['Nperm']"+'.txt')
   params:
@@ -83,16 +83,16 @@ rule aggregate:
 
 rule FDR_chr:
   input:
-    file_p=expand('p/p.module{module}.chr{chr}.rds',chr=CHRS, module="{module}"),
-    file_p_null=expand('p/p.null.module{module}.chr{chr}.perm{perm}.rds',chr=CHRS, module="{module}", perm="{perm}")
+    file_p=expand('p/p.module{module}.chr{chr}.rds',chr=CHRS, allow_missing=True),
+    file_p_null=expand('p/p.null.module{module}.chr{chr}.perm{perm}.rds',chr=CHRS, allow_missing=True)
   output:
-    file_q=temp('FDR/q.chr.module{module}.perm{perm}.rds')
+    file_q='FDR/q.chr.module{module}.perm{perm}.rds'
   script:
     'script/'+config['script_q']
 
 rule average_perm_chr:
   input:
-    file_q=expand('FDR/q.chr.module{module}.perm{perm}.rds', module="{module}", perm=PERM)
+    file_q=expand('FDR/q.chr.module{module}.perm{perm}.rds', perm=PERM, allow_missing=True)
   output:
     file_signals=temp('FDR/signals.chr.module{module}.perm'+"config['Nperm']"+'.txt')
   params:
@@ -113,9 +113,9 @@ rule aggregate_chr:
 rule FDR_chr_module:
   input:
     file_p=expand('p/p.module{module}.chr{chr}.rds',chr=CHRS,module=MODULE),
-    file_p_null=expand('p/p.null.module{module}.chr{chr}.perm{perm}.rds',chr=CHRS,module=MODULE, perm="{perm}")
+    file_p_null=expand('p/p.null.module{module}.chr{chr}.perm{perm}.rds',chr=CHRS,module=MODULE, allow_missing=True)
   output:
-    file_q=temp('FDR/q.chr.module.perm{perm}.rds')
+    file_q='FDR/q.chr.module.perm{perm}.rds'
   script:
     'script/'+config['script_q']
 
