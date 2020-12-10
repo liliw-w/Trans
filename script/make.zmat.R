@@ -7,6 +7,6 @@ outp = parameter[2]
 library(data.table)
 z = fread(inp,
           header = TRUE, sep = "\t")
-z.mat = dcast(z, snp~gene, value.var = "zscore", fun.aggregate = max, drop = FALSE)
+z.mat = dcast(z, snp~gene, value.var = "zscore")
 fwrite(z.mat, outp,
        sep = "\t", row.names = FALSE, col.names = TRUE)

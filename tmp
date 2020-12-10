@@ -1,3 +1,31 @@
+library(data.table)
+
+dataeQTLGen = fread("eQTLGen.txt.gz", header = TRUE)
+z.mat = dcast(dataeQTLGen, SNP~Gene, value.var = "Zscore")
+
+dim(dataeQTLGen)
+dim(z.mat)
+z.mat[1:5, 1:7]
+
+str(unique(dataeQTLGen$SNP))
+str(unique(dataeQTLGen$Gene))
+
+ind.use = apply(z.mat, 1, function(x)  !any(is.na(x) ))
+str(ind.use)
+sum(ind.use)
+
+saveRDS(z.mat, "eQTLGen.z_mat.rds")
+
+fwrite(z.mat[, "SNP"], file = "eQTLGen.snp.txt", sep = "\t", col.names = FALSE)
+fwrite(list(colnames(z.mat)[-1]), file = "eQTLGen.gene.txt", sep = "\t", col.names = FALSE)
+
+sum(apply(a, 2, function(x)  any(x == Inf) ))
+
+
+
+
+
+
 for i in $(seq 5 5 20)
 do
 wc -l ../FDR/signals.chr.module.perm${i}.txt
@@ -80,28 +108,3 @@ sum(rem.all)
 length(pc)-sum(rem.all)
 
 length(grep(x=data.gene[data.gene$Class!="protein_coding" & data.gene$Class!="lincRNA", Class][!rem.all], pattern="pseudogene"))
-
-
-###################################
-######### Filter genes ############
-###################################
-
-library(data.table)
-a = fread("gencode.v19.annotation.table.txt", header=T)
-low.mapp = fread("hg19_gencode19_50merExon_36merUTR_2mismatch_gene_mappability.txt.gz")
-cross.map = fread("hg19_gencode19_75merExon_36merUTR_2mismatch_cross_mappability_symmetric_mean.txt.gz")
-
-gnames.meta = gnames[gnames %in% a$GeneSymbol]
-
-rem.pseu = !(a[match(gnames.meta, a$GeneSymbol), Class] %in% c("protein_coding", "lincRNA"))
-rem.low.mapp = gnames.meta %in% a[match(low.mapp[low.mapp$V2 < 0.9, V1], a$Geneid), GeneSymbol]
-rem.cross.map = gnames.meta %in% a[match(unique(c(cross.map$V1, cross.map$V2)), a$Geneid), GeneSymbol]
-rem.auto = !(a[match(gnames.meta, a$GeneSymbol), Chromosome] %in% paste0("chr", 1:22))
-
-rem.N = sum(rem.auto | rem.pseu | rem.low.mapp | rem.cross.map)
-
-cat("All genes:", length(gnames), '\n',
-"With meta:", length(gnames.meta), '\n',
-"Final use:", length(gnames.meta) - rem.N, '\n',
-"All removed:", rem.N+length(gnames)-length(gnames.meta), '\n',
-"including:", c(length(gnames)-length(gnames.meta), sum(rem.auto), sum(rem.pseu), sum(rem.low.mapp), sum(rem.cross.map)), '\n')
