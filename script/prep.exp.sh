@@ -34,6 +34,10 @@ rm ${prefix}*
 #cp /project2/xuanyao/llw/TCGA/data/mappability.txt .
 #cp /project2/xuanyao/llw/TCGA/data/cross.mappable.genes.rds .
 
+if ! [ -d "../script" ]; then
+    mkdir "../script"
+fi
+
 if ! [ -d "../logs" ]; then
     mkdir "../logs"
 fi

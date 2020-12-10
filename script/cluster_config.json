@@ -6,8 +6,8 @@
       "time": "2:00:00",
       "nodes": "1",
       "mem": "5G",
-      "output": "logs/{rule}.log"
-      "error": "logs/{rule}.log"
+      "output": "logs/{rule}.log",
+      "error": "logs/{rule}.log",
       "email-type": "FAIL",
       "email": "liliw1@uchicago.edu",
       "ntasks-per-node": "1"        

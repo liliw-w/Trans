@@ -12,7 +12,7 @@ rule covariates:
     file_covariates=config['dir_expression']+config['file_covariates'],
     file_ex=config['dir_expression']+config['file_ex']
   output:
-    file_gene_meta='result/'+config['file_gene_meta']
+    file_gene_meta='result/'+config['file_gene_meta'],
     file_ex_var_regressed='result/'+config['file_ex_var_regressed']
   script:
     'script/'+config['script_covariates']
