@@ -33,13 +33,13 @@ script/
   prep.exp.sh
   prep.exp.R
   davies.R; liu.R; liumod.R; ModifiedSigmaOEstimate.R; ModifiedPCOMerged.R; qfc.cpp; qfc.o; qfc.so
-logs/
-postanalysis/
-plots/
+
 cluster_config.yaml
 config.yaml
 Snakefile.sh
-Snakefile0
 Snakefile
-
+Snakefile0
 README
+
+logs/
+plots/

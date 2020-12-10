@@ -1,13 +1,13 @@
 #!/bin/bash 
 
-dir_cov=/project2/xuanyao/data/GTEx_V8/expression/GTEx_Analysis_v8_eQTL_covariates
-dir_exp=/project2/xuanyao/data/GTEx_V8/expression/GTEx_Analysis_v8_eQTL_expression_matrices
-dir_GTEx=/project2/xuanyao/llw/GTEx_v8
+dir_cov=/project2/xuanyao/data/GTEx_v8/expression/GTEx_Analysis_v8_eQTL_covariates
+dir_exp=/project2/xuanyao/data/GTEx_v8/expression/GTEx_Analysis_v8_eQTL_expression_matrices
+dir_GTEx=/scratch/midway2/liliw1/GTEx_v8/
 
 all_tissue=$(ls ${dir_cov} | cut -d "." -f 1)
 for tissue in ${all_tissue}
 do
-dir_data=${dir_GTEx}/${tissue}
+dir_data=${dir_GTEx}${tissue}
 prefix=${tissue}.v8
 echo ${dir_data}
 
@@ -21,17 +21,25 @@ cp ${dir_cov}/${prefix}* ./covariates.txt
 cp ${dir_exp}/${prefix}* .
 
 # write gene meta file
-zcat ${prefix}*.bed.gz | \
-cut -f 1-4 | tail -n+2 | \
-awk 'BEGIN {printf("#chr\tstart\tend\tgene\n")} {print $0}' > \
-gene.meta.txt
+#zcat ${prefix}*.bed.gz | \
+#cut -f 1-4 | tail -n+2 | \
+#awk 'BEGIN {printf("#chr\tstart\tend\tgene\n")} {print $0}' > \
+#gene.meta.txt
 
-Rscript ${dir_GTEx}/prep.exp.R ${prefix}*.bed.gz 'ex.rdata'
+Rscript ${dir_GTEx}'prep.exp.R' ${prefix}*.bed.gz 'ex.rds'
 
 rm ${prefix}*
 
-cp /project2/xuanyao/llw/TCGA/data/pseudogenes.txt .
-cp /project2/xuanyao/llw/TCGA/data/mappability.txt .
-cp /project2/xuanyao/llw/TCGA/data/cross.mappable.genes.rds .
+#cp /project2/xuanyao/llw/TCGA/data/pseudogenes.txt .
+#cp /project2/xuanyao/llw/TCGA/data/mappability.txt .
+#cp /project2/xuanyao/llw/TCGA/data/cross.mappable.genes.rds .
+
+if ! [ -d "../logs" ]; then
+    mkdir "../logs"
+fi
+
+if ! [ -d "../plots" ]; then
+    mkdir "../plots"
+fi
 
 done
