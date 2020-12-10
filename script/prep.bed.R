@@ -4,11 +4,10 @@
 #data.type = parameter[2]
 
 data.type = snakemake@params[['data_type']]
-input1 = snakemake@input[['file_sample_name']]
-input2 = snakemake@input[['file_ex']]
-input3 = snakemake@input[['file_covariates']]
-input4 = snakemake@input[['file_gene_meta']]
-input5 = snakemake@input[['file_coexp_module']]
+file.ex = snakemake@input[['file_ex']]
+file.covariates = snakemake@input[['file_covariates']]
+file.gene.meta = snakemake@input[['file_gene_meta']]
+file.coexp.module = snakemake@input[['file_coexp_module']]
 file.covariates.null = snakemake@output[['file_covariates_null']]
 file.expression = snakemake@output[['file_expression']]
 
@@ -20,27 +19,21 @@ options(stringsAsFactors = FALSE)
 
 if(!data.type %in% c("obs", "null")){stop("Please specify a valid data.type: obs, null.\n")}
 
-# sample name
-sample.name = read.table(input1,
-                         row.names = NULL, header=F,
-                         stringsAsFactors=F, check.names = FALSE)
-
 # expression
-load(input2)
+ex = readRDS(file.ex); sample.name = rownames(ex)
 if(data.type == "null"){
   perm = sample(nrow(ex))
-  ex = ex[perm, ]
+  ex = ex[perm, ]; rownames(ex) = sample.name
   
-  cov_all = read.table(input3,
+  cov_all = read.table(file.covariates,
                        sep = "\t", header = TRUE, row.names = 1,
                        stringsAsFactors = FALSE, check.names = FALSE)
-  cov_all.perm = cov_all[, perm]; colnames(cov_all.perm) = colnames(cov_all)
+  cov_all.perm = cov_all[, sample.name[perm]]; colnames(cov_all.perm) = colnames(cov_all)
   write.table(cov_all.perm, file.covariates.null, sep = "\t", quote = FALSE)
 }
-colnames(ex) = gnames; rownames(ex) = sample.name[, 1]
 
 # gene position
-gene.meta = as.matrix(read.table(input4,
+gene.meta = as.matrix(read.table(file.gene.meta,
                                  sep ="\t", header=TRUE, row.names = NULL,
                                  stringsAsFactors=F,  check.names = FALSE))
 rownames(gene.meta) = gene.meta[, "gene"]
@@ -49,10 +42,10 @@ gene.meta[, "chr"] = paste0(gene.meta[, "chr"], "NA")
 colnames(gene.meta)[1] = "#chr"
 
 # module
-module.info = readRDS(input5)
-Nmodule = max(module.info$moduleLabels)
+coexp.module = readRDS(file.coexp.module)
+Nmodule = max(coexp.module$moduleLabels)
 for(k in 1:Nmodule){
-  gene.in.module = names(module.info$moduleLabels)[module.info$moduleLabels==k]
+  gene.in.module = names(coexp.module$moduleLabels)[coexp.module$moduleLabels==k]
   res = cbind(gene.meta[gene.in.module, ], t(ex[, gene.in.module]))
   
   write.table(res, gzfile(file.expression[[k]]),

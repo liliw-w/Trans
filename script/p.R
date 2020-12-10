@@ -5,23 +5,23 @@
 #chr = as.numeric(parameter[3])
 #p.method = parameter[4]
 
-input1 = snakemake@input[['file_ex_var_regressed']]
-input2 = snakemake@input[['file_gene_meta']]
-input3 = snakemake@input[['file_coexp_module']]
-input4 = snakemake@input[['file_z']]
-output1 = snakemake@output[['file_p']]
+file.ex.var.regressed = snakemake@input[['file_ex_var_regressed']]
+file.gene.meta = snakemake@input[['file_gene_meta']]
+file.coexp.module = snakemake@input[['file_coexp_module']]
+file.z = snakemake@input[['file_z']]
+file.p = snakemake@output[['file_p']]
 params1 = snakemake@params[['dir_script']]
 chr = as.numeric(snakemake@params[['chr']])
 module = as.numeric(snakemake@params[['module']])
 
 library(data.table)
 
-datExpr = readRDS(input1)
-gene.meta = read.table(input2, sep = '\t', header = T, row.names = NULL, stringsAsFactors = F)
-gene_module = readRDS(input3)
+datExpr = readRDS(file.ex.var.regressed)
+gene.meta = read.table(file.gene.meta, sep = '\t', header = T, row.names = NULL, stringsAsFactors = F,  check.names = FALSE)
+coexp.module = readRDS(file.coexp.module)
 
 # zscore input
-z.mat = fread(input4)
+z.mat = fread(file.z)
 z.mat = as.matrix(z.mat, rownames = TRUE)
 
 # Apply new PCO
@@ -34,8 +34,8 @@ source(paste0(params1, "ModifiedSigmaOEstimate.R"))
 
 
 
-gene_in_cluster = data.frame("gene" = names(gene_module$moduleLabels[gene_module$moduleLabels == module]), stringsAsFactors = F)
-gene_w_pos = merge(gene_in_cluster, gene.meta, by.x = 1, by.y = 1)
+gene_in_cluster = data.frame("gene" = names(coexp.module$moduleLabels[coexp.module$moduleLabels == module]), stringsAsFactors = F)
+gene_w_pos = merge(gene_in_cluster, gene.meta)
 gene_trans = gene_w_pos[gene_w_pos[, "chr"] != paste0("chr", chr), "gene"]
 
 
@@ -47,5 +47,5 @@ p.all = ModifiedPCOMerged(Z.mat=z.mat_trans,
                           Sigma=Sigma, SigmaO=SigmaO)
 
 
-saveRDS(p.all, file = output1)
+saveRDS(p.all, file = file.p)
 

@@ -1,22 +1,14 @@
 #rm(list = ls())
 
-input1 = snakemake@input[['file_ex_var_regressed']]
-input2 = snakemake@input[['file_genes_rm_info']]
-output1 = snakemake@output[['file_coexp_module']]
+file.ex.var.regressed = snakemake@input[['file_ex_var_regressed']]
+file.coexp.module = snakemake@output[['file_coexp_module']]
 minModuleSize = snakemake@params[['minModuleSize']]
 
 library(WGCNA)
 
 
-# Data preparation
-datExpr = readRDS(input1)
-rm_info = read.table(input2,
-                     header = TRUE, row.names = NULL,
-                     sep = "\t",
-                     stringsAsFactors = FALSE, check.names = FALSE)
-ind_remove = rm_info$ind_remove; names(ind_remove) = rm_info$gene
-datExpr = datExpr[, !ind_remove]
-
+# load ex_cov_regressed
+datExpr = readRDS(file.ex.var.regressed)
 
 # Run WGCNA
 ### Parameter specification ###
@@ -73,6 +65,5 @@ result = list(moduleColors = mergedColors,
               old_moduleColors = dynamicColors,
               old_moduleLabels = dynamicMods,
               old_MEs = MEs,
-              geneTree = geneTree,
-              ind_remove = ind_remove)
-saveRDS(result, file = output1)
+              geneTree = geneTree)
+saveRDS(result, file = file.coexp.module)

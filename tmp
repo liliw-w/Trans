@@ -1,0 +1,107 @@
+for i in $(seq 5 5 20)
+do
+wc -l ../FDR/signals.chr.module.perm${i}.txt
+done
+
+library(data.table)
+
+cross_map.Dat = fread("/project2/xuanyao/data/GTEx_V8/mappability/hg38_cross_mappability_strength_symmetric_mean_sorted.txt.gz", header = F)
+cross_map.rem_ind = cross_map.Dat$V3 > 1
+all_gene = unique(c(cross_map.Dat[, V1], cross_map.Dat[, V2]))
+rem_gene = unique(c(cross_map.Dat[cross_map.rem_ind, V1], cross_map.Dat[cross_map.rem_ind, V2]))
+
+N.all_gene = length()
+N.rem_gene = length(rem_gene)
+
+N.all_gene #26200
+N.rem_gene #25938
+N.all_gene - N.rem_gene #262
+
+cross_map.Dat.gene_name = fread("hg19_gencode19_75merExon_36merUTR_2mismatch_cross_mappability_symmetric_mean_gene_names.txt")
+cross_map.gene_name.rem_ind = cross_map.Dat.gene_name$V3 > 1
+length(unique(c(cross_map.Dat.gene_name[, gene1], cross_map.Dat.gene_name[, gene2])))
+length(unique(c(cross_map.Dat.gene_name[cross_map.gene_name.rem_ind, gene1], cross_map.Dat.gene_name[cross_map.gene_name.rem_ind, gene2])))
+#24119
+#23873
+#246
+
+cross_map.Dat.old = fread("cross_map_larger_than_1.txt.gz", header = F)
+rem_gene.old = unique(c(cross_map.Dat.old[, V1], cross_map.Dat.old[, V2]))
+
+length(rem_gene.old) #26005
+
+cross_map.Dat.DGN = readRDS("cross.mappable.genes.rds")
+use.DGN = names(cross_map.Dat.DGN[is.na(cross_map.Dat.DGN)])
+use.DGN.ens = ens[ens$V2 %in% use.DGN, V1]
+rem.DGN = names(cross_map.Dat.DGN[!is.na(cross_map.Dat.DGN)])
+rem.DGN.ens = ens[ens$V2 %in% rem.DGN, V1]
+
+
+tmp = fread("ensemble_to_gene_name.txt")
+
+ens = fread("ens.txt", header=F)
+write.table(ens[ens$V2 %in% use.DGN, V1], "use.DGN.ENS.txt")
+
+
+sum(use.DGN.ens %in% a)
+sum(rem.DGN.ens %in% a)
+
+sum(sapply(use.DGN.ens, function(x) strsplit(x, split=".", fixed=T)[[1]][1]) %in% rem_gene.old)
+sum(sapply(rem.DGN.ens, function(x) strsplit(x, split=".", fixed=T)[[1]][1]) %in% rem_gene.old)
+
+sum(sapply(use.DGN.ens, function(x) strsplit(x, split=".", fixed=T)[[1]][1]) %in% sapply(a, function(x) strsplit(x, split=".", fixed=T)[[1]][1]))
+
+rem_gene.old
+
+
+gtex.all_gene = fread("gencode.v26.GRCh38.genes_annotation_table.txt")
+data.gene = fread("/project2/xuanyao/data/GTEx_V8/expression/GTEx_Analysis_v8_eQTL_expression_matrices/Whole_Blood.v8.normalized_expression.bed.gz")
+data.gene = merge(data.gene, gtex.all_gene, by.x = "gene_id", by.y = "Geneid")
+
+sort(table(gtex.all_gene[gtex.all_gene$Geneid %in% data.gene$gene_id, Class]))
+
+
+
+low_map.Dat = fread("/project2/xuanyao/data/GTEx_V8/mappability/hg38_gene_mappability.txt.gz", header = F)
+low_map.rem = low_map.Dat[is.na(low_map.Dat$V2) | low_map.Dat$V2< 0.9, V1]
+#sum(low_map.Dat[!is.na(low_map.Dat$V2), V2] < 0.9)
+#sum(is.na(low_map.Dat$V2) | low_map.Dat$V2< 0.9)
+
+pc = data.gene[data.gene$Class!="protein_coding" & data.gene$Class!="lincRNA", gene_id] #data.gene$Class!="protein_coding" & data.gene$Class!="lincRNA"
+length(pc)
+sum(pc %in% all_gene)
+sum(sapply(pc, function(x) strsplit(x, split=".", fixed=T)[[1]][1]) %in% sapply(all_gene, function(x) strsplit(x, split=".", fixed=T)[[1]][1]))
+
+length(pc)
+sum(pc %in% low_map.rem)
+
+rem.all = pc %in% all_gene | pc %in% low_map.rem
+sum(rem.all)
+length(pc)-sum(rem.all)
+
+length(grep(x=data.gene[data.gene$Class!="protein_coding" & data.gene$Class!="lincRNA", Class][!rem.all], pattern="pseudogene"))
+
+
+###################################
+######### Filter genes ############
+###################################
+
+library(data.table)
+a = fread("gencode.v19.annotation.table.txt", header=T)
+low.mapp = fread("hg19_gencode19_50merExon_36merUTR_2mismatch_gene_mappability.txt.gz")
+cross.map = fread("hg19_gencode19_75merExon_36merUTR_2mismatch_cross_mappability_symmetric_mean.txt.gz")
+
+gnames.meta = gnames[gnames %in% a$GeneSymbol]
+
+rem.pseu = !(a[match(gnames.meta, a$GeneSymbol), Class] %in% c("protein_coding", "lincRNA"))
+rem.low.mapp = gnames.meta %in% a[match(low.mapp[low.mapp$V2 < 0.9, V1], a$Geneid), GeneSymbol]
+rem.cross.map = gnames.meta %in% a[match(unique(c(cross.map$V1, cross.map$V2)), a$Geneid), GeneSymbol]
+rem.auto = !(a[match(gnames.meta, a$GeneSymbol), Chromosome] %in% paste0("chr", 1:22))
+
+rem.N = sum(rem.auto | rem.pseu | rem.low.mapp | rem.cross.map)
+
+cat("All genes:", length(gnames), '\n',
+"With meta:", length(gnames.meta), '\n',
+"Final use:", length(gnames.meta) - rem.N, '\n',
+"All removed:", rem.N+length(gnames)-length(gnames.meta), '\n',
+"including:", c(length(gnames)-length(gnames.meta), sum(rem.auto), sum(rem.pseu), sum(rem.low.mapp), sum(rem.cross.map)), '\n')

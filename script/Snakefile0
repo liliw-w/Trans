@@ -6,29 +6,21 @@ rule all:
 
 rule covariates:
   input:
-    file_covariates=config['dir_data']+config['file_covariates'],
-    file_ex=config['dir_data']+config['file_ex']
+    file_gene_annotation=config['dir_mappability']+config['file_gene_annotation'],
+    file_mappability=config['dir_mappability']+config['file_mappability'],
+    file_cross_mappability=config['dir_mappability']+config['file_cross_mappability'],
+    file_covariates=config['dir_expression']+config['file_covariates'],
+    file_ex=config['dir_expression']+config['file_ex']
   output:
+    file_gene_meta='result/'+config['file_gene_meta']
     file_ex_var_regressed='result/'+config['file_ex_var_regressed']
   script:
     'script/'+config['script_covariates']
 
-rule remove_gene:
-  input:
-    file_ex_var_regressed='result/'+config['file_ex_var_regressed'],
-    file_gene_meta=config['dir_data']+config['file_gene_meta'],
-    file_pseudogenes=config['dir_data']+config['file_pseudogenes'],
-    file_mappability=config['dir_data']+config['file_mappability'],
-    file_cross_mappable_genes=config['dir_data']+config['file_cross_mappable_genes']
-  output:
-    file_genes_rm_info='result/'+config['file_genes_rm_info']
-  script:
-    'script/'+config['script_remove_gene']
 
 rule coexp_module:
   input:
-    file_ex_var_regressed='result/'+config['file_ex_var_regressed'],
-    file_genes_rm_info='result/'+config['file_genes_rm_info']
+    file_ex_var_regressed='result/'+config['file_ex_var_regressed']
   output:
     file_coexp_module='result/'+config['file_coexp_module']
   params: minModuleSize=config['minModuleSize']

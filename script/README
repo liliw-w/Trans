@@ -1,36 +1,24 @@
-# check TCGA, histogram of p.null
-# plot log-pvalue range of signals; distribution of signals on chr? plot these signals v.s. -logp, annotated by nearest genes?
-# Why z.tensor different in diff runs?
-# GTEx:
-  #sample name: don't extract from fam file but from exp bed file, as exp and geno have diff samples. change code. sanple name is in ex.rdata with ex and gnames in the data file. no need to generate sanple name in pipeline. change prep.bed.R, no need to read sample name, which is automatically loaded by loading ex.rdata.
-  #ex.rdata: ex, gnames, snames. make the latter two as col and row names of ex. and modify relavant code.
-  #covariates?
-  #tensorqtl extract samples from geno file?
-
-
-To-do's:
-# check files file_covariates & file_gene_meta strictly satisfy the file requirements.
-# need to take another look at low.quality.genes.R. 1. gene.name may have no '|' (doesn't matter); 2. maybe no genes on chrX or Y (doesn't matter).
-
-
 Input files:
 # All text files should be \t separated.
-/project2/xuanyao/llw/TCGA:
-data/
-  plink_prefix_path=config['dir_data']+config['geno_prefix']+'{chr}'+config['geno_suffix']; snp meta file (bim) shoud have "chr22", "chr:pos" as the first two cols.
-  geno_prefix: chr; geno_suffix: _QCed
-  file_covariates: covariates.txt #\t separated; row: covariates; column: samples; with arbitrary rownames; with header as sample names.
-  file_gene_meta: gene.meta.txt #\t separated; should include all genes!!!; four columns; with header: gene (ex's col name), chr (chr22), start, end; no rowname.
-  file_ex: ex.rdata # include two objects: ex and gnames; make sure genes not in file_gene_meta are deleted from ex and gnames!!!
-  file_pseudogenes: pseudogenes.txt
-  file_mappability: mappability.txt
-  file_cross_mappable_genes: cross.mappable.genes.rds
 
+dir_mappability:
+  file_gene_annotation: headers: Geneid	GeneSymbol	Chromosome ((chr22))	Start	End	Class	Strand	Length
+  file_mappability
+  file_cross_mappability
+
+dir_expression:
+  file_ex: expression matrix with sample names and gene sysmbols/ids as row and col names.
+  file_covariates: covariates.txt #\t separated; row: covariates; column: samples; with arbitrary rownames; with header as sample names.
+
+
+dir_geno:
+  plink_prefix_path=config['dir_geno']+config['geno_prefix']+'{chr}'+config['geno_suffix']; snp meta file (bim) shoud have "chr22", "chr:pos" as the first two cols.
+  geno_prefix: chr
+  geno_suffix: _QCed
 
 /scratch/midway2/liliw1/TCGA/:
 script/
   regress.out.covariates.R
-  low.quality.genes.R
   coexp.module.R
   prep.bed.R
   z.sh
@@ -40,9 +28,10 @@ script/
   post.sh
   signals.uniq.R
   plot.R
-  q.chr.R
-  q.chr.module.R
   near.gene.R
+  prep.geno.sh
+  prep.exp.sh
+  prep.exp.R
   davies.R; liu.R; liumod.R; ModifiedSigmaOEstimate.R; ModifiedPCOMerged.R; qfc.cpp; qfc.o; qfc.so
 logs/
 postanalysis/

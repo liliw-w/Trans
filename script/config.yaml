@@ -1,5 +1,7 @@
+dir_mappability:
+dir_expression: ??? #/project2/xuanyao/llw/GTEx_v8/Whole_Blood/data
+dir_geno: ??? #/project2/xuanyao/data/GTEx_V8/genotype
 Nmodule: ???
-dir_data: ???
 Nperm: 5
 
 fdr_thre: ???
@@ -12,19 +14,18 @@ fdr_level: 0.05
 
 geno_prefix: chr
 geno_suffix: _QCed
+
 file_covariates: covariates.txt
-file_ex: ex.rdata
-file_gene_meta: gene.meta.txt
-file_pseudogenes: pseudogenes.txt
-file_mappability: mappability.txt
-file_cross_mappable_genes: cross.mappable.genes.rds
+file_ex: ex.rds
+file_gene_annotation: gencode.v19.annotation.table.txt
+file_mappability: hg19_gencode19_50merExon_36merUTR_2mismatch_gene_mappability.txt.gz
+file_cross_mappability: hg19_gencode19_75merExon_36merUTR_2mismatch_cross_mappability_symmetric_mean.txt.gz
 
 file_ex_var_regressed: ex.var.regressed.rds
-file_genes_rm_info: genes.rm.info.txt
+file_gene_meta: gene.meta.txt
 file_coexp_module: coexp.module.rds
-file_sample_name: sample.name.txt
+
 script_covariates: regress.out.covariates.R
-script_remove_gene: low.quality.genes.R
 script_coexp_module: coexp.module.R
 script_prep_bed: prep.bed.R
 script_z: z.sh
