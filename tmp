@@ -1,23 +1,50 @@
 library(data.table)
 
+zmat = readRDS("eQTLGen.z_mat.rds")
+meta = fread("meta.txt.gz", header = TRUE)
+
+snp = unique(meta$SNP)
+snpchr = meta[match(snp, meta$SNP), SNPChr]; names(snpchr) = snp
+
+gene = unique(meta$Gene)
+genechr = meta[match(gene, meta$Gene), GeneChr]; names(genechr) = gene
+
+
+zmat[zmat$SNP=="rs17111684", "ENSG00000196656"]
+
+for(chr in 1:22){
+  tmp.snp = snp[snpchr == chr]
+  tmp.gene = gene[genechr != as.character(chr)]
+  res = cbind(data.frame("snp"=tmp.snp), zmat[match(tmp.snp, zmat$SNP), ..tmp.gene])
+  
+  fwrite(res, paste0("/scratch/midway2/liliw1/eQTLGen/z.chr", chr, ".txt.gz"),
+       sep = "\t", row.names = FALSE, col.names = TRUE)
+  cat(chr)
+}
+
+anno = fread("/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt", header = TRUE)
+anno.gene = sapply(anno$Geneid, function(x) strsplit(x, ".", , fixed = TRUE)[[1]][1])
+sum(gene %in% anno.gene)
+
+
 dataeQTLGen = fread("eQTLGen.txt.gz", header = TRUE)
-z.mat = dcast(dataeQTLGen, SNP~Gene, value.var = "Zscore")
+zmat = dcast(dataeQTLGen, SNP~Gene, value.var = "Zscore")
 
 dim(dataeQTLGen)
-dim(z.mat)
-z.mat[1:5, 1:7]
+dim(zmat)
+zmat[1:5, 1:7]
 
 str(unique(dataeQTLGen$SNP))
 str(unique(dataeQTLGen$Gene))
 
-ind.use = apply(z.mat, 1, function(x)  !any(is.na(x) ))
+ind.use = apply(zmat, 1, function(x)  !any(is.na(x) ))
 str(ind.use)
 sum(ind.use)
 
-saveRDS(z.mat, "eQTLGen.z_mat.rds")
+saveRDS(zmat, "eQTLGen.z_mat.rds")
 
-fwrite(z.mat[, "SNP"], file = "eQTLGen.snp.txt", sep = "\t", col.names = FALSE)
-fwrite(list(colnames(z.mat)[-1]), file = "eQTLGen.gene.txt", sep = "\t", col.names = FALSE)
+fwrite(zmat[, "SNP"], file = "eQTLGen.snp.txt", sep = "\t", col.names = FALSE)
+fwrite(list(colnames(zmat)[-1]), file = "eQTLGen.gene.txt", sep = "\t", col.names = FALSE)
 
 sum(apply(a, 2, function(x)  any(x == Inf) ))
 
