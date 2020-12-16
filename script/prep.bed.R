@@ -15,6 +15,7 @@ str(file.expression)
 print(file.expression)
 print(file.expression[[1]])
 
+require(data.table)
 options(stringsAsFactors = FALSE)
 
 if(!data.type %in% c("obs", "null")){stop("Please specify a valid data.type: obs, null.\n")}
@@ -24,7 +25,7 @@ ex = readRDS(file.ex); sample.name = rownames(ex)
 if(data.type == "null"){
   perm = sample(nrow(ex))
   ex = ex[perm, ]; rownames(ex) = sample.name
-  
+
   cov_all = read.table(file.covariates,
                        sep = "\t", header = TRUE, row.names = 1,
                        stringsAsFactors = FALSE, check.names = FALSE)
@@ -33,36 +34,34 @@ if(data.type == "null"){
 }
 
 # gene position
-gene.meta = as.matrix(read.table(file.gene.meta,
-                                 sep ="\t", header=TRUE, row.names = NULL,
-                                 stringsAsFactors=F,  check.names = FALSE))
-rownames(gene.meta) = gene.meta[, "gene"]
+gene.meta = fread("gene.meta.txt", sep ="\t", header=TRUE)
+gene.meta = gene.meta[!duplicated(gene.meta$gene), ]
 gene.meta = gene.meta[, c("chr", "start", "end", "gene")]
-gene.meta[, "chr"] = paste0(gene.meta[, "chr"], "NA")
+gene.meta$chr = paste0(gene.meta$chr, "NA")
 colnames(gene.meta)[1] = "#chr"
+rownames(gene.meta) = gene.meta$gene
 
 # module
 coexp.module = readRDS(file.coexp.module)
 Nmodule = max(coexp.module$moduleLabels)
 for(k in 1:Nmodule){
   gene.in.module = names(coexp.module$moduleLabels)[coexp.module$moduleLabels==k]
-  res = cbind(gene.meta[gene.in.module, ], t(ex[, gene.in.module]))
-  
-  write.table(res, gzfile(file.expression[[k]]),
-              sep = "\t", row.name = F, quote = F)
-  
+  res = cbind(gene.meta[match(gene.in.module, gene.meta$gene), ], t(ex[, gene.in.module]))
+
+  fwrite(res, file.expression[[k]], sep = "\t", row.names = FALSE, col.names = TRUE)
+
   nGene = nrow(res)
   nBatch = nGene %/% 100; nLeft = nGene %% 100
   if(nBatch > 0){
     for(i in 1:nBatch){
-      write.table(res[(i*100-99):(i*100), ],
-                  gzfile(paste0(file.expression[[k]], ".", i,".bed.gz")),
-                  sep = "\t", row.name = F, col.names = T, quote = F)
+      fwrite(res[(i*100-99):(i*100), ],
+             paste0(file.expression[[k]], ".", i,".bed.gz"),
+             sep = "\t", row.names = FALSE, col.names = TRUE)
     }
     if(nLeft != 0){
-      write.table(res[(nBatch*100+1):nrow(res), ],
-                  gzfile(paste0(file.expression[[k]], ".", (nBatch+1),".bed.gz")),
-                  sep = "\t", row.name = F, col.names = T, quote = F)
+      fwrite(res[(nBatch*100+1):nrow(res), ],
+             paste0(file.expression[[k]], ".", (nBatch+1),".bed.gz"),
+             sep = "\t", row.names = FALSE, col.names = TRUE)
     }
   }
 }

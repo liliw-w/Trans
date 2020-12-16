@@ -291,7 +291,7 @@ rm(list = ls())
 require(data.table)
 
 file.signal = "/scratch/midway2/liliw1/eQTLGen/FDR/signals.qvalue.txt"
-file.uniq = "/scratch/midway2/liliw1/eQTLGen/post/LD.prun.in.txt"
+file.uniq = "/scratch/midway2/liliw1/eQTLGen/postanalysis/LD.prun.in.txt"
 file.meta = "/project2/xuanyao/data/eQTLGen/meta.snp.txt.gz"
 
 meta.snp = fread(file.meta, header = TRUE)
@@ -305,3 +305,34 @@ snp = sort(unique(sapply(strsplit(module.snp, ":"), function(x) paste(x[-1], col
 snp = sort(apply(meta.snp[match(snp, meta.snp$SNP), 2:3], 1, function(x) paste0(x, collapse = ":")))
 
 write.table(snp, file = file.uniq, quote = FALSE, row.names = FALSE, col.names = FALSE)
+
+dir_geno=/project2/xuanyao/data/GTEx_v8/genotype/
+geno_prefix=chr
+geno_suffix=_QCed
+sig_uniq=postanalysis/LD.prun.in.txt
+sig_indp=postanalysis/indep.signals.txt
+
+module load plink
+module load R/3.6.1
+
+for chr in {1..22}
+do
+plink --bfile $dir_geno$geno_prefix$chr$geno_suffix \
+--extract $sig_uniq \
+--indep-pairwise 50 5 0.2 \
+--out indep.eigene.eqtls.$chr
+echo chr$chr
+done
+
+cat indep.eigene.eqtls.*.prune.in > in.txt
+cat indep.eigene.eqtls.*.prune.out > out.txt
+
+grep -vFf out.txt $sig_uniq > $sig_indp
+
+rm indep.eigene.eqtls* in.txt out.txt
+
+echo $dir_geno
+echo "(module, snp):"$(wc $signals_file -l)
+echo "unique snps:"$(wc $sig_uniq -l)
+echo "independent snps:"$(wc $sig_indp -l)
+
