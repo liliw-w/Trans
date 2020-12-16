@@ -34,7 +34,7 @@ if(data.type == "null"){
 }
 
 # gene position
-gene.meta = fread("gene.meta.txt", sep ="\t", header=TRUE)
+gene.meta = fread(file.gene.meta, sep ="\t", header=TRUE)
 gene.meta = gene.meta[!duplicated(gene.meta$gene), ]
 gene.meta = gene.meta[, c("chr", "start", "end", "gene")]
 gene.meta$chr = paste0(gene.meta$chr, "NA")
