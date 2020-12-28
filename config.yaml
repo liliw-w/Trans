@@ -1,5 +1,5 @@
-dir_mappability: /project2/xuanyao/data/GTEx_v8/mappability/
 dir_expression: /scratch/midway2/liliw1/GTEx_v8/Whole_Blood/data/
+dir_mappability: /project2/xuanyao/data/GTEx_v8/mappability/
 dir_geno: /project2/xuanyao/data/GTEx_v8/genotype/
 Nmodule: ???
 Nperm: 10

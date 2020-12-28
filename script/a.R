@@ -66,21 +66,18 @@ tmp = as.character(q1[order(q1$p), 'snp'])[2:4]
 
 library(ggplot2)
 library(gridExtra)
+library(data.table)
 
-file.p = as.character(outer(1:22, 1:22, FUN = function(x, y) paste0("p/p.module", x, ".chr", y, ".rds")))
+Nmodule = 19; plot.name = "plots/DGN_new.p.png"
+
+file.p = as.character(outer(1:Nmodule, 1:22, FUN = function(x, y) paste0("p/p.module", x, ".chr", y, ".rds")))
 p.obs = rbindlist(lapply(file.p, function(x) 
 {tmp_y=readRDS(x);
 as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)}))
 
-fig1 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(x=-log10(V2))) + geom_histogram(binwidth=0.5) + coord_cartesian(xlim=c(0,20), ylim=c(0, 250))
+p.obs$V2[p.obs$V2==0] = 1e-20
+fig1 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(x=-log10(V2))) + geom_histogram(binwidth=0.1) + coord_cartesian(xlim=c(0,20), ylim=c(0, 250))
 fig2 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(y=-log10(V2))) + geom_boxplot()+ coord_cartesian(ylim=c(0,20))
 fig.all = list(fig1, fig2)
-ggsave(paste0("GTEx.Whole_Blood.p.png"), marrangeGrob(fig.all, nrow=1, ncol=2, top = NULL), width = 10, height = 5)
-sum(p.obs$V2<1e-6)
-
-p.obs$V2[p.obs$V2==1e-18] = 1e-20
-fig1 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(x=-log10(V2))) + geom_histogram(binwidth=0.5) + coord_cartesian(xlim=c(0,20), ylim=c(0, 250))
-fig2 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(y=-log10(V2))) + geom_boxplot()+ coord_cartesian(ylim=c(0,20))
-fig.all = list(fig1, fig2)
-ggsave(paste0("DGN.p.png"), marrangeGrob(fig.all, nrow=1, ncol=2, top = NULL), width = 10, height = 5)
+ggsave(plot.name, marrangeGrob(fig.all, nrow=1, ncol=2, top = NULL), width = 10, height = 5)
 sum(p.obs$V2<1e-6)
