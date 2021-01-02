@@ -306,7 +306,7 @@ snp = sort(apply(meta.snp[match(snp, meta.snp$SNP), 2:3], 1, function(x) paste0(
 
 write.table(snp, file = file.uniq, quote = FALSE, row.names = FALSE, col.names = FALSE)
 
-dir_geno=/project2/xuanyao/data/GTEx_v8/genotype/
+dir_geno=/project2/xuanyao/llw/DGN/data/
 geno_prefix=chr
 geno_suffix=_QCed
 sig_uniq=postanalysis/LD.prun.in.txt

@@ -75,8 +75,10 @@ p.obs = rbindlist(lapply(file.p, function(x)
 {tmp_y=readRDS(x);
 as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)}))
 
+fsort(p.obs$V2)[1:50]
+
 p.obs$V2[p.obs$V2==0] = 1e-20
-fig1 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(x=-log10(V2))) + geom_histogram(binwidth=0.1) + coord_cartesian(xlim=c(0,20), ylim=c(0, 250))
+fig1 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(x=-log10(V2))) + geom_histogram(binwidth=0.5) + coord_cartesian(xlim=c(0,20), ylim=c(0, 250))
 fig2 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(y=-log10(V2))) + geom_boxplot()+ coord_cartesian(ylim=c(0,20))
 fig.all = list(fig1, fig2)
 ggsave(plot.name, marrangeGrob(fig.all, nrow=1, ncol=2, top = NULL), width = 10, height = 5)
