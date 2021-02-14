@@ -44,7 +44,7 @@ gene_trans = gene_w_pos[gene_w_pos[, "chr"] != paste0("chr", chr), "gene"]
 
 
 Sigma = cor(datExpr[, gene_trans])
-SigmaO = ModifiedSigmaOEstimate(Sigma) 
+SigmaO = ModifiedSigmaOEstimate(Sigma)
 
 tmp = c("3:56815721", "3:100001720")
 z.mat_trans = zmat[tmp, gene_trans]
@@ -68,12 +68,20 @@ library(ggplot2)
 library(gridExtra)
 library(data.table)
 
-Nmodule = 19; plot.name = "plots/DGN_new.p.png"
+
+Nmodule = 32; plot.name = "plots/Muscle_Skeletal_WGCNA.p.png"
 
 file.p = as.character(outer(1:Nmodule, 1:22, FUN = function(x, y) paste0("p/p.module", x, ".chr", y, ".rds")))
-p.obs = rbindlist(lapply(file.p, function(x) 
+p.obs = rbindlist(lapply(file.p, function(x)
 {tmp_y=readRDS(x);
-as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)}))
+tmp_y = tmp_y[tmp_y<1e-6];
+if(length(tmp_y > 0)){as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)}
+}))
+
+file.q = as.character(outer(1:Nmodule, 1:22, FUN = function(x, y) paste0("FDR/q.module", x, ".chr", y, ".perm3.rds")))
+p.obs = unlist(rbind(lapply(file.q, function(x)
+{tmp_y=readRDS(x); setNames(tmp_y$p, tmp_y$snp)})))
+p.obs = data.frame("V1" = names(p.obs), "V2" = p.obs, stringsAsFactors = FALSE)
 
 fsort(p.obs$V2)[1:50]
 

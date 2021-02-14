@@ -13,7 +13,6 @@ datExpr = readRDS(file.ex.var.regressed)
 # Run WGCNA
 ### Parameter specification ###
 minModuleSize = minModuleSize
-MEDissThres = 0.15
 if_plot_adjacency_mat_parameter_selection = F
 if_plot_only_tree = F
 if_plot_color_and_tree = F
@@ -48,12 +47,14 @@ MEList = moduleEigengenes(datExpr, colors = dynamicColors)
 MEs = MEList$eigengenes
 
 # Call an automatic merging function
-merge = mergeCloseModules(datExpr, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+merge = mergeCloseModules(datExpr, dynamicColors, verbose = 3)
 mergedColors = merge$colors
 mergedMEs = merge$newMEs
 
 moduleLabels = match(mergedColors, c("grey", standardColors(100)))-1
 names(moduleLabels) = colnames(datExpr)
+tmp = factor(moduleLabels, c(0, as.numeric(names(sort(table(moduleLabels)[-1], decreasing=T)))), 1:length(unique(moduleLabels))-1 )
+moduleLabels = as.numeric(levels(tmp))[tmp]; names(moduleLabels) = names(tmp)
 
 print(table(moduleLabels))
 cat("Number of modules:", max(moduleLabels), "\n")
