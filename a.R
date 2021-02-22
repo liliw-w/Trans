@@ -69,7 +69,7 @@ library(gridExtra)
 library(data.table)
 
 
-Nmodule = 32; plot.name = "plots/Muscle_Skeletal_WGCNA.p.png"
+Nmodule = 18; plot.name = "plots/Muscle_Skeletal_PCO.lambda.01.p.png"
 
 file.p = as.character(outer(1:Nmodule, 1:22, FUN = function(x, y) paste0("p/p.module", x, ".chr", y, ".rds")))
 p.obs = rbindlist(lapply(file.p, function(x)
@@ -83,7 +83,12 @@ p.obs = unlist(rbind(lapply(file.q, function(x)
 {tmp_y=readRDS(x); setNames(tmp_y$p, tmp_y$snp)})))
 p.obs = data.frame("V1" = names(p.obs), "V2" = p.obs, stringsAsFactors = FALSE)
 
+p.obs2 = readRDS('~/xuanyao_llw/GTEx_v8/Muscle_Skeletal/FDR/q.chr.module.perm1.rds')
+fsort(p.obs2$p)[1:50]
+
+
 fsort(p.obs$V2)[1:50]
+p.obs[order(p.obs$V2), ][1:50, ]
 
 p.obs$V2[p.obs$V2==0] = 1e-20
 fig1 = ggplot(p.obs[p.obs$V2<1e-6, ], aes(x=-log10(V2))) + geom_histogram(binwidth=0.5) + coord_cartesian(xlim=c(0,20), ylim=c(0, 250))
