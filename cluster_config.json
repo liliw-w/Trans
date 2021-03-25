@@ -3,19 +3,19 @@
     {
       "job-name": "{rule}",
       "partition": "broadwl",
-      "time": "2:00:00",
+      "time": "00:30:00",
       "nodes": "1",
-      "mem": "5G",
+      "mem": "1G",
       "output": "logs/{rule}.log",
       "error": "logs/{rule}.log",
       "email-type": "FAIL",
       "email": "liliw1@uchicago.edu",
-      "ntasks-per-node": "1"        
+      "ntasks-per-node": "1"
     },
   "z" :
     {
       "job-name": "{rule}.{wildcards.module}.{wildcards.chr}",
-      "time": "12:00:00",
+      "time": "4:00:00",
       "mem": "40G",
       "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
       "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
@@ -23,7 +23,7 @@
   "z_null" :
     {
       "job-name": "zn.{wildcards.module}.{wildcards.chr}.{wildcards.perm}",
-      "time": "12:00:00",
+      "time": "4:00:00",
       "mem": "40G",
       "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
       "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
@@ -31,7 +31,7 @@
   "p" :
     {
       "job-name": "{rule}.{wildcards.module}.{wildcards.chr}",
-      "time": "12:00:00",
+      "time": "4:00:00",
       "mem": "20G",
       "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
       "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
@@ -39,15 +39,22 @@
   "p_null" :
     {
       "job-name": "pn.{wildcards.module}.{wildcards.chr}.{wildcards.perm}",
-      "time": "12:00:00",
+      "time": "4:00:00",
       "mem": "20G",
       "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
       "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
+    },
+  "FDR_chr" :
+    {
+      "job-name": "FDR.chr.{wildcards.perm}",
+      "time": "3:00:00",
+      "mem": "10G"
     },
   "FDR_chr_module" :
     {
       "job-name": "FDR.chr.module.{wildcards.perm}",
       "time": "5:00:00",
-      "mem": "50G"
+      "partition": "bigmem2",
+      "mem": "200G"
     }
 }

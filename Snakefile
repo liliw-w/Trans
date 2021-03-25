@@ -6,6 +6,7 @@ PERM=list(range(1, config['Nperm']+1))
 
 rule all:
   input:
+    #expand('p/p.module{module}.chr{chr}.rds', module=MODULE, chr=CHRS)
     'postanalysis/indep.signals.perm'+str(config['Nperm'])+'.txt',
     'postanalysis/indep.signals.chr.perm'+str(config['Nperm'])+'.txt',
     'postanalysis/indep.signals.chr.module.perm'+str(config['Nperm'])+'.txt'
