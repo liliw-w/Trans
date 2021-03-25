@@ -1,6 +1,6 @@
 require(mvtnorm)
 require(ggplot2)
-library(gridExtra)
+require(gridExtra)
 
 qqplot.hist <- function(input, title){
   observed <- sort(input)
@@ -45,6 +45,23 @@ res.null = NULL
 # z null
 Z.null = rmvnorm(N.sample, rep(0, K), Sigma)
 
+
+# PCO
+method.tmp = "PCO"
+p.null = as.numeric(ModifiedPCOMerged(Z.mat=Z.null, Sigma=Sigma, SigmaO=SigmaO))
+
+p.null.all$'p.null.PCO' = p.null
+res.null = rbind(res.null, c('alpha=0.05', method.tmp, sum(p.null<0.05)/N.sample))
+res.null = rbind(res.null, c('alpha=1e-4', method.tmp, sum(p.null<10^(-4))/N.sample))
+res.null = rbind(res.null, c('alpha=1e-5', method.tmp, sum(p.null<10^(-5))/N.sample))
+
+cat("PCO done.")
+
+print(res.null)
+
+save(res.null, p.null.all, file = "simulation.null.lambda1.RData")
+
+
 # PC1
 method.tmp = "PC1"
 PC1 = Z.null %*% eigen.vec[, 1]
@@ -69,18 +86,9 @@ res.null = rbind(res.null, c('alpha=1e-5', method.tmp, sum(p.null<10^(-5))/N.sam
 
 cat("minp done.")
 
+print(res.null)
 
-# PCO
-method.tmp = "PCO"
-p.null = as.numeric(ModifiedPCOMerged(Z.mat=Z.null, Sigma=Sigma, SigmaO=SigmaO))
-
-p.null.all$'p.null.PCO' = p.null
-res.null = rbind(res.null, c('alpha=0.05', method.tmp, sum(p.null<0.05)/N.sample))
-res.null = rbind(res.null, c('alpha=1e-4', method.tmp, sum(p.null<10^(-4))/N.sample))
-res.null = rbind(res.null, c('alpha=1e-5', method.tmp, sum(p.null<10^(-5))/N.sample))
-
-cat("PCO done.")
-
+save(res.null, p.null.all, file = "simulation.null.lambda1.RData")
 
 # plot p.null to see if it's well calibrated, i.e. uniformly distributed
 fig1 = qqplot.hist(p.null.all$'p.null.PC1', 'p.null.PC1')
@@ -91,233 +99,6 @@ ggsave('qqplot.null.png',
        marrangeGrob(fig.all, ncol=length(fig.all)/2, nrow=2, top = NULL),
        width = length(fig.all), height = 4)
 
-
-print(res.null)
-save(res.null, p.null.all, file = "simulation.null.RData")
-
-
-# Z alternative
-
-require(mvtnorm)
-
-params1 = './script/'
-source(paste0(params1, "ModifiedPCOMerged.R"))
-source(paste0(params1, "liu.R"))
-source(paste0(params1, "liumod.R"))
-source(paste0(params1, "davies.R"))
-dyn.load(paste0(params1, "qfc.so"))
-source(paste0(params1, "ModifiedSigmaOEstimate.R"))
-
-N.sample = 10^4; N.sim = 10^4
-thre = 0.05/(50*1000000)
-
-Sigma = as.matrix(readRDS('Sigma.DGN.module13_chr3.100.rds'))
-SigmaO = ModifiedSigmaOEstimate(Sigma)
-K = dim(Sigma)[1]
-eigen.res = eigen(Sigma)
-lambdas = eigen.res$values
-eigen.vec = eigen.res$vectors
-Sigma.trunc.inv = eigen.vec[, which(lambdas>1)] %*% diag(1/lambdas[lambdas>1]) %*% t(eigen.vec[, which(lambdas>1)])
-
-# various causal gene percentage under fixed total variance
-{
-  N = 500; var.b.fix = 0.2
-  caus.seq = c(1, 10, 30, 50, 70, 100)
-  models = paste0("caus.fix=", caus.seq)
-
-  res.alt = NULL
-  for(i in 1:N.sim){
-    B = matrix(rep(NA, K*length(models)), ncol = length(models),
-               dimnames = list(NULL, models))
-    B[, models] = sapply(caus.seq, function(x) as.matrix(c(rnorm(x, sd = sqrt(var.b.fix/x)), rep(0, K-x))) ) * sqrt(N)
-
-    for(model in models){
-      Z.alt = rmvnorm(N.sample, B[, model], Sigma)
-
-      # Oracle
-      method.tmp = "Oracle"
-      T.oracle = as.numeric(Z.alt %*% Sigma.trunc.inv %*% B[, model])
-      p.alt.Oracle = 1-pchisq((T.oracle/as.numeric(sqrt(t(B)[model, ] %*% Sigma.trunc.inv %*% B[, model])))^2, 1)
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.Oracle<thre)/N.sample))
-
-      # PC1
-      method.tmp = "PC1"
-      PC1 = Z.alt %*% eigen.vec[, 1]
-      p.alt.PC1 = as.numeric(2*pnorm(-abs(PC1/sqrt(lambdas[1]))))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PC1<thre)/N.sample))
-
-      # univariate minp
-      method.tmp = "minp"
-      p.alt.minp = apply(Z.alt, 1, function(x) min(1-pchisq(x^2, 1))*length(x) )
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.minp<thre)/N.sample))
-
-      # PCO
-      method.tmp = "PCO"
-      p.alt.PCO = as.numeric(ModifiedPCOMerged(Z.mat=Z.alt, Sigma=Sigma, SigmaO=SigmaO))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PCO<thre)/N.sample))
-
-    }
-    cat("Simulation: ", i, "\n")
-    if(i %% 20 == 0){
-      colnames(res.alt) = c("model", "method", "power")
-      saveRDS(res.alt, "simulation.alt.caus_fix.rds")}
-  }
-
-}
-
-
-# various causal gene percentage
-{
-  N = 500; var.b = 0.02
-  caus.seq = c(1, 10, 30, 50, 70, 100)
-  models = paste0("caus=", caus.seq)
-
-  res.alt = NULL
-  for(i in 1:N.sim){
-    B = matrix(rep(NA, K*length(models)), ncol = length(models),
-               dimnames = list(NULL, models))
-    B[, models] = sapply(caus.seq, function(x) as.matrix(c(rnorm(x, sd = sqrt(var.b)), rep(0, K-x))) ) * sqrt(N)
-
-    for(model in models){
-      Z.alt = rmvnorm(N.sample, B[, model], Sigma)
-
-      # Oracle
-      method.tmp = "Oracle"
-      T.oracle = as.numeric(Z.alt %*% Sigma.trunc.inv %*% B[, model])
-      p.alt.Oracle = 1-pchisq((T.oracle/as.numeric(sqrt(t(B)[model, ] %*% Sigma.trunc.inv %*% B[, model])))^2, 1)
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.Oracle<thre)/N.sample))
-
-      # PC1
-      method.tmp = "PC1"
-      PC1 = Z.alt %*% eigen.vec[, 1]
-      p.alt.PC1 = as.numeric(2*pnorm(-abs(PC1/sqrt(lambdas[1]))))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PC1<thre)/N.sample))
-
-      # univariate minp
-      method.tmp = "minp"
-      p.alt.minp = apply(Z.alt, 1, function(x) min(1-pchisq(x^2, 1))*length(x) )
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.minp<thre)/N.sample))
-
-      # PCO
-      method.tmp = "PCO"
-      p.alt.PCO = as.numeric(ModifiedPCOMerged(Z.mat=Z.alt, Sigma=Sigma, SigmaO=SigmaO))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PCO<thre)/N.sample))
-
-    }
-    cat("Simulation: ", i, "\n")
-    if(i %% 20 == 0){
-      colnames(res.alt) = c("model", "method", "power")
-      saveRDS(res.alt, "simulation.alt.caus.rds")}
-  }
-}
-
-
-# various sample size N
-{
-  # Different true effects
-  var.b = 0.01
-  N.seq = c(200, 400, 600, 800, 1000)
-  models = paste0("N=", N.seq)
-  #c("u1", "uPCO", "uK", paste0("N=", N.seq), "100%", "70%", "30%")
-
-
-  res.alt = NULL
-  for(i in 1:N.sim){
-    B = matrix(rep(NA, K*length(models)), ncol = length(models),
-               dimnames = list(NULL, models))
-    beta.n = as.matrix(rnorm(K, sd = sqrt(var.b)))
-    B[, models] = beta.n %*% sqrt(N.seq)
-
-    for(model in models){
-      Z.alt = rmvnorm(N.sample, B[, model], Sigma)
-
-      # Oracle
-      method.tmp = "Oracle"
-      T.oracle = as.numeric(Z.alt %*% Sigma.trunc.inv %*% B[, model])
-      p.alt.Oracle = 1-pchisq((T.oracle/as.numeric(sqrt(t(B)[model, ] %*% Sigma.trunc.inv %*% B[, model])))^2, 1)
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.Oracle<thre)/N.sample))
-
-      # PC1
-      method.tmp = "PC1"
-      PC1 = Z.alt %*% eigen.vec[, 1]
-      p.alt.PC1 = as.numeric(2*pnorm(-abs(PC1/sqrt(lambdas[1]))))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PC1<thre)/N.sample))
-
-      # univariate minp
-      method.tmp = "minp"
-      p.alt.minp = apply(Z.alt, 1, function(x) min(1-pchisq(x^2, 1))*length(x) )
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.minp<thre)/N.sample))
-
-      # PCO
-      method.tmp = "PCO"
-      p.alt.PCO = as.numeric(ModifiedPCOMerged(Z.mat=Z.alt, Sigma=Sigma, SigmaO=SigmaO))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PCO<thre)/N.sample))
-
-      # MinP
-      #p.alt.MinP = apply(Z.alt, 1, function(x){
-      #  upper = qnorm(1 - min(pnorm(-abs(x))));
-      #  1 - pmvnorm(lower = -rep(upper, K), upper = rep(upper, K), mean = rep(0, K), sigma = Sigma)
-      #})
-      #tmp = paste0('p.alt.MinP.', model); p.alt.all[[tmp]] = p.alt.MinP
-      #res.alt[model, "MinP"] = sum(p.alt.MinP<0.05)/N.sample
-      #cat("MinP done.")
-
-    }
-    cat("Simulation: ", i, "\n")
-    if(i %% 20 == 0){
-      colnames(res.alt) = c("model", "method", "power")
-      saveRDS(res.alt, "simulation.alt.N.rds")}
-  }
-
-}
-
-# various beta variance
-{
-  # Different true effects
-  N = 500
-  var.seq = c(0.005, 0.01, 0.05, 0.1, 0.2)
-  models = paste0("var=", var.seq)
-  #c("u1", "uPCO", "uK", paste0("N=", N.seq), "100%", "70%", "30%")
-  #Methods = c("Oracle", "PC1", "PCO", "MinP")
-
-  res.alt = NULL
-  for(i in 1:N.sim){
-    B = matrix(rep(NA, K*length(models)), ncol = length(models),
-               dimnames = list(NULL, models))
-    B[, models] = sapply(var.seq, function(x) as.matrix(rnorm(K, sd = sqrt(x)))) * sqrt(N)
-
-    for(model in models){
-      Z.alt = rmvnorm(N.sample, B[, model], Sigma)
-
-      # Oracle
-      method.tmp = "Oracle"
-      T.oracle = as.numeric(Z.alt %*% Sigma.trunc.inv %*% B[, model])
-      p.alt.Oracle = 1-pchisq((T.oracle/as.numeric(sqrt(t(B)[model, ] %*% Sigma.trunc.inv %*% B[, model])))^2, 1)
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.Oracle<thre)/N.sample))
-
-      # PC1
-      method.tmp = "PC1"
-      PC1 = Z.alt %*% eigen.vec[, 1]
-      p.alt.PC1 = as.numeric(2*pnorm(-abs(PC1/sqrt(lambdas[1]))))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PC1<thre)/N.sample))
-
-      # univariate minp
-      method.tmp = "minp"
-      p.alt.minp = apply(Z.alt, 1, function(x) min(1-pchisq(x^2, 1))*length(x) )
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.minp<thre)/N.sample))
-
-      # PCO
-      method.tmp = "PCO"
-      p.alt.PCO = as.numeric(ModifiedPCOMerged(Z.mat=Z.alt, Sigma=Sigma, SigmaO=SigmaO))
-      res.alt = rbind(res.alt, c(model, method.tmp, sum(p.alt.PCO<thre)/N.sample))
-    }
-    cat("Simulation: ", i, "\n")
-    if(i %% 20 == 0){
-      colnames(res.alt) = c("model", "method", "power")
-      saveRDS(res.alt, "simulation.alt.var.rds")}
-  }
-
-}
 
 
 # plot
@@ -333,14 +114,14 @@ Sigma.trunc.inv = eigen.vec[, which(lambdas>1)] %*% diag(1/lambdas[lambdas>1]) %
     return(y)
   }
 
-  res.alt.N = modify('simulation.alt.N.u1.rds')
+  res.alt.N = modify('simulation.alt.N.lambda0.1.K105.rds')
   #res.alt.N2 = modify('simulation.alt.N2.rds')
 
-  res.alt.var = modify('simulation.alt.N.05.rds')
+  #res.alt.var = modify('simulation.alt.N.05.rds')
   #res.alt.var2 = modify('simulation.alt.var2.rds')
 
-  res.alt.caus = modify('simulation.alt.caus.lambda0.1.rds')
-  res.alt.caus_fix = modify('simulation.alt.caus_fix.lambda0.1.rds')
+  res.alt.caus = modify('simulation.alt.caus.lambda0.1.K105.rds')
+  res.alt.caus_fix = modify('simulation.alt.caus_fix.lambda0.1.K105.rds')
 
   #colnames(res.alt.var) = c("model", "method", "power")
 
@@ -383,7 +164,7 @@ Sigma.trunc.inv = eigen.vec[, which(lambdas>1)] %*% diag(1/lambdas[lambdas>1]) %
 
   df.alt.N <- summarySE(res.alt.N, measurevar="power", groupvars=c("model", "method"))
   #df.alt.N2 <- summarySE(res.alt.N2, measurevar="power", groupvars=c("model", "method"))
-  df.alt.var <- summarySE(res.alt.var, measurevar="power", groupvars=c("model", "method"))
+  #df.alt.var <- summarySE(res.alt.var, measurevar="power", groupvars=c("model", "method"))
   #df.alt.var2 <- summarySE(res.alt.var2, measurevar="power", groupvars=c("model", "method"))
   df.alt.caus <- summarySE(res.alt.caus, measurevar="power", groupvars=c("model", "method"))
   df.alt.caus_fix <- summarySE(res.alt.caus_fix, measurevar="power", groupvars=c("model", "method"))
@@ -395,7 +176,7 @@ Sigma.trunc.inv = eigen.vec[, which(lambdas>1)] %*% diag(1/lambdas[lambdas>1]) %
                 geom_line() +
                 geom_point() +
                 geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
-                              position=position_dodge(0.05)) +
+                              position=position_dodge(0)) +
                 coord_cartesian(ylim=c(0, 1)) + theme_bw()
   )
 
@@ -404,7 +185,7 @@ Sigma.trunc.inv = eigen.vec[, which(lambdas>1)] %*% diag(1/lambdas[lambdas>1]) %
                 geom_line() +
                 geom_point() +
                 geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
-                              position=position_dodge(0.05)) +
+                              position=position_dodge(0)) +
                 coord_cartesian(ylim=c(0, 1)) + theme_bw()
   )
 
@@ -413,7 +194,7 @@ Sigma.trunc.inv = eigen.vec[, which(lambdas>1)] %*% diag(1/lambdas[lambdas>1]) %
                 geom_line() +
                 geom_point() +
                 geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
-                              position=position_dodge(0.05)) +
+                              position=position_dodge(0)) +
                 coord_cartesian(ylim=c(0, 1)) + theme_bw()
   )
 
@@ -422,13 +203,13 @@ Sigma.trunc.inv = eigen.vec[, which(lambdas>1)] %*% diag(1/lambdas[lambdas>1]) %
                 geom_line() +
                 geom_point() +
                 geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
-                              position=position_dodge(0.05)) +
+                              position=position_dodge(0)) +
                 coord_cartesian(ylim=c(0, 1)) + theme_bw()
   )
 
-  ggsave("power.png", ggarrange(plotlist = c(fig1, fig2, fig3, fig4),
-                                ncol = 2, nrow = 4, common.legend=T,
-                                labels = rep(c("N", "var", "caus", "caus_fix"), each=2)),
+  ggsave("power.lambda0.1.K105.png", ggarrange(plotlist = c(fig1, fig3, fig4),
+                                ncol = 2, nrow = 3, common.legend=T,
+                                labels = rep(c("N", "caus", "caus_fix"), each=2)),
          width = 10, height = 15)
 
 }

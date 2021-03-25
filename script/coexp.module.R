@@ -38,7 +38,7 @@ geneTree = hclust(as.dist(dissTOM), method = "average")
 
 # branch cutting using dynamic tree cut
 dynamicMods = cutreeDynamic(dendro = geneTree, distM = dissTOM,
-                            deepSplit = 2, pamRespectsDendro = FALSE,
+                            deepSplit = 4, pamRespectsDendro = FALSE,
                             minClusterSize = minModuleSize)
 dynamicColors = labels2colors(dynamicMods)
 
@@ -51,7 +51,7 @@ merge = mergeCloseModules(datExpr, dynamicColors, verbose = 3)
 mergedColors = merge$colors
 mergedMEs = merge$newMEs
 
-moduleLabels = match(mergedColors, c("grey", standardColors(100)))-1
+moduleLabels = match(mergedColors, c("grey", standardColors(length(unique(mergedColors)))))-1
 names(moduleLabels) = colnames(datExpr)
 tmp = factor(moduleLabels, c(0, as.numeric(names(sort(table(moduleLabels)[-1], decreasing=T)))), 1:length(unique(moduleLabels))-1 )
 moduleLabels = as.numeric(levels(tmp))[tmp]; names(moduleLabels) = names(tmp)
