@@ -24,8 +24,8 @@ ModifiedSigmaOEstimate = function(Sigma,p.method="TruncPCO",simNum=2000,method =
     eigen.vec = eigen.res$vectors
     
     if(p.method != "PCO"){
-      lambdas = lambdas[lambdas>1]
-      eigen.vec = eigen.vec[, which(lambdas>1)]
+      lambdas = lambdas[lambdas>0.1]
+      eigen.vec = eigen.vec[, which(lambdas>0.1)]
     }
     K = length(lambdas)
     

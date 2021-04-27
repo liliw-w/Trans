@@ -6,8 +6,8 @@ geno_prefix=$5
 geno_suffix=$6
 
 
-module load plink
-module load R/3.6.1
+#module load plink
+#module load R/3.6.1
 
 Rscript ./script/signals.uniq.R $signals_file $sig_uniq
 

@@ -15,13 +15,19 @@ str(input2)
 
 require(data.table)
 
-p.obs = rbindlist(lapply(input1, function(x) 
+p.obs = rbindlist(lapply(input1, function(x)
 {tmp_y=readRDS(x);
-as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)}))
+if(!is.null(tmp_y)){
+  as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)
+}
+}))
 
-p.null = rbindlist(lapply(input2, function(x) 
+p.null = rbindlist(lapply(input2, function(x)
 {tmp_y=readRDS(x);
-as.data.table(setNames(tmp_y, paste0("n", strsplit(x, '.', fixed = T)[[1]][3], ":", names(tmp_y))), keep.rownames=T)}))
+if(!is.null(tmp_y)){
+  as.data.table(setNames(tmp_y, paste0("n", strsplit(x, '.', fixed = T)[[1]][3], ":", names(tmp_y))), keep.rownames=T)
+}
+}))
 
 
 p.obs.rank = frank(p.obs, V2)

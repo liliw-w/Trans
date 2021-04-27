@@ -7,8 +7,8 @@ PERM=list(range(1, config['Nperm']+1))
 rule all:
   input:
     #expand('p/p.module{module}.chr{chr}.rds', module=MODULE, chr=CHRS)
-    'postanalysis/indep.signals.perm'+str(config['Nperm'])+'.txt',
-    'postanalysis/indep.signals.chr.perm'+str(config['Nperm'])+'.txt',
+    #'postanalysis/indep.signals.perm'+str(config['Nperm'])+'.txt',
+    #'postanalysis/indep.signals.chr.perm'+str(config['Nperm'])+'.txt',
     'postanalysis/indep.signals.chr.module.perm'+str(config['Nperm'])+'.txt'
 
 rule prep_bed:
@@ -182,7 +182,7 @@ rule post_chr:
   shell: 'bash script/'+config['script_post']+' {input.sig} {output.sig_uniq} {output.sig_indp} {params.dir_geno} {params.geno_prefix} {params.geno_suffix}'
 
 rule post_chr_module:
-  input: 'postanalysis/indep.signals.perm'+str(config['Nperm'])+'.txt', 'postanalysis/indep.signals.chr.perm'+str(config['Nperm'])+'.txt', sig='FDR/signals.chr.module.perm'+str(config['Nperm'])+'.txt'
+  input: sig='FDR/signals.chr.module.perm'+str(config['Nperm'])+'.txt'
   output: sig_uniq='postanalysis/LD.prun.in.chr.module.perm'+str(config['Nperm'])+'.txt', sig_indp='postanalysis/indep.signals.chr.module.perm'+str(config['Nperm'])+'.txt'
   params: dir_geno=config['dir_geno'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
   shell: 'bash script/'+config['script_post']+' {input.sig} {output.sig_uniq} {output.sig_indp} {params.dir_geno} {params.geno_prefix} {params.geno_suffix}'

@@ -1,4 +1,4 @@
-module load R/3.6.1
+#module load R/3.6.1
 
 set -o nounset -o errexit -o pipefail
 

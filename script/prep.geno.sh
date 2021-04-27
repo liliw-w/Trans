@@ -14,7 +14,7 @@ geno_prefix='split_by_chrom/GTEx_Analysis_2017-06-05_v8_WGS_VCF_files_GTEx_Analy
 
 
 # filter variants; convert vcf files to bfiles; format snp's names as chr:pos
-module load plink
+#module load plink
 
 for chr in `seq 22`
 do

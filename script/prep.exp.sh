@@ -16,8 +16,9 @@ if ! [ -d "${dir_data}/data" ]; then
     mkdir ${dir_data}/data
 fi
 
-cp ${dir_cov}/${prefix}* ./data/covariates.txt
-cp ${dir_exp}/${prefix}* ./data/
+cd ${dir_data}/data
+cp ${dir_cov}/${prefix}* ./covariates.txt
+cp ${dir_exp}/${prefix}* .
 
 # write gene meta file
 #zcat ${prefix}*.bed.gz | \
@@ -25,20 +26,24 @@ cp ${dir_exp}/${prefix}* ./data/
 #awk 'BEGIN {printf("#chr\tstart\tend\tgene\n")} {print $0}' > \
 #gene.meta.txt
 
-Rscript ${dir_GTEx}'prep.exp.R' ./data/${prefix}*.bed.gz ./data/'ex.rds'
+Rscript ${dir_GTEx}'prep.exp.R' ${prefix}*.bed.gz 'ex.rds'
 
-rm ./data/${prefix}*
+rm ${prefix}*
 
-if ! [ -d "./script" ]; then
-    mkdir "./script"
+#cp /project2/xuanyao/llw/TCGA/data/pseudogenes.txt .
+#cp /project2/xuanyao/llw/TCGA/data/mappability.txt .
+#cp /project2/xuanyao/llw/TCGA/data/cross.mappable.genes.rds .
+
+if ! [ -d "../script" ]; then
+    mkdir "../script"
 fi
 
-if ! [ -d "./logs" ]; then
-    mkdir "./logs"
+if ! [ -d "../logs" ]; then
+    mkdir "../logs"
 fi
 
-if ! [ -d "./plots" ]; then
-    mkdir "./plots"
+if ! [ -d "../plots" ]; then
+    mkdir "../plots"
 fi
 
 done

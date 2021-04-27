@@ -10,7 +10,7 @@
       "error": "logs/{rule}.log",
       "email-type": "FAIL",
       "email": "liliw1@uchicago.edu",
-      "ntasks-per-node": "1"
+      "ntasks-per-node": "1"        
     },
   "z" :
     {
@@ -53,8 +53,8 @@
   "FDR_chr_module" :
     {
       "job-name": "FDR.chr.module.{wildcards.perm}",
-      "time": "5:00:00",
+      "time": "6:00:00",
       "partition": "bigmem2",
-      "mem": "200G"
+      "mem": "300G"
     }
 }

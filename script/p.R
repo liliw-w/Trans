@@ -39,12 +39,16 @@ gene_w_pos = merge(gene_in_cluster, gene.meta)
 gene_trans = gene_w_pos[gene_w_pos[, "chr"] != paste0("chr", chr), "gene"]
 
 
-Sigma = cor(datExpr[, gene_trans])
-SigmaO = ModifiedSigmaOEstimate(Sigma) 
+if(length(gene_trans) > 1){
+  Sigma = cor(datExpr[, gene_trans])
+  SigmaO = ModifiedSigmaOEstimate(Sigma) 
 
-z.mat_trans = z.mat[, gene_trans]; rm(z.mat)
-p.all = ModifiedPCOMerged(Z.mat=z.mat_trans,
-                          Sigma=Sigma, SigmaO=SigmaO)
+  z.mat_trans = z.mat[, gene_trans]; rm(z.mat)
+  p.all = ModifiedPCOMerged(Z.mat=z.mat_trans,
+                            Sigma=Sigma, SigmaO=SigmaO)
+}else{
+  p.all = NULL
+}
 
 
 saveRDS(p.all, file = file.p)
