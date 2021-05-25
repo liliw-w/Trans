@@ -4,8 +4,8 @@ require(data.table)
 parameter = commandArgs(trailingOnly = T)
 if(length(parameter) == 0){
   parameter = c('gencode.v19.annotation.table.TSS.txt',
-                'TCGA_PCO.lambda.01/FDR/signals.chr.module.perm10.txt',
-                'TCGA_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt',
+                'FDR/signals.chr.module.perm10.txt',
+                'postanalysis/LD.prun.in.chr.module.perm10.txt',
                 "signals.nearset.gene.txt",
                 "signals.nearset.gene.func.txt")
 }
