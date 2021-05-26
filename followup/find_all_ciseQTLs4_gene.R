@@ -10,7 +10,7 @@ fdr = args[5]
 
 if(is.na(file_input) | is.na(file_all) | is.na(file_eGene) | is.na(file_eQTL) | is.na(fdr)){
   file_input = '~/xuanyao_llw/DGN_PCO.lambda.01/DGN_eQTL.txt.gz'
-  file_all = '~/xuanyao_llw/DGN_PCO.lambda.01/nom_20phenoPC_allChr.txt.gz'
+  file_all = '~/xuanyao_llw/DGN_PCO.lambda.01/nom_20phenoPC_allChr_eQTL.txt.gz'
   file_eGene = '~/xuanyao_llw/DGN_PCO.lambda.01/DGN_egenes.txt.gz'
   file_eQTL = '~/xuanyao_llw/DGN_PCO.lambda.01/DGN_eQTL_signif_variant_gene_pairs.txt.gz'
   fdr = 0.05
@@ -28,7 +28,9 @@ fwrite(eGene, file_eGene, quote=FALSE, row.names=FALSE, col.names=TRUE, sep="\t"
 
 
 ## Find cis-eQTLs for each gene
-assoc_all = fread(file_all, header = TRUE, sep=" ")
+assoc_all = fread(file_all, header = FALSE, sep=" ")
+setnames(assoc_all, c("pid", "sid", "dist", "npval", "slope"))
+print(head(assoc_all))
 
 sig_egene = unique(eGene$pid)
 assoc_all = assoc_all[assoc_all$pid %in% sig_egene, ]
@@ -36,4 +38,3 @@ assoc_all$pval_nominal_threshold = eGene[match(assoc_all$pid, eGene$pid), pval_n
 assoc_all$if_QTL = assoc_all$npval <= assoc_all$pval_nominal_threshold
 
 fwrite(assoc_all[assoc_all$if_QTL, ], file_eQTL, quote=FALSE, row.names=FALSE, col.names=TRUE, sep="\t")
-

@@ -2,10 +2,14 @@
 ######## Check if trans-eQTLs are cis-eQTLs ###########
 file_trans=$1
 file_cis=$2
-if_GTEx_cis=$3
+prefix=$3
+if_GTEx_cis=$4
 
-if [[ -z  ${if_GTEx_cis} ]] || [[ -z  ${file_trans} ]] || [[ -z  ${file_cis} ]]
+cd /scratch/midway2/liliw1/trans_cis/
+
+if [[ -z  ${if_GTEx_cis} ]] || [[ -z  ${file_trans} ]] || [[ -z  ${file_cis} ]] || [[ -z ${prefix} ]]
 then
+  prefix='eQTL'
   if_GTEx_cis='no'
   file_trans=/project2/xuanyao/llw/DGN_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt
   #/project2/xuanyao/llw/eQTLGen_DGN_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt
@@ -17,29 +21,29 @@ fi
 
 if [[ ${if_GTEx_cis} = 'no' ]]
 then
-  zcat ${file_cis} | grep -f ${file_trans} | sed "1 i $(zcat ${file_cis} | head -n1)" > trans_cis.txt
-  cat trans_cis.txt | tail -n+2 | cut -f 2 | sort | uniq > cis_transeQTLs.txt
-  cat trans_cis.txt | tail -n+2 | cut -f 1 | sort | uniq > cis_eGenes.txt
+  zcat ${file_cis} | grep -f ${file_trans} | sed "1 i $(zcat ${file_cis} | head -n1)" > trans_cis_${prefix}.txt
+  cat trans_cis_${prefix}.txt | tail -n+2 | cut -f 2 | sort | uniq > signals_${prefix}.txt
+  cat trans_cis_${prefix}.txt | tail -n+2 | cut -f 1 | sort | uniq > Genes_${prefix}.txt
 
   Ntrans=$(cat ${file_trans} | wc -l)
-  Ntrans_cis=$(cat cis_transeQTLs.txt | wc -l)
-  Ncis_eGenes=$(cat cis_eGenes.txt | wc -l)
-  cis_eGenes=$(cat cis_eGenes.txt)
+  Ntrans_cis=$(cat signals_${prefix}.txt | wc -l)
+  Ncis_eGenes=$(cat Genes_${prefix}.txt | wc -l)
+  cis_eGenes=$(cat Genes_${prefix}.txt)
 else
   file_anno=/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt
   #/project2/xuanyao/data/GTEx_v7/Whole_Blood.v7.egenes.txt.gz
 
   cat ${file_trans} | sed 's\:\_\g' > tmp.txt
-  zcat ${file_cis} | grep -f tmp.txt | sed "1 i $(zcat ${file_cis} | head -n1)" > trans_cis.txt
-  cat trans_cis.txt | tail -n+2 | cut -f 1 | sort | uniq > cis_transeQTLs.txt
-  cat trans_cis.txt | tail -n+2 | cut -f 2 | sort | uniq > cis_eGenes.txt
-  cat ${file_anno} | grep -w -f cis_eGenes.txt | sed "1 i $(head -n1 ${file_anno})" > cis_eGenes_annoted.txt
+  zcat ${file_cis} | grep -f tmp.txt | sed "1 i $(zcat ${file_cis} | head -n1)" > trans_cis_${prefix}.txt
+  cat trans_cis_${prefix}.txt | tail -n+2 | cut -f 1 | sort | uniq > signals_${prefix}.txt
+  cat trans_cis_${prefix}.txt | tail -n+2 | cut -f 2 | sort | uniq > Genes_${prefix}.txt
+  cat ${file_anno} | grep -w -f Genes_${prefix}.txt | sed "1 i $(head -n1 ${file_anno})" > Genes_${prefix}_annoted.txt
   rm tmp.txt
 
   Ntrans=$(cat ${file_trans} | wc -l)
-  Ntrans_cis=$(cat cis_transeQTLs.txt | wc -l)
-  Ncis_eGenes=$(cat cis_eGenes.txt | wc -l)
-  cis_eGenes=$(cat cis_eGenes_annoted.txt | tail -n+2 | cut -f 2)
+  Ntrans_cis=$(cat signals_${prefix}.txt | wc -l)
+  Ncis_eGenes=$(cat Genes_${prefix}.txt | wc -l)
+  cis_eGenes=$(cat Genes_${prefix}_annoted.txt | tail -n+2 | cut -f 2)
 fi
-echo "${Ntrans_cis} trans-eQTLs (out of ${Ntrans}) are also cis-eQTLs, corresponding to ${Ncis_eGenes} cis-eGenes. \n"; \
-echo "cis-eGenes include: \n ${cis_eGenes}"
+echo "${Ntrans_cis} trans-eQTLs (out of ${Ntrans}) are also cis-${prefix}, corresponding to ${Ncis_eGenes} cis-${prefix}-Genes. \n"; \
+echo "cis-${prefix}-Genes include: \n ${cis_eGenes}"
