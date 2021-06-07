@@ -38,7 +38,7 @@ if(change == "N"){
   cat(paste0("Various ", change), '\n')
 
   # Different true effects
-  N.seq = c(200, 400, 600, 800, 1000)
+  N.seq = c(200, 400, 600, 800)
   models = paste0("N=", N.seq)
   #c("u1", "uPCO", "uK", paste0("N=", N.seq), "100%", "70%", "30%")
 
@@ -82,7 +82,7 @@ if(change == "N"){
 }else if(change == "caus"){
   cat(paste0("Various ", change), '\n')
 
-  caus.seq = c(1, 5, 10, 30, 50, 70, 100)
+  caus.seq = c(1, 5, 10, 30, 50)
   models = paste0("caus=", caus.seq)
 
   res.alt = NULL
@@ -123,7 +123,7 @@ if(change == "N"){
 }else if(change == "caus_fix"){
   cat(paste0("Various ", change), '\n')
 
-  caus.seq = c(1, 5, 10, 30, 50, 70, 100)
+  caus.seq = c(1, 5, 10, 30, 50)
   models = paste0("caus.fix=", caus.seq)
 
   res.alt = NULL
