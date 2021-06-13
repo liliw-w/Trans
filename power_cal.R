@@ -96,5 +96,5 @@ if(is_plot %in% c("True", "TRUE", "T")){
   ggsave(paste0(file_out, ".png"), ggarrange(plotlist = c(fig),
                                              ncol = 2, nrow = 1, common.legend=T,
                                              labels = "A"),
-         height = 4.5, width = 7)
+         height = 5, width = 8)
 }

@@ -2,15 +2,11 @@ dir_mappability: /project2/xuanyao/data/mappability/
 dir_expression: /scratch/midway2/liliw1/TCGA_PCO.lambda.01/data/
 dir_geno: /project2/xuanyao/llw/TCGA/data/
 Nmodule: 127
-Nperm: 10
-
-fdr_thre: 0.00001789549034
-fdr_thre_chr: 0.0003937007874
-fdr_thre_chr_module: 0.05
-
 minModuleSize: 10
-Nchr: 22
+
 fdr_level: 0.05
+Nchr: 22
+Nperm: 10
 
 geno_prefix: chr
 geno_suffix: _QCed

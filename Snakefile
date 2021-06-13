@@ -3,6 +3,9 @@ configfile: "config.yaml"
 MODULE=list(range(1, config['Nmodule']+1))
 CHRS=list(range(1, config['Nchr']+1))
 PERM=list(range(1, config['Nperm']+1))
+fdr_thre_chr_module=config['fdr_level']
+fdr_thre_chr=config['fdr_level']/config['Nmodule']
+fdr_thre=config['fdr_level']/config['Nmodule']/config['Nchr']
 
 rule all:
   input:
@@ -107,7 +110,7 @@ rule average_perm:
   output:
     file_signals=temp('FDR/signals.module{module}.chr{chr}.perm'+str(config['Nperm'])+'.txt')
   params:
-    fdr_thre=config['fdr_thre']
+    fdr_thre=fdr_thre
   script:
     'script/'+config['script_average_perm']
 
@@ -136,7 +139,7 @@ rule average_perm_chr:
   output:
     file_signals=temp('FDR/signals.chr.module{module}.perm'+str(config['Nperm'])+'.txt')
   params:
-    fdr_thre=config['fdr_thre_chr']
+    fdr_thre=fdr_thre_chr
   script:
     'script/'+config['script_average_perm']
 
@@ -165,7 +168,7 @@ rule average_perm_chr_module:
   output:
     file_signals='FDR/signals.chr.module.perm'+str(config['Nperm'])+'.txt'
   params:
-    fdr_thre=config['fdr_thre_chr_module']
+    fdr_thre=fdr_thre_chr_module
   script:
     'script/'+config['script_average_perm']
 
