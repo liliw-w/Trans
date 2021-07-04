@@ -25,7 +25,7 @@ meta_used_snp = fread('/project2/xuanyao/llw/eQTLGen/eQTLGen.used_snp.meta.txt',
 
 fig.all = NULL
 for (dir_p in c("eQTLGen_lessmodule_PCO.lambda1/", "eQTLGen_lessmodule_PCO.lambda.01/", "eQTLGen_moremodule_PCO.lambda1/", "eQTLGen_PCO.lambda.01/")) {
-  #file.p = list.files(path = paste0(dir_p, "p"), pattern = "^p.*module.*chr.*rds", full.names = TRUE)
+  #file.p = list.files(path = paste0(dir_p, "p"), pattern = "^p.module.*chr.*rds", full.names = TRUE)
   #p.obs = rbindlist(lapply(file.p, function(x)
   #{tmp_y=readRDS(x);
   #print(x);
