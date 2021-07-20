@@ -1,0 +1,21 @@
+MODULE=[73, 20, 1]
+CHRS=list(range(1, 23))
+thre_p_z='1e-04'
+
+rule all:
+  input:
+    expand('p.Sigma.null.z/p.module{module}.chr{chr}.rds', module=MODULE, chr=CHRS)
+
+rule p:
+  input:
+    file_Sigma='Sigma.null.z/Sigma.null.z.module{module}.'+thre_p_z+'.rds',
+    file_ex_var_regressed='/project2/xuanyao/llw/DGN_PCO.lambda.01/result/ex.var.regressed.rds',
+    file_gene_meta='/project2/xuanyao/llw/DGN_PCO.lambda.01/result/gene.meta.txt',
+    file_coexp_module='/project2/xuanyao/llw/DGN_PCO.lambda.01/result/coexp.module.rds',
+    file_z='/project2/xuanyao/llw/DGN_PCO.lambda.01/z/z.module{module}.chr{chr}.txt.gz'
+  output:
+    file_p='p.Sigma.null.z/p.module{module}.chr{chr}.rds'
+  params:
+    dir_script='/project2/xuanyao/llw/DGN_PCO.lambda.01/script/', chr='{chr}', module='{module}'
+  script:
+    'p.R'

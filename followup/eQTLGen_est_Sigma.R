@@ -2,38 +2,38 @@ rm(list = ls())
 require(data.table)
 
 meta=fread('~/scratch/eQTLGen_PCO.lambda.01/result/DGN.txt')
-module_info=readRDS('~/scratch/eQTLGen_PCO.lambda.01/result/coexp.module.rds')
-module_info=module_info$moduleLabels
+module_info=readRDS('~/scratch/eQTLGen_PCO.lambda.01/result/coexp.module.rds')$moduleLabels
 names(module_info) = meta[match(names(module_info), meta$gene), GeneNameConv]
+Nmodule = max(module_info)
 
 ## Extract (trans) summary stat for each modules
 a = fread('/project2/xuanyao/data/eQTLGen/2018-09-04-trans-eQTLsFDR-CohortInfoRemoved-BonferroniAdded.txt.gz')
-for(module_tmp in 1:75){
-  module1 = names(module_info)[module_info==module_tmp]
+for(module in 1:Nmodule){
+  module1 = names(module_info)[module_info==module]
   a_module1 = a[a$Gene %in% module1, ]
 
-  saveRDS(a_module1, paste0("sumStat.trans.module", module_tmp, ".rds"))
-  cat("module:", module_tmp, "\n")
+  saveRDS(a_module1, paste0("sumStat.trans.module", module, ".rds"))
+  cat("module:", module, "\n")
 }
 
 
 ## Extract (cis) summary stat for each modules
 a = fread('/project2/xuanyao/data/eQTLGen/2019-12-11-cis-eQTLsFDR-ProbeLevel-CohortInfoRemoved-BonferroniAdded.txt.gz')
 
-for(module_tmp in 10:75){
-  module1 = names(module_info)[module_info==module_tmp]
+for(module in 10:Nmodule){
+  module1 = names(module_info)[module_info==module]
   a_module1 = a[a$Gene %in% module1, ]
 
-  saveRDS(a_module1, paste0("sumStat.cis.module", module_tmp, ".rds"))
-  cat("module:", module_tmp, "\n")
+  saveRDS(a_module1, paste0("sumStat.cis.module", module, ".rds"))
+  cat("module:", module, "\n")
 }
 
 
 ## Combine trans and cis summary stat for each module
 ## And extract the common SNPs, i.e. SNPs with summary stat for all genes within each module.
-for(module_tmp in 1:75){
-  a_module1 = readRDS(paste0("sumStat.cis.module", module_tmp, ".rds"))
-  b_module1 = readRDS(paste0("sumStat.trans.module", module_tmp, ".rds"))
+for(module in 1:Nmodule){
+  a_module1 = readRDS(paste0("sumStat.cis.module", module, ".rds"))
+  b_module1 = readRDS(paste0("sumStat.trans.module", module, ".rds"))
   ab_module1 = rbind(a_module1, b_module1)
   ab_module1$SNPmeta = paste(ab_module1$SNPChr, ab_module1$SNPPos, sep = ":")
 
@@ -43,24 +43,24 @@ for(module_tmp in 1:75){
   ab_z_na = is.na(ab_z)
   rem_ind = apply(ab_z_na[, -c(1:2)], 1, sum )
   ab_z_remain = ab_z[rem_ind == 0, ]
-  saveRDS(ab_z_remain, paste0("sumStat.all.module", module_tmp, ".rds"))
+  saveRDS(ab_z_remain, paste0("sumStat.all.module", module, ".rds"))
 
-  cat("module:", module_tmp, "\n")
+  cat("module:", module, "\n")
 }
 
 
 ## #Indep null SNPs (and #Uniq null SNPs) for each module under various z-score threshold for being null
 res_nullSNP = NULL
-for(module_tmp in 1:75){
-  ab_z_remain = readRDS(paste0("sumStat.all.module", module_tmp, ".rds"))
+for(module in 1:Nmodule){
+  ab_z_remain = readRDS(paste0("sumStat.all.module", module, ".rds"))
   NSNP = nrow(ab_z_remain); module_size = ncol(ab_z_remain)-2
 
   for(thre_p_z in c(5e-2, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 0)){
     thre_z2 = qchisq(1-thre_p_z, 1)
     altSNP_ind = apply((ab_z_remain[, -c(1:2)])^2 > thre_z2, 1, sum) > 0
 
-    file_uniq = paste0("eQTLGen_est_Sigma/unique.SNP.module", module_tmp, ".", thre_p_z, ".text")
-    file_indep = paste0("eQTLGen_est_Sigma/indep.SNP.module", module_tmp, ".", thre_p_z, ".text")
+    file_uniq = paste0("eQTLGen_est_Sigma/unique.SNP.module", module, ".", thre_p_z, ".txt")
+    file_indep = paste0("eQTLGen_est_Sigma/indep.SNP.module", module, ".", thre_p_z, ".txt")
     fwrite(ab_z_remain[!altSNP_ind, "SNPmeta"], file_uniq,
            quote = FALSE, sep = "\t", col.names = FALSE)
     command = paste0("bash eQTLGen_est_Sigma/indep.SNP.sh ", file_uniq, " ", file_indep)
@@ -70,7 +70,7 @@ for(module_tmp in 1:75){
     res_nullSNP = rbind(res_nullSNP, data.table("thre_z" = thre_p_z,
                                                 "num_nullSNP_uniq" = NSNP - sum(altSNP_ind),
                                                 "num_nullSNP_indep" = num_nullSNP_indep,
-                                                "module" = module_tmp,
+                                                "module" = module,
                                                 "module_size" = module_size))
   }
 }
@@ -99,7 +99,7 @@ require(data.table)
 eqtlGen_transPCO_res_file = "/scratch/midway2/liliw1/eQTLGen_PCO.lambda.01/FDR/signals.qvalue.txt"
 coexp_module_file = "/scratch/midway2/liliw1/eQTLGen_PCO.lambda.01/result/coexp.module.rds"
 file_eQTLGen_z = "/scratch/midway2/liliw1/eQTLGen_est_Sigma/sumStat.all.module1.rds"
-file_indep_null_snp = "/scratch/midway2/liliw1/eQTLGen_est_Sigma/indep.SNP.module1.0.001.text"
+file_indep_null_snp = "/scratch/midway2/liliw1/eQTLGen_est_Sigma/indep.SNP.module1.0.001.txt"
 gene_meta_file = "/scratch/midway2/liliw1/eQTLGen_PCO.lambda.01/result/DGN.txt"
 
 eqtlGen_transPCO_res = fread(eqtlGen_transPCO_res_file, header = TRUE)
@@ -185,11 +185,10 @@ fig_p = ggplot(data = res_all, aes(x = x)) +
   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ggsave(paste0('effect.of.Sigma.on.PCO.pvalue.module', module, '.png'), fig_p,
        height = 10, width = 10)
+# system(paste0('bash ~/imgcat effect.of.Sigma.on.PCO.pvalue.module', module, '.png'))
 
 cat("Under Bonferroni correction, pvalue threshold is ", 0.05/nrow(snp_used)/Nmodule, "\n", "#Signals for this module using two Sigma's are: ", "\n")
 print(apply(res_all[, c("p_nullz", "p_DGN")], 2, function(x) sum(x < 0.05/nrow(snp_used)/Nmodule)))
-
-# system(paste0('bash ~/imgcat effect.of.Sigma.on.PCO.pvalue.module', module, '.png'))
 
 
 ### QQ-plot of the PCO pvalues for this module using the two Sigma's ###
@@ -220,7 +219,6 @@ fig_qq = rbind(qqplot.hist(res_all$p_nullz, "nullz"), qqplot.hist(res_all$p_DGN,
 ggsave(paste0('qqplot.effect.of.Sigma.on.PCO.pvalue.module', module, '.png'),
        marrangeGrob(fig_qq, nrow=length(fig_qq)/2, ncol=2, top = NULL),
        height = length(fig_qq)/2*(6/2), width = 6)
-
 # system(paste0('bash ~/imgcat qqplot.effect.of.Sigma.on.PCO.pvalue.module', module, '.png'))
 
 #### eqtlGen_transPCO signals under Bonferroni correction

@@ -1,9 +1,8 @@
+dir_expression: /scratch/midway2/liliw1/DGN_PCO.lambda.01_real/data/
 dir_mappability: /project2/xuanyao/data/mappability/
-dir_expression: /scratch/midway2/liliw1/TCGA_PCO.lambda.01/data/
-dir_geno: /project2/xuanyao/llw/TCGA/data/
-Nmodule: 127
-minModuleSize: 10
+dir_geno: /project2/xuanyao/llw/DGN/data/
 
+minModuleSize: 10
 fdr_level: 0.05
 Nchr: 22
 Nperm: 10

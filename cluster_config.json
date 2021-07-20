@@ -10,7 +10,15 @@
       "error": "logs/{rule}.log",
       "email-type": "FAIL",
       "email": "liliw1@uchicago.edu",
-      "ntasks-per-node": "1"        
+      "ntasks-per-node": "1"
+    },
+  "covariates" :
+    {
+      "mem": "20G"
+    },
+  "coexp_module" :
+    {
+      "mem": "20G"
     },
   "z" :
     {
@@ -47,7 +55,7 @@
   "FDR_chr" :
     {
       "job-name": "FDR.chr.{wildcards.perm}",
-      "time": "3:00:00",
+      "time": "2:00:00",
       "mem": "10G"
     },
   "FDR_chr_module" :

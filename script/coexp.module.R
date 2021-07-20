@@ -56,6 +56,7 @@ moduleLabels = match(mergedColors, c("grey", standardColors(length(unique(merged
 names(moduleLabels) = colnames(datExpr)
 tmp = factor(moduleLabels, c(0, as.numeric(names(sort(table(moduleLabels)[-1], decreasing=T)))), 1:length(unique(moduleLabels))-1 )
 moduleLabels = as.numeric(levels(tmp))[tmp]; names(moduleLabels) = names(tmp)
+Nmodule = sum(as.numeric(names(table(moduleLabels))) != 0)
 
 print(table(moduleLabels))
 cat("Number of modules:", max(moduleLabels), "\n")
@@ -69,3 +70,5 @@ result = list(moduleColors = mergedColors,
               old_MEs = MEs,
               geneTree = geneTree)
 saveRDS(result, file = file.coexp.module)
+
+write(Nmodule, "result/Nmodule.txt")

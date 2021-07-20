@@ -2,7 +2,7 @@ configfile: "config.yaml"
 
 rule all:
   input: 'result/'+config['file_coexp_module']
-  
+
 
 rule covariates:
   input:
@@ -22,7 +22,8 @@ rule coexp_module:
   input:
     file_ex_var_regressed='result/'+config['file_ex_var_regressed']
   output:
-    file_coexp_module='result/'+config['file_coexp_module']
+    file_coexp_module='result/'+config['file_coexp_module'],
+    file_Nmodule='result/Nmodule.txt'
   params: minModuleSize=config['minModuleSize']
   script:
     'script/'+config['script_coexp_module']

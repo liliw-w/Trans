@@ -1,11 +1,16 @@
 configfile: "config.yaml"
 
-MODULE=list(range(1, config['Nmodule']+1))
+path='result/Nmodule.txt'
+with open(path) as f:
+    lines = [x.rstrip() for x in f]
+Nmodule=int(lines[0])
+
+MODULE=list(range(1, Nmodule+1))
 CHRS=list(range(1, config['Nchr']+1))
 PERM=list(range(1, config['Nperm']+1))
 fdr_thre_chr_module=config['fdr_level']
-fdr_thre_chr=config['fdr_level']/config['Nmodule']
-fdr_thre=config['fdr_level']/config['Nmodule']/config['Nchr']
+fdr_thre_chr=config['fdr_level']/Nmodule
+fdr_thre=config['fdr_level']/Nmodule/config['Nchr']
 
 rule all:
   input:

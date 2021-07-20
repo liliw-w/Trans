@@ -6,7 +6,7 @@ geno_suffix=_QCed
 
 #module load plink
 #module load R/3.6.1
-set -o nounset -o errexit -o pipefail
+#set -o nounset -o errexit -o pipefail
 
 for chr in {1..22}
 do
