@@ -3,7 +3,9 @@ parameter = commandArgs(trailingOnly = T)
 file_p_alt = parameter[1] # "simulation.alt.N.lambda0.1.K100.rds"
 file_p_null = parameter[2] # "simulation.null.lambda0.1.K100.rds"
 file_out = parameter[3] # "power.N.lambda0.1.K100.rds"
-is_plot = parameter[4]
+fdr_level = as.numeric(parameter[4])
+is_plot = parameter[5]
+xlab_text = parameter[6] #"Sample size" #"Trans- target %"
 
 require(data.table)
 p_alt_all = readRDS(file_p_alt)
@@ -23,7 +25,7 @@ for (method.tmp in c("PCO", "PC1", "minp")) {
     names(all.rank) = c(p.obs$V1, p.null$V1)
     q = pmin((all.rank[names(p.obs.rank)]/p.obs.rank-1)/C, 1)
 
-    sum(q < 0.05)/N.sample
+    sum(q < fdr_level)/N.sample
   } )
   cat("Method ", method.tmp, "is done.", '\n')
   saveRDS(res, file_out)
@@ -86,15 +88,20 @@ if(is_plot %in% c("True", "TRUE", "T")){
   fig = list(ggplot(data = df.alt, aes(x=model, y=power, group=method, color=method)) +
                geom_line(linetype = "solid", size = 0.15) +
                geom_point(shape = 20) +
-               xlab("Sample size") +
+               xlab(xlab_text) +
                ylab("Power") +
+               scale_y_continuous(labels = scales::percent) +
+               coord_cartesian(ylim=c(0, 1)) +
                labs(color = "Method") +
                geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
                              position=position_dodge(0)) +
-               coord_cartesian(ylim=c(0, 1)) + theme_bw() + scale_color_manual(values=c("red3", "blue2", "springgreen4"))
+               theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+               scale_color_manual(values=c("red3", "blue2", "springgreen4"))
   )
+
   ggsave(paste0(file_out, ".png"), ggarrange(plotlist = c(fig),
-                                             ncol = 2, nrow = 1, common.legend=T,
+                                             ncol = 2, nrow = 1,
+                                             common.legend=T, legend = "right",
                                              labels = "A"),
-         height = 5, width = 8)
+         height = 4, width = 8)
 }
