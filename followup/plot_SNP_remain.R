@@ -8,9 +8,9 @@ file_cross_mappability = "/project2/xuanyao/data/mappability/hg19_gencode19_75me
 file.ex.var.regressed = "/scratch/midway2/liliw1/DGN_cross_map_filter/result/ex.var.regressed.rds"
 file.gene.meta = "/scratch/midway2/liliw1/DGN_cross_map_filter/result/gene.meta.txt"
 file.coexp.module = "/scratch/midway2/liliw1/DGN_cross_map_filter/result/coexp.module.rds"
-#file.z = "/scratch/midway2/liliw1/DGN_PCO.lambda.01_real/z/z.module68.chr22.txt.gz"
-file.p = NULL
-params1 = "/scratch/midway2/liliw1/DGN_PCO.lambda.01_real/script/"
+file_out = "SNP_remain.RData"
+
+seq.module = c(1, 5, 12, 40, 111, 112)
 
 
 datExpr = readRDS(file.ex.var.regressed)
@@ -19,7 +19,6 @@ coexp.module = readRDS(file.coexp.module)
 gene_annotation = fread(file_gene_annotation, header = TRUE)
 cross_map = fread(file_cross_mappability)
 
-seq.module = c(1, 10, 30, 50, 100, 130, 157, 158)
 seq.chr = 22:1
 mat_SNP_chr = matrix(nrow = length(seq.module), ncol = length(seq.chr),
                        dimnames = list(paste0("module", seq.module), paste0("chr", seq.chr)))
@@ -59,21 +58,8 @@ for(chr in seq.chr){
   }
   cat("Chr ", chr, " is done!", "\n")
 }
-save(mat_SNP_chr, mat_SNP_remain, file = "SNP_remain.RData")
+save(mat_SNP_chr, mat_SNP_remain, file = file_out)
 
-
-sapply(cis_Genes, function(x) length(x) )
-SNP_remain2 <- sapply(cis_Genes, function(x){
-  sum(x %in% cross_map_gene_chr)
-} )
-
-png("a.png")
-hist(sapply(cis_Genes, function(x) length(x) ))
-dev.off()
-
-png("b.png")
-hist(SNP_remain2)
-dev.off()
 
 ### Prepare plot data
 df_SNP_remove = cbind("Module" = rownames(mat_SNP_chr), as.data.frame(mat_SNP_chr-mat_SNP_remain, check.names = FALSE, stringsAsFactors = FALSE)) %>%
