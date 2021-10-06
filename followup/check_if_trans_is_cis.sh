@@ -5,18 +5,18 @@ file_cis=$2
 prefix=$3
 if_GTEx_cis=$4
 
-cd /scratch/midway2/liliw1/trans_cis/
+# cd /scratch/midway2/liliw1/trans_cis/
 
 if [[ -z  ${if_GTEx_cis} ]] || [[ -z  ${file_trans} ]] || [[ -z  ${file_cis} ]] || [[ -z ${prefix} ]]
 then
-  prefix='eQTL'
+  prefix='sQTL'
   if_GTEx_cis='no'
-  file_trans=/project2/xuanyao/llw/DGN_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt
-  #/project2/xuanyao/llw/eQTLGen_DGN_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt
-  #/project2/xuanyao/llw/DGN_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt
-  file_cis=/project2/xuanyao/llw/DGN_PCO.lambda.01/DGN_eQTL_signif_variant_gene_pairs.txt.gz
+  file_cis=/project2/xuanyao/llw/DGN_PCO.lambda.01/DGN_sQTL_signif_variant_gene_pairs.txt.gz
   #/project2/xuanyao/llw/DGN_PCO.lambda.01/DGN_eQTL_signif_variant_gene_pairs.txt.gz
   #/project2/xuanyao/data/GTEx_v7/Whole_Blood.v7.signif_variant_gene_pairs.txt.gz
+  file_trans=/project2/xuanyao/llw/DGN_PCO.lambda.01_real/postanalysis/LD.prun.in.chr.module.perm10.fdr10.txt
+  #/project2/xuanyao/llw/eQTLGen_DGN_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt
+  #/project2/xuanyao/llw/DGN_PCO.lambda.01/postanalysis/LD.prun.in.chr.module.perm10.txt
 fi
 
 if [[ ${if_GTEx_cis} = 'no' ]]
