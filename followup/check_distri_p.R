@@ -7,15 +7,16 @@ rm(list = ls())
 library(data.table)
 library(ggplot2)
 
-dir_p = "/scratch/midway2/liliw1/MODULES/MSigDB/p/"
-Nmodule = 50
-plot_path = "/scratch/midway2/liliw1/MODULES/MSigDB/plot/"
+dir_p = "/scratch/midway2/liliw1/MODULES/STRING/p/"
+Nmodule = 194
+module_seq = 1:Nmodule
+plot_path = "/scratch/midway2/liliw1/MODULES/STRING/plot/"
 if_hist = TRUE
 if_qqplot = TRUE
 
 
 ### plot for each module separately, but with combined chr's
-for(module in 1:Nmodule){
+for(module in module_seq){
   ### pvalue files names
   file.p = as.character(outer(module, 1:22, FUN = function(x, y) paste0("p.module", x, ".chr", y, ".rds")))
   #file.p = as.character(outer(1:Nmodule, 1:22, FUN = function(x, y) paste0("p.module", x, ".chr", y, ".rds")))
