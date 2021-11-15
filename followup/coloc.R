@@ -3,103 +3,98 @@ library(data.table)
 library(tidyverse)
 library(coloc)
 
+
+########## files and parameter ##########
+gwasPhenocode = 30080
+qtlN = 913
+qtlType = "quant"
+gwasType = "quant"
+pop = "EUR"
+pp4Thre = 0.75
+csThre = 0.95
+
+file_qtlColocReg_gwas = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".qtlColocReg_gwas.txt.gz")
+file_gwasColocReg = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasColocReg.txt.gz")
+file_gwasRegTruncPthre= paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasRegTruncPthre.txt")
+file_gwasTraitInfo = "/scratch/midway2/liliw1/UKB_nealelab/phenotype_manifest.tsv.bgz"
+
+file_resColoc = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".resColoc.txt.gz")
+file_resColocSNP = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".resColocSNP.txt.gz")
+
+
 ########## files and parameter, read files ##########
-file_snp_meta_qtl = "/scratch/midway2/liliw1/coloc/snp.meta.qtl.txt.gz"
-file_qtlColocReg = "/scratch/midway2/liliw1/coloc/qtlColocReg.txt.gz"
+qtlColocReg_gwas = fread(file_qtlColocReg_gwas)
+gwasColocReg = fread(file_gwasColocReg)
+gwasRegTruncPthre = fread(file_gwasRegTruncPthre, header = FALSE, col.names = "Region")
 
-dir_p = "/project2/xuanyao/llw/DGN_no_filter_on_mappability/p/"
-Nmodule = 166
-module_seq = 1:Nmodule
-p_included_thre = 1e-5
-regionDis = 1e5
+gwasTraitInfoCol = c("trait_type", "phenocode", "pheno_sex", "description",
+                     paste(c("n_cases", "n_controls"), pop, sep = "_") )
+gwasTraitInfo = fread(cmd = paste("gunzip -c", file_gwasTraitInfo), select = gwasTraitInfoCol)
 
 
-########## Define regions ##########
-qtlColocReg = NULL
-for(module in module_seq){
-  ### pvalue files names
-  file.p = as.character(outer(module, 1:22, FUN = function(x, y) paste0("p.module", x, ".chr", y, ".rds")))
+########## GWAS trait info, sample size
+gwasTraitInfo_usedGWAS = gwasTraitInfo %>% filter(phenocode == gwasPhenocode)
+if(nrow(gwasTraitInfo_usedGWAS) != 1) stop("There are more than one trait with the same given phenocode. Check more. e.g. The trait is not quantitative and have more than two phenotype categories. Or, e.g. The phenocode corresponds to multiple traits with different detailed descriptions.")
+n_cases = gwasTraitInfo_usedGWAS[[paste0("n_cases_", pop)]]
+n_controls = gwasTraitInfo_usedGWAS[[paste0("n_controls_", pop)]]
+gwasN = sum(n_cases, n_controls, na.rm = TRUE)
 
-  ### read p
-  p.obs = rbindlist(lapply(file.p, function(x)
-  {tmp_y=readRDS(paste0(dir_p, x));
-  print(x);
-  if(!is.null(tmp_y)){
-    as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)
-  }
-  }))
-  # p.obs$V2[p.obs$V2==0] = 1e-20
-  p.obs = p.obs %>% rename(Signal = V1, Pval = V2)
 
-  if(min(p.obs$Pval) > p_included_thre) next
-
-  ### reformat
-  tmpqtlColocReg = p.obs %>%
-    separate(col = Signal, into = c("Module", "Chr", "Pos"), sep = ":", remove = FALSE, convert = TRUE) %>%
-    unite(col = "SNP_ID", c("Chr", "Pos"), sep = ":", remove = FALSE) %>%
-    arrange(Pval) %>%
-    mutate(Region = NA) %>% mutate(Included = FALSE)
-  # tmpqtlColocReg = tmpqtlColocReg %>% filter(Pval < p_included_thre)
-
-  ### Find the lead SNP of a region and define the region
-  lSignal = tmpqtlColocReg[1, ]
-  while (lSignal$Pval <= p_included_thre) {
-    indReg = tmpqtlColocReg$Chr == lSignal$Chr & abs(tmpqtlColocReg$Pos-lSignal$Pos) < regionDis/2
-    tmpqtlColocReg[indReg, "Included"] = TRUE
-    tmpqtlColocReg[indReg, "Region"] = lSignal$Signal
-
-    qtlColocReg = rbind(qtlColocReg, tmpqtlColocReg[tmpqtlColocReg$Included, ])
-
-    tmpqtlColocReg = tmpqtlColocReg[!tmpqtlColocReg$Included, ]
-    lSignal = tmpqtlColocReg[1, ]
-
-  }
-
-  fwrite(qtlColocReg, file_qtlColocReg, quote = FALSE, sep = "\t")
-  cat("coloc region defined for module", module, ", out of", Nmodule, "modules.", "\n")
-
+### remove SNPs whose se(\beta) equals 0, as coloc needs to use 1/se(\beta)
+if(any(gwasColocReg[[paste0("se_", pop)]] == 0)){
+  gwasColocReg = gwasColocReg[gwasColocReg[[paste0("se_", pop)]] != 0, ]
+  qtlColocReg_gwas = qtlColocReg_gwas[qtlColocReg_gwas$SNP_ID %in% gwasColocReg$SNP_ID, ]
 }
 
 
-## overlap with gwas, add rsid from gwas
-snp_meta_qtl = fread(file_snp_meta_qtl)
-qtlColocReg = left_join(x = qtlColocReg, y = snp_meta_qtl, by = c("SNP_ID", "Chr", "Pos"))
-
-fwrite(qtlColocReg, file_qtlColocReg, quote = FALSE, sep = "\t")
-
-
-## add MAF column, plink?
-
-
-########## Summarize the region info ##########
-### 0. # overlapped SNPs in both QTL and GWAS
-
-### 1. #regions for each module?
-
-### 2. #SNPs in each region
-
-
-
 ########## prepare coloc files and run coloc ##########
-D1 = list("pvalues",
-          "N",
-          "MAF",
-          "type",
-          "snp")
-D2 = list("pvalues",
-          "N",
-          "MAF",
-          "type",
-          "snp")
-maf
+resColoc = NULL
+resColocSNP = NULL
+nRegion = length(gwasRegTruncPthre$Region)
+for(reg in gwasRegTruncPthre$Region){
+  ### extract the region for qtl and gwas
+  tmpqtlColocReg_gwas = qtlColocReg_gwas %>% filter(Region == reg)
+  tmpgwasColocReg = gwasColocReg %>% filter(Region == reg)
 
-check_dataset(D1)
-check_dataset(D2)
 
-## coloc
-coloc_res = coloc.abf(D1, D2, MAF = maf)
+  ### construct coloc dataset D1 & D2
+  D1 = list("pvalues" = tmpqtlColocReg_gwas$Pval,
+            "N" = qtlN,
+            "MAF" = tmpqtlColocReg_gwas$MAF,
+            "type" = qtlType,
+            "snp" = tmpqtlColocReg_gwas$SNP_ID)
+  D2 = list("pvalues" = tmpgwasColocReg[[paste0("pval_", pop)]],
+            "N" = gwasN,
+            "MAF" = tmpgwasColocReg[[paste0("af_", pop)]],
+            "beta" = tmpgwasColocReg[[paste0("beta_", pop)]],
+            "varbeta" = (tmpgwasColocReg[[paste0("se_", pop)]])^2,
+            "type" = gwasType,
+            "s" = if(gwasType=="cc") n_cases/gwasN else NULL,
+            "snp" = tmpgwasColocReg$SNP_ID)
 
-## follow up analysis
+  ### do coloc
+  coloc_res = coloc.abf(D1, D2)
 
-## save results
+  ### follow-up: credible set
+  if(coloc_res$summary["PP.H4.abf"] > pp4Thre){
+    o <- order(coloc_res$results$SNP.PP.H4,decreasing=TRUE)
+    cs <- cumsum(coloc_res$results$SNP.PP.H4[o])
+    w <- which(cs > csThre)[1]
+    resColocSNP = rbind(resColocSNP, data.table("Region" = reg,
+                                                "SNP_ID" = as.character(coloc_res$results[o,][1:w,]$snp),
+                                                "SNP.PP.H4" = coloc_res$results[o,][1:w,]$SNP.PP.H4))
+  }
 
+  ### organize result
+  resColoc = rbind(resColoc, data.table("Region" = reg, t(coloc_res$summary)) )
+
+  ### in progress
+  cat(grep(reg, gwasRegTruncPthre$Region, fixed = TRUE),
+      "-th region:", reg, "(out of", nRegion, "regions)", "is done!", "\n")
+}
+
+
+########## save results##########
+resColoc = resColoc %>% arrange(desc(PP.H4.abf))
+fwrite(resColoc, file_resColoc, quote = FALSE, sep = "\t")
+fwrite(resColocSNP, file_resColocSNP, quote = FALSE, sep = "\t")
