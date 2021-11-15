@@ -4,15 +4,18 @@ library(tidyverse)
 
 
 ########## files and parameters ##########
-file_gwas_bgz = "/scratch/midway2/liliw1/UKB_nealelab/continuous-30080-both_sexes-irnt.tsv.bgz"
-file_snp_meta = "/scratch/midway2/liliw1/UKB_nealelab/full_variant_qc_metrics.txt.bgz"
-file_qtlColocReg = "/scratch/midway2/liliw1/coloc/qtlColocReg.txt.gz"
-file_qtlColocReg_gwas = "/scratch/midway2/liliw1/coloc/qtlColocReg_gwas.txt.gz"
-file_gwasColocReg = "/scratch/midway2/liliw1/coloc/gwasColocReg.txt.gz"
-file_gwasRegTruncPthre= "/scratch/midway2/liliw1/coloc/gwasRegTruncPthre.txt"
-
 pop = "EUR"
-regionDis = 1e5
+gwasPhenocode = 30100
+#gwasPhenocode_seq = c(30080, 30090, 30100, 30110, 30010, 30020, 30030, 30040, 30050, 30060, 30070, 30270, 30240, 30250, 30260, 30280, 30290, 30300, 30000, 30120, 30130, 30140, 30150, 30160, 30180, 30190, 30200, 30210, 30220)
+p_included_thre = 1e-5
+
+file_gwas_bgz = list.files(path = "/scratch/midway2/liliw1/UKB_nealelab", pattern = paste0("^continuous.", gwasPhenocode, ".*.tsv.bgz$"), full.names = TRUE)
+file_snp_meta = "/scratch/midway2/liliw1/UKB_nealelab/full_variant_qc_metrics.txt.bgz"
+file_qtlColocReg = "/scratch/midway2/liliw1/coloc/data/qtlColocReg.txt.gz"
+
+file_qtlColocReg_gwas = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".qtlColocReg_gwas.txt.gz")
+file_gwasColocReg = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasColocReg.txt.gz")
+file_gwasRegTruncPthre= paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasRegTruncPthre.txt")
 
 
 ########## read files ##########
@@ -30,6 +33,7 @@ if(identical(gwas$pos, snpMeta$pos)){
   gwas = cbind(gwas, snpMeta[, c("rsid", "high_quality")])
 }else stop("GWAS variants and SNP meta are not aligned!")
 
+
 gwas$if_good = !is.na(gwas[[paste0("pval_", pop)]]) & gwas$high_quality & !gwas[[paste0("low_confidence_", pop)]]
 
 
@@ -38,6 +42,8 @@ gwas$if_qtl = paste(gwas$chr, gwas$pos, sep = ":") %in% qtlColocReg$SNP_ID
 gwas = gwas %>% filter(if_good & if_qtl &
                          !duplicated(paste(chr, pos, sep = ":")) )
 gwas$SNP_ID = paste(gwas$chr, gwas$pos, sep = ":")
+
+if(nrow(gwas) == 0) stop("No individuals in the specified population are phenotyped for this GWAS trait!")
 
 
 ########## qtl regions with overlapped SNPs ##########
@@ -54,13 +60,13 @@ gwasColocReg = qtlColocReg_gwas %>% select(c(Signal, Module, SNP_ID, Chr, Pos, R
 gwasRegP = gwasColocReg %>% group_by(Region) %>% summarise(s = min(pval_EUR), l = max(pval_EUR))
 qtlRegP = qtlColocReg_gwas %>% group_by(Region) %>% summarise(s = min(Pval), l = max(Pval))
 
-gwasRegTruncPthre = gwasRegP$Region[gwasRegP$s < 1e-5]
+gwasRegTruncPthre = gwasRegP$Region[gwasRegP$s < p_included_thre]
 
 
 ########## save results ##########
 fwrite(qtlColocReg_gwas, file_qtlColocReg_gwas, quote = FALSE, sep = "\t")
 fwrite(gwasColocReg, file_gwasColocReg, quote = FALSE, sep = "\t")
-fwrite(gwasColocReg, file_gwasRegTruncPthre, quote = FALSE, sep = "\t", col.names = FALSE)
+fwrite(data.table(gwasRegTruncPthre), file_gwasRegTruncPthre, quote = FALSE, sep = "\t", col.names = FALSE)
 
 
 ### Notes
