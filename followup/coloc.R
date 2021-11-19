@@ -18,6 +18,11 @@ file_gwasColocReg = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPheno
 file_gwasRegTruncPthre= paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasRegTruncPthre.txt")
 file_gwasTraitInfo = "/scratch/midway2/liliw1/UKB_nealelab/phenotype_manifest.tsv.bgz"
 
+# Add p-value and trait info
+file_qtlColocReg = "/scratch/midway2/liliw1/coloc/data/qtlColocReg.txt.gz"
+file_trait_info = "/scratch/midway2/liliw1/coloc/ukbb_blood_traits.csv"
+
+# output
 file_resColoc = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".resColoc.txt.gz")
 file_resColocSNP = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".resColocSNP.txt.gz")
 
@@ -94,7 +99,22 @@ for(reg in gwasRegTruncPthre$Region){
 }
 
 
+########## Add p-value and trait info ##########
+qtlColocReg = fread(file_qtlColocReg, header = TRUE)
+trait_info = fread(file_trait_info, sep = ",", header = TRUE)
+
+resColoc = qtlColocReg %>% select(c(Signal, Pval)) %>%
+  right_join(y = resColoc, by = c("Signal" = "Region")) %>%
+  rename("Region" = "Signal") %>%
+  mutate("Phenocode" = gwasPhenocode)
+resColoc = trait_info %>% select(c("GWAS ID", "Trait Abbreviation")) %>%
+  right_join(y = resColoc, by = c("GWAS ID" = "Phenocode")) %>%
+  rename("Phenocode" = "GWAS ID", "trait" = "Trait Abbreviation")
+
+
 ########## save results##########
 resColoc = resColoc %>% arrange(desc(PP.H4.abf))
 fwrite(resColoc, file_resColoc, quote = FALSE, sep = "\t")
 fwrite(resColocSNP, file_resColocSNP, quote = FALSE, sep = "\t")
+
+
