@@ -1,5 +1,5 @@
 ########## visualization of colocalization events ##########
-########## using R package locuscomparer ##########
+########## by R package locuscomparer ##########
 rm(list = ls())
 library(data.table)
 library(tidyverse)
@@ -33,6 +33,10 @@ resColoc = resColoc %>% filter(PP.H4.abf > pp4Thre & !Region %in% removeReg)
 
 ########## Visualize each region & save ##########
 nRegion = length(resColoc$Region)
+
+## remove SNPs without rsid, as locuscomparer requires rsid
+qtlColocReg_gwas = qtlColocReg_gwas[qtlColocReg_gwas$rsid != "", ]
+gwasColocReg = gwasColocReg[gwasColocReg$rsid != "", ]
 
 for(reg in resColoc$Region){
   tmpresColoc = resColoc %>% filter(Region == reg)
