@@ -1,3 +1,5 @@
+########## Prepare coloc regions for gwas traits ##########
+########## These traits are ukbb traits from nealelab ##########
 rm(list = ls())
 library(data.table)
 library(tidyverse)
