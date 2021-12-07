@@ -1,10 +1,12 @@
+########## Run coloc on regions for qtl and gwas traits ##########
+########## These traits are ukbb traits from nealelab ##########
 rm(list = ls())
 library(data.table)
 library(tidyverse)
 library(coloc)
 
 
-########## files and parameter ##########
+########## files and parameters ##########
 gwasPhenocode = 30080
 qtlN = 913
 qtlType = "quant"
