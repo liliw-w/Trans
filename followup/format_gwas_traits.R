@@ -111,3 +111,21 @@ gwas = gwas %>%
 fwrite(gwas, file_gwas, quote = FALSE, sep = "\t")
 
 
+
+########## Trait: MS, add beta, se columns ##########
+file_gwas = "/project2/xuanyao/llw/GWAS/pmid31604244_MS_15_discovery_metav3.0.meta.gz"
+
+## original gwas file
+gwas = fread(file = file_gwas)
+
+## beta
+gwas$beta = log(gwas[["OR"]])
+
+## se
+gwas$abs_z = with(gwas, sqrt(qchisq(1 - P, 1)))
+gwas$se = with(gwas, abs(beta / abs_z) )
+gwas$abs_z = NULL
+
+## save new formatted gwas file
+fwrite(gwas, file_gwas, quote = FALSE, sep = "\t")
+
