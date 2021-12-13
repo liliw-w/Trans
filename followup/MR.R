@@ -8,34 +8,8 @@ if(!require("TwoSampleMR")){
 
 library(TwoSampleMR)
 
-bmi_exp_dat <- read_exposure_data(
-  filename = bmi2_file,
-  sep = ",",
-  snp_col = "rsid",
-  beta_col = "effect",
-  se_col = "SE",
-  effect_allele_col = "a1",
-
-  other_allele_col = "a2",
-  eaf_col = "a1_freq",
-  exposure,
-
-  chr_col,
-  position_col,
-  samplesize_col = "n",
-  pval_col = "p-value",
-  #units_col = "Units",
-  #gene_col = "Gene"
-)
-head(bmi_exp_dat)
-bmi_exp_dat$exposure <- "BMI"
-
-cd /project2/xuanyao/llw/DGN/data/
-  plink --bfile chr10_QCed --recode --out chr10
-
 pop = "EUR"
 gwasPhenocode = "30090"
-reg = "module2:7:50427982"
 
 
 file_qtlMaf = "/project2/xuanyao/llw/DGN/data/chr_all.frq"
