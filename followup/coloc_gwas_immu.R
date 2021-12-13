@@ -8,8 +8,8 @@ library(tidyverse)
 args = commandArgs(trailingOnly=TRUE)
 
 ########## files and parameters ##########
-gwas_pmid = as.numeric(26502338)
-gwas_label = "sle"
+gwas_pmid = as.numeric(args[1])
+gwas_label = args[2]
 p_included_thre = 1e-5
 
 ## create folder for each gwas trait
@@ -96,4 +96,3 @@ fwrite(data.table(gwasRegTruncPthre), file_gwasRegTruncPthre, quote = FALSE, sep
 
 str(qtlColocReg_gwas)
 str(gwasRegTruncPthre)
-
