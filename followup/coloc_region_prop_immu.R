@@ -15,8 +15,8 @@ dirPlot = "/scratch/midway2/liliw1/coloc/pmid_all"
 file_plot = "all.traits.coloc.region.summary.png"
 file_res_coloc_reg_prop = file.path(dirPlot, "coloc_region_prop.txt")
 
-gwas_pmid_seq = c(29892013, 24390342, 29083406, 30929738, 26502338, 26192919, 26192919, 26192919, 28067908, 28067908, 28067908)
-gwas_label_seq = c("AE", "RA_GWASmeta_European", "Allergy", "ASTHMA", "sle", "IBD", "CD", "UC", "ibd", "cd", "uc")
+gwas_pmid_seq = c(29892013, 31604244, 24390342, 29083406, 30929738, 26502338, 26192919, 26192919, 26192919, 28067908, 28067908, 28067908)
+gwas_label_seq = c("AE", "MS", "RA_GWASmeta_European", "Allergy", "ASTHMA", "sle", "IBD", "CD", "UC", "ibd", "cd", "uc")
 
 dir_gwas = file.path("/scratch/midway2/liliw1/coloc",
                      paste0("pmid", gwas_pmid_seq, "_", gwas_label_seq))
