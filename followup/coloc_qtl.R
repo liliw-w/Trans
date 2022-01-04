@@ -81,7 +81,8 @@ if( !all(qtlColocReg$SNP_ID %in% qtlMaf$SNP) ) stop("Not all SNPs have maf!")
 
 qtlColocReg = qtlColocReg %>%
   left_join(y = qtlMaf, by = c("SNP_ID" = "SNP", "Chr" = "CHR")) %>%
-  mutate(A1 = NULL, A2 = NULL, NCHROBS = NULL)
+  mutate(A1 = NULL, A2 = NULL, NCHROBS = NULL) %>%
+  arrange(Pval)
 
 
 ########## Save results ##########
