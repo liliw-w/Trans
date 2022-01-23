@@ -113,7 +113,9 @@ resColoc = qtlColocReg %>% select(c(Signal, Pval)) %>%
   right_join(y = resColoc, by = c("Signal" = "Region")) %>%
   rename("Region" = "Signal") %>%
   mutate("gwas_label" = gwas_label)
-resColoc = gwas_trait_info %>% select(c("Trait", "Label")) %>%
+resColoc = gwas_trait_info %>%
+  filter(PMID == gwas_pmid & Label == gwas_label) %>%
+  select(c("Trait", "Label")) %>%
   right_join(y = resColoc, by = c("Label" = "gwas_label")) %>%
   rename("trait" = "Trait", "Phenocode" = "Label")
 
