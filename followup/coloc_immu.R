@@ -69,8 +69,8 @@ for(reg in gwasRegTruncPthre$Region){
   ### extract the region for qtl and gwas
   tmpqtlColocReg_gwas = qtlColocReg_gwas %>% filter(Region == reg)
   tmpgwasColocReg = gwasColocReg %>% filter(Region == reg)
-
-
+  
+  
   ### construct coloc dataset D1 & D2
   D1 = list("pvalues" = tmpqtlColocReg_gwas$Pval,
             "N" = qtlN,
@@ -85,10 +85,10 @@ for(reg in gwasRegTruncPthre$Region){
             "type" = gwasType,
             "s" = if(gwasType=="cc" & !is.na(gwasN) ) n_cases/gwasN else if(gwasType=="cc" & is.na(gwasN) ) tmpgwasColocReg[["s"]] else NULL,
             "snp" = tmpgwasColocReg$SNP_ID)
-
+  
   ### do coloc
   coloc_res = coloc.abf(D1, D2)
-
+  
   ### follow-up: credible set
   if(coloc_res$summary["PP.H4.abf"] > pp4Thre){
     o <- order(coloc_res$results$SNP.PP.H4,decreasing=TRUE)
@@ -98,10 +98,10 @@ for(reg in gwasRegTruncPthre$Region){
                                                 "SNP_ID" = as.character(coloc_res$results[o,][1:w,]$snp),
                                                 "SNP.PP.H4" = coloc_res$results[o,][1:w,]$SNP.PP.H4))
   }
-
+  
   ### organize result
   resColoc = rbind(resColoc, data.table("Region" = reg, t(coloc_res$summary)) )
-
+  
   ### in progress
   cat(grep(reg, gwasRegTruncPthre$Region, fixed = TRUE),
       "-th region:", reg, "(out of", nRegion, "regions)", "is done!", "\n")
