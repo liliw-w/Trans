@@ -1,23 +1,47 @@
-########## Prepare coloc regions for gwas traits ##########
-########## These traits are ukbb traits from nealelab ##########
 rm(list = ls())
 library(data.table)
 library(tidyverse)
 
 
+file_pheno_manifest = "/scratch/midway2/liliw1/coloc/phenotype_manifest_sub.tsv"
+dir_gwas_data = "/project2/xuanyao/llw/GWAS/UKB_nealelab"
+dir_coloc_data = "/project2/xuanyao/llw/coloc"
+dir_coloc = "/scratch/midway2/liliw1/coloc"
+
+pheno_manifest = fread(file_pheno_manifest)
+pheno_manifest$filename
+
 ########## files and parameters ##########
 pop = "EUR"
-gwasPhenocode = 30100
-#gwasPhenocode_seq = c(30080, 30090, 30100, 30110, 30010, 30020, 30030, 30040, 30050, 30060, 30070, 30270, 30240, 30250, 30260, 30280, 30290, 30300, 30000, 30120, 30130, 30140, 30150, 30160, 30180, 30190, 30200, 30210, 30220)
+gwasPhenocode = pheno_manifest$phenocode_uniq[1]
+gwas_trait_type = pheno_manifest$trait_type[1]
+gwas_trait = pheno_manifest$trait[1]
+
+#gwasPhenocode_seq = pheno_manifest$phenocode_uniq
 p_included_thre = 1e-5
 
-file_gwas_bgz = list.files(path = "/scratch/midway2/liliw1/UKB_nealelab", pattern = paste0("^continuous.", gwasPhenocode, ".*.tsv.bgz$"), full.names = TRUE)
-file_snp_meta = "/scratch/midway2/liliw1/UKB_nealelab/full_variant_qc_metrics.txt.bgz"
-file_qtlColocReg = "/scratch/midway2/liliw1/coloc/data/qtlColocReg.txt.gz"
+file_qtlColocReg = file.path(dir_coloc_data, "qtlColocReg.txt.gz")
+file_snp_meta = file.path(dir_gwas_data, "full_variant_qc_metrics.txt.bgz")
+file_gwas_bgz = file.path(dir_gwas_data, pheno_manifest$filename)[1]
 
-file_qtlColocReg_gwas = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".qtlColocReg_gwas.txt.gz")
-file_gwasColocReg = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasColocReg.txt.gz")
-file_gwasRegTruncPthre= paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasRegTruncPthre.txt")
+
+dir_gwas = file.path(dir_coloc,
+                     paste("ukbb",
+                           gwas_trait_type,
+                           gwasPhenocode,
+                           gwas_trait,
+                           sep = "_")
+                     )
+dir.create(file.path(dir_gwas, "data"), recursive = TRUE, showWarnings = FALSE)
+
+
+## output files
+setwd(dir_gwas)
+file_qtlColocReg_gwas = "data/qtlColocReg_gwas.txt.gz"
+file_gwasColocReg = "data/gwasColocReg.txt.gz"
+file_gwasRegTruncPthre = "data/gwasRegTruncPthre.txt"
+
+
 
 
 ########## read files ##########
