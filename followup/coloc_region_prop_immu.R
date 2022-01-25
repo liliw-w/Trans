@@ -64,7 +64,7 @@ fig_bar_prop <- ggplot(dat_fig_bar_prop, aes(x = trait, y = n, fill = regionType
   scale_fill_brewer(palette="Paired") +
   theme_bw() + theme(axis.text.x = element_text(angle = 60, size = 7),
                      panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-                     legend.position = "none")
+                     legend.position = "top")
 
 # figure 2: draw line plot on the colocalized region proportion
 dat_fig_line_prop = res_coloc_reg_prop %>% select(c(trait, propColoc, propPvalColoc)) %>%
