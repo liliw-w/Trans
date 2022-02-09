@@ -5,16 +5,16 @@ library(tidyverse)
 ########## files and parameter, read files ##########
 scriptCalMaf = "cal_maf.sh"
 dirGeno = "/project2/xuanyao/llw/DGN/data/"
-dir_p = "/project2/xuanyao/llw/DGN_no_filter_on_mappability/p/"
-Nmodule = 166
+dir_p = "/project2/xuanyao/llw/MODULES/MSigDB/p/"
+Nmodule = 50
 module_seq = 1:Nmodule
 p_included_thre = 1e-5
 regionDis = 1e5
 
-file_snp_meta_qtl = "/scratch/midway2/liliw1/coloc/snp.meta.qtl.txt.gz"
+file_snp_meta_qtl = "/project2/xuanyao/llw/coloc/snp.meta.qtl.txt.gz"
 file_qtlMaf = "/project2/xuanyao/llw/DGN/data/chr_all.frq"
 
-file_qtlColocReg = "/scratch/midway2/liliw1/coloc/data/qtlColocReg.txt.gz"
+file_qtlColocReg = "/scratch/midway2/liliw1/coloc_MSigDB/qtlColocReg.txt.gz"
 
 
 ########## Define regions ##########
@@ -41,7 +41,7 @@ for(module in module_seq){
     separate(col = Signal, into = c("Module", "Chr", "Pos"), sep = ":", remove = FALSE, convert = TRUE) %>%
     unite(col = "SNP_ID", c("Chr", "Pos"), sep = ":", remove = FALSE) %>%
     arrange(Pval) %>%
-    mutate(Region = NA) %>% mutate(Included = FALSE)
+    mutate(Region = "") %>% mutate(Included = FALSE)
   # tmpqtlColocReg = tmpqtlColocReg %>% filter(Pval < p_included_thre)
 
   ### Find the lead SNP of a region and define the region
