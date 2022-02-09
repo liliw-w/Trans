@@ -1,19 +1,27 @@
 ########## Prepare coloc regions for gwas traits ##########
 ########## These traits are part of the 72 traits ##########
 ########## Focus on the 14 autoimmune diseases ##########
-rm(list = ls())
+rm(list = ls()[!ls() %in% "qtlColocReg"])
 library(data.table)
 library(tidyverse)
 
 args = commandArgs(trailingOnly=TRUE)
 
+## qtl regions
+file_qtlColocReg = "/scratch/midway2/liliw1/coloc_MSigDB/qtlColocReg.txt.gz"
+
+qtlColocReg = fread(file_qtlColocReg)
+
+rm(list = ls()[!ls() %in% "qtlColocReg"])
+
+
 ########## files and parameters ##########
-gwas_pmid = as.numeric(args[1])
-gwas_label = args[2]
+gwas_pmid = 31604244
+gwas_label = "MS"
 p_included_thre = 1e-5
 
 ## create folder for each gwas trait
-dir_gwas = file.path("/scratch/midway2/liliw1/coloc",
+dir_gwas = file.path("/scratch/midway2/liliw1/coloc_MSigDB",
                      paste0("pmid", gwas_pmid, "_", gwas_label))
 dir_gwas_data = file.path(dir_gwas, "data")
 dir.create(dir_gwas, showWarnings = FALSE)
@@ -24,7 +32,6 @@ file_gwas = list.files(path = "/project2/xuanyao/llw/GWAS",
                        pattern = paste0("^pmid", gwas_pmid, ".*", gwas_label, ".*.gz$"),
                        full.names = TRUE)
 file_gwas_trait_info = "/project2/xuanyao/llw/GWAS/72_traits_GWAS.csv"
-file_qtlColocReg = "/scratch/midway2/liliw1/coloc/data/qtlColocReg.txt.gz"
 
 ## output files
 file_qtlColocReg_gwas = file.path(dir_gwas_data, "qtlColocReg_gwas.txt.gz")
@@ -48,8 +55,6 @@ gwas = fread(file = file_gwas,
              select = gwasCol[!is.na(gwasCol)],
              col.names = gwasCol_newName[!is.na(gwasCol)])
 
-## qtl regions
-qtlColocReg = fread(file_qtlColocReg)
 
 
 ########## gwas good SNPs & if overlapped with qtl SNPs & remove duplicated SNPs ##########
