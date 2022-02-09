@@ -11,7 +11,7 @@ pvalThre = 1e-7
 nsnpsThre = 5
 #gwasPhenocode_seq = c(30080, 30090, 30100, 30110, 30010, 30020, 30030, 30040, 30050, 30060, 30070, 30270, 30240, 30250, 30260, 30280, 30290, 30300, 30000, 30120, 30130, 30140, 30150, 30160, 30180, 30190, 30200, 30210, 30220)
 
-dirPlot = "/scratch/midway2/liliw1/coloc/pmid_all"
+dirPlot = "/scratch/midway2/liliw1/coloc_MSigDB/pmid_all"
 dir.create(dirPlot, showWarnings = FALSE)
 file_plot = paste0("all.traits.coloc.region.summary.pvalThre-", pvalThre, ".png")
 file_res_coloc_reg_prop = file.path(dirPlot, paste0("coloc_region_prop_pvalThre-", pvalThre, ".txt"))
@@ -19,7 +19,7 @@ file_res_coloc_reg_prop = file.path(dirPlot, paste0("coloc_region_prop_pvalThre-
 gwas_pmid_seq = c(29892013, 31604244, 24390342, 29083406, 30929738, 26502338, 26192919, 26192919, 26192919, 28067908, 28067908, 28067908)
 gwas_label_seq = c("AE", "MS", "RA_GWASmeta_European", "Allergy", "ASTHMA", "sle", "IBD", "CD", "UC", "ibd", "cd", "uc")
 
-dir_gwas = file.path("/project2/xuanyao/llw/coloc",
+dir_gwas = file.path("/scratch/midway2/liliw1/coloc_MSigDB/",
                      paste0("pmid", gwas_pmid_seq, "_", gwas_label_seq))
 dir_gwas_data = file.path(dir_gwas, "data")
 
@@ -36,7 +36,7 @@ res_coloc_reg_prop = resColoc_all %>%
             nRegionColoc = sum(PP.H4.abf > pp4Thre & nsnps >= nsnpsThre),
             nRegionPval = sum(Pval <= pvalThre),
             nRegionPvalColoc = sum(Pval <= pvalThre & PP.H4.abf > pp4Thre & nsnps >= nsnpsThre)) %>%
-  arrange(desc(nRegionPvalColoc)) %>%
+  arrange(desc(nRegionPvalColoc), desc(nRegionColoc), desc(nRegionPval), desc(nRegion)) %>%
   ungroup()
 res_coloc_reg_prop = res_coloc_reg_prop %>%
   mutate(propColoc = nRegionColoc/nRegion, propPvalColoc = nRegionPvalColoc/nRegionPval)
@@ -52,17 +52,22 @@ fwrite(res_coloc_reg_prop, file_res_coloc_reg_prop, quote = FALSE, sep = "\t")
 ######################################################
 
 # order the traits based on the number of corresponding regions
-res_coloc_reg_prop = rename(res_coloc_reg_prop, c("Phenocode" = "trait", "trait" = "Phenocode"))
-res_coloc_reg_prop$trait = with(res_coloc_reg_prop, reorder(trait, -nRegionPvalColoc))
+#res_coloc_reg_prop = rename(res_coloc_reg_prop, c("Phenocode" = "trait", "trait" = "Phenocode"))
+
 
 # figure 1: draw bar plot on number of reigons
 dat_fig_bar_prop = res_coloc_reg_prop %>%
   pivot_longer(c(nRegion, nRegionPval), names_to = "regionType", values_to = "n") %>%
   pivot_longer(c(nRegionColoc, nRegionPvalColoc), names_to = "regionTypeColoc", values_to = "nColoc")
+dat_fig_bar_prop$Phenocode = with(dat_fig_bar_prop,
+                                  factor(Phenocode,
+                                         levels = unique(Phenocode),
+                                         labels = trait[!duplicated(Phenocode)])
+)
 
-fig_bar_prop <- ggplot(dat_fig_bar_prop, aes(x = trait, y = n, fill = regionType)) +
+fig_bar_prop <- ggplot(dat_fig_bar_prop, aes(x = Phenocode, y = n, fill = regionType)) +
   geom_bar(stat = "identity", position=position_dodge()) +
-  geom_bar(aes(x = trait, y = nColoc, fill = regionTypeColoc), stat = "identity", position=position_dodge()) +
+  geom_bar(aes(x = Phenocode, y = nColoc, fill = regionTypeColoc), stat = "identity", position=position_dodge()) +
   labs(x = NULL, y = "#Regions") +
   scale_fill_brewer(palette="Paired") +
   theme_bw() + theme(axis.text.x = element_text(angle = 60, size = 7),
