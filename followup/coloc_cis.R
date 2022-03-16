@@ -1,125 +1,158 @@
+########## Run coloc on regions for qtl and gwas traits ##########
+########## These traits are part of the 72 traits ##########
+########## Focus on the 14 autoimmune diseases ##########
 rm(list = ls())
 library(data.table)
 library(tidyverse)
-library(ggplot2)
-library(cowplot)
+library(coloc)
+
+setwd('/scratch/midway2/liliw1/coloc_cis_ARHGEF3')
 
 
-########## files and parameters, read files ##########
-pvalThre = 1e-8
-regionDis = 1e5
-cisDis = 5e5
-p_included_thre = 1e-5
+## region files
+file_qtlColocReg =  "~/xuanyao_llw/coloc/cis/data/qtlColocReg.txt.gz"
+file_qtlColocReg_gwas = file.path("qtlColocReg_gwas.txt.gz")
+file_gwasColocReg = file.path("gwasColocReg.txt.gz")
 
 
-file_gene_meta = "/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt"
-file_qtlColocReg = "/scratch/midway2/liliw1/coloc/data/qtlColocReg.txt.gz"
-
-gene_meta = fread(file_gene_meta, header = TRUE)
-qtlColocReg = fread(file_qtlColocReg)
-qtlColocReg = qtlColocReg %>% filter(rsid != "")
+## output
+file_resColoc = file.path("resColoc.txt.gz")
+file_resColocSNP = file.path("resColocSNP.txt.gz")
 
 
-res_coloc_leadSNP = qtlColocReg %>%
-  group_by(Region) %>%
-  summarise(Pval = min(Pval)) %>%
-  filter(Pval <= pvalThre) %>%
-  ungroup() %>%
-  select(Region) %>%
-  separate(col = Region, into = c("Module", "Chr", "Pos"), sep = ":", remove = FALSE, convert = TRUE)
+qtlColocReg <- fread(file_qtlColocReg, header = TRUE)
+qtlColocReg_gwas <- fread(file_qtlColocReg_gwas)
+gwasColocReg <- fread(file_gwasColocReg)
 
 
+gene_sep <- gwasColocReg %>% group_by(gene) %>% summarise() %>% unlist()
+gwas_pmid_seq <- gene_sep
+gwas_label_seq <- gene_sep
+
+reg_seq <- gwasColocReg %>% group_by(Region) %>% summarise() %>% unlist()
 
 
-########## loop over all traits ##########
-#file_resColoc = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode_seq, ".resColoc.txt.gz")
-#resColoc_all = rbindlist(lapply(file_resColoc, fread, header = TRUE), use.names = TRUE)
+qtlN = 913
+gwasN <- 913
+qtlType = "quant"
+gwasType = "quant"
+pp4Thre = 0.75
+csThre = 0.95
 
-# only retain regions with module-QTL signals
-#res_coloc_leadSNP = resColoc_all %>% filter(Pval <= pvalThre) %>%
-#  select(c(Phenocode, trait, Region, Pval, nsnps, PP.H4.abf)) %>%
-#  separate(col = Region, into = c("Module", "Chr", "Pos"), sep = ":", remove = FALSE, convert = TRUE)
+gwasColocReg_all_gene <- gwasColocReg
+resColoc = NULL
+resColocSNP = NULL
+for(k in 1:length(gwas_pmid_seq)){
+  gwas_pmid = gwas_pmid_seq[k]
+  gwas_label = gwas_label_seq[k]
+  
+  gwasColocReg <- gwasColocReg_all_gene %>% filter(gene == gwas_pmid)
+  
+  gwasRegTruncPthre <- gwasColocReg %>% group_by(Region) %>% summarise()
+  
+  ########## prepare coloc files and run coloc ##########
+  nRegion = length(gwasRegTruncPthre$Region)
+  for(reg in gwasRegTruncPthre$Region){
+    ### extract the region for qtl and gwas
+    tmpqtlColocReg_gwas = qtlColocReg_gwas %>% filter(Region == reg)
+    tmpgwasColocReg = gwasColocReg %>% filter(Region == reg)
+    
+    tmpgwasColocReg <- tmpgwasColocReg %>% filter(!duplicated(SNP_ID)) %>% filter(SNP_ID %in% tmpqtlColocReg_gwas$SNP_ID)
+    tmpqtlColocReg_gwas <- tmpqtlColocReg_gwas %>% filter(SNP_ID %in% tmpgwasColocReg$SNP_ID)
+    
+    ### construct coloc dataset D1 & D2
+    D1 = list("pvalues" = tmpqtlColocReg_gwas$Pval,
+              "N" = qtlN,
+              "MAF" = tmpqtlColocReg_gwas$MAF,
+              "type" = qtlType,
+              "snp" = tmpqtlColocReg_gwas$SNP_ID)
+    D2 = list("pvalues" = tmpgwasColocReg$npval,
+              "N" = gwasN,
+              "MAF" = tmpgwasColocReg$MAF,
+              "beta" = tmpgwasColocReg$slope,
+              #"varbeta" = (tmpgwasColocReg[["se"]])^2,
+              "type" = gwasType,
+              #"s" = if(gwasType=="cc" & !is.na(gwasN) ) n_cases/gwasN else if(gwasType=="cc" & is.na(gwasN) ) tmpgwasColocReg[["s"]] else NULL,
+              "snp" = tmpgwasColocReg$SNP_ID)
+    
+    ### do coloc
+    coloc_res = coloc.abf(D1, D2)
+    
+    ### follow-up: credible set
+    if(coloc_res$summary["PP.H4.abf"] > pp4Thre){
+      o <- order(coloc_res$results$SNP.PP.H4,decreasing=TRUE)
+      cs <- cumsum(coloc_res$results$SNP.PP.H4[o])
+      w <- which(cs > csThre)[1]
+      resColocSNP = rbind(resColocSNP, data.table("Region" = reg,
+                                                  "SNP_ID" = as.character(coloc_res$results[o,][1:w,]$snp),
+                                                  "SNP.PP.H4" = coloc_res$results[o,][1:w,]$SNP.PP.H4))
+    }
+    
+    ### organize result
+    resColoc = rbind(resColoc, data.table("Region" = reg, "gwas_label" = gwas_label, t(coloc_res$summary)) )
+    
+    ### in progress
+    cat(grep(reg, gwasRegTruncPthre$Region, fixed = TRUE),
+        "-th region:", reg, "(out of", nRegion, "regions)", "is done!", "\n")
+  }
+  
+  cat("Trait", gwas_label, ". \n")
+  
+}
 
 
-# only consider "protein_coding" or "lincRNA" genes, & convert TSS
-gene_meta = gene_meta %>% filter(Class %in% c("protein_coding", "lincRNA"))
-strand_ind = gene_meta$Strand == "-"
-gene_meta[strand_ind, "Start"] = gene_meta[strand_ind, "End"]
+########## Add p-value and trait info to coloc regions ##########
+resColoc = qtlColocReg %>%
+  select(c(Signal, Pval)) %>%
+  right_join(y = resColoc, by = c("Signal" = "Region")) %>%
+  rename("Region" = "Signal")
+resColoc <- resColoc %>%
+  mutate(trait = gwas_label) %>%
+  rename("Phenocode" = "gwas_label")
 
 
-# TSS and distance of genes that are overlapped with regions and lead SNPs
-coloc_cis_dis = max(regionDis/2, cisDis/2)
+########## save results##########
+resColoc = resColoc %>% arrange(desc(PP.H4.abf))
+fwrite(resColoc, file_resColoc, quote = FALSE, sep = "\t")
+#if(!is.null(resColocSNP)) fwrite(resColocSNP, file_resColocSNP, quote = FALSE, sep = "\t")
 
-cis_overlap = rbindlist(apply(res_coloc_leadSNP, 1, function(x) {
-  tmp_cis_overlap = gene_meta %>%
-    filter(Chromosome == paste0("chr", as.numeric(x["Chr"]))) %>%
-    mutate(dis = abs(Start-as.numeric(x["Pos"]))) %>%
-    filter(dis < coloc_cis_dis)
-  data.table("N_gene" = length(tmp_cis_overlap$GeneSymbol),
-             "gene" = paste(tmp_cis_overlap$GeneSymbol, collapse = ";"),
-             "dis" = paste(tmp_cis_overlap$dis, collapse = ";") )
-}))
+str(resColoc)
+str(sum(resColoc$PP.H4.abf > pp4Thre))
 
-res_coloc_leadSNP = cbind(res_coloc_leadSNP, cis_overlap)
+resColoc %>% group_by(Region) %>% summarise()
 
-reg_gene = rbindlist(apply(res_coloc_leadSNP %>% filter(N_gene > 0), 1, function(x) {
-  data.table("Region" = x["Region"],
-             "gene" = unlist(strsplit(x["gene"], ";")) )
-}))
+df_fig <- resColoc %>% group_by(Region) %>% summarise(H0 = max(PP.H0.abf),
+                                                      H1 = max(PP.H1.abf),
+                                                      H2 = max(PP.H2.abf),
+                                                      H3 = max(PP.H3.abf),
+                                                      H4 = max(PP.H4.abf) ) %>%
+  pivot_longer(c('H0', 'H1', 'H2', 'H3', 'H4'), names_to = "type", values_to = "H")
 
-
-file_cis_eqtl = "/project2/xuanyao/llw/DGN_PCO.lambda.01/nom_20phenoPC_allChr_eQTL.txt.gz"
-cis_eqtl = fread(file_cis_eqtl)
-colnames(cis_eqtl) = c("pid", "sid", "dist", "npval", "slope")
+df_fig2 <- resColoc %>%
+  pivot_longer(c('PP.H0.abf', 'PP.H1.abf', 'PP.H2.abf', 'PP.H3.abf', 'PP.H4.abf'), names_to = "type", values_to = "H")
 
 
-ind = cis_eqtl$pid %in% unique(reg_gene$gene)
-cis_eqtl = cis_eqtl[ind, ]
+library(ggbeeswarm)
+library(RColorBrewer)
+
+custom.col <- c("#FFDB6D", "#C4961A", "#F4EDCA", 
+                "#D16103", "#C3D7A4", "#52854C", "#4E84C4", "#293352")
+
+# The palette with grey:
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# The palette with black:
+cbp2 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+ggplot(df_fig2, mapping = aes(type, H, color = type)) +
+  geom_quasirandom(varwidth = TRUE, size = 1, alpha = 0.6) +
+  scale_color_manual(values = cbp1) +
+  theme_classic()
 
 
-
-gwasColocReg = reg_gene %>% left_join(cis_eqtl, by = c("gene" = "pid") ) %>% filter(!is.na(npval))
-gwasColocReg = gwasColocReg %>%
-  group_by(Region, gene) %>%
-  summarise("minp" = min(npval)) %>%
-  ungroup %>%
-  filter(minp < p_included_thre) %>%
-  left_join(gwasColocReg, by = c("Region", "gene") )
-
-
-gwasColocReg = gwasColocReg[gwasColocReg$sid %in% qtlColocReg$SNP_ID, ]
-qtlColocReg_gwas = qtlColocReg[qtlColocReg$Region %in% gwasColocReg$Region & qtlColocReg$SNP_ID %in% gwasColocReg$sid, ]
-gwasColocReg = gwasColocReg[gwasColocReg$sid %in% qtlColocReg_gwas$SNP_ID, ]
-
-gwasColocReg = qtlColocReg_gwas %>%
-  filter(!duplicated(SNP_ID)) %>%
-  select(SNP_ID, MAF) %>%
-  right_join(gwasColocReg, by = c("SNP_ID" = "sid") )
-
-fwrite(gwasColocReg, "gwasColocReg.txt.gz", quote = FALSE, sep = "\t")
-fwrite(qtlColocReg_gwas, "qtlColocReg_gwas.txt.gz", quote = FALSE, sep = "\t")
-
-
-
-########## Plot ##########
-fig1 = ggplot(res_coloc_leadSNP, aes(x = N_gene)) +
-  #facet_wrap(~trait) +
-  geom_line(stat = "bin", binwidth = 1) +
-  geom_point(stat = "bin", binwidth = 1, size = 0.7) +
-  labs(x = "#cis genes", y = "#regions") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-res_coloc_dis_trait = res_coloc_leadSNP %>% group_by() %>% summarise(dis_trait = paste0(dis, collapse = ";"))
-res_coloc_dis_trait = data.table("dis" = as.numeric(unlist(strsplit(res_coloc_dis_trait$dis_trait, ";"))) )
-
-fig2 = ggplot(res_coloc_dis_trait, aes(x = dis)) +
-  #facet_wrap(~trait) +
-  geom_line(stat = "bin", binwidth = 5000) +
-  geom_point(stat = "bin", binwidth = 5000, size = 0.7) +
-  labs(x = "dis", y = "#regions") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-fig <- plot_grid(fig1, fig2, labels = c('A', "B"), nrow = 1)
-ggsave("region.cis.gene.png", fig, path = "./plot/", width = 10, height = 5)
+# 255
+# 212
 
 
