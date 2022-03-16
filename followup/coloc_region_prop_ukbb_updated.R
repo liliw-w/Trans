@@ -1,7 +1,6 @@
 rm(list = ls())
 library(data.table)
 library(tidyverse)
-library(ggplot2)
 library(cowplot)
 
 file_pheno_manifest = "/scratch/midway2/liliw1/coloc/phenotype_manifest_sub.tsv"
@@ -66,7 +65,12 @@ fwrite(res_coloc_reg_prop, file_res_coloc_reg_prop, quote = FALSE, sep = "\t")
 ########## 2. visualize the proportions ##########
 ######################################################
 
+### number regions whose lead-SNPs are trans-eQTLs. Don't consider traits' p-values in this region
+### Previously, I draw those light regions if their min p of trait < 1e-5.
+n_region_pval_all_trait = 255
+
 res_coloc_reg_prop = fread(file_res_coloc_reg_prop)
+res_coloc_reg_prop$nRegionPval_all_trait = n_region_pval_all_trait
 
 # order the traits based on the number of corresponding regions
 #res_coloc_reg_prop$Phenocode = with(res_coloc_reg_prop, reorder(Phenocode, -nRegion))
@@ -79,21 +83,42 @@ dat_fig_bar_prop = res_coloc_reg_prop %>%
 dat_fig_bar_prop$Phenocode = with(dat_fig_bar_prop,
                                   factor(Phenocode,
                                          levels = unique(Phenocode),
-                                         labels = paste(trait[!duplicated(Phenocode)],
-                                                        Phenocode[!duplicated(Phenocode)],
-                                                        sep = "_"))
+                                         labels = paste(Phenocode[!duplicated(Phenocode)],
+                                                        trait[!duplicated(Phenocode)],
+                                                        sep = ";"))
 )
 
+### Don't draw blue regions, only draw green regions, i.e. regions whose lead-SNPs are trans-eQTLs
+dat_fig_bar_prop <- dat_fig_bar_prop %>% filter(regionType == "nRegionPval" & regionTypeColoc == "nRegionPvalColoc")
+
+
+### Draw bar plot (with dual y-axis)
+y_lim <- n_region_pval_all_trait
 fig_bar_prop <- ggplot(dat_fig_bar_prop, aes(x = Phenocode)) +
+  geom_bar(aes(y = n_region_pval_all_trait), stat = "identity", fill = "#edf5f9") +
   geom_bar(aes(y = n, fill = regionType), stat = "identity", position=position_dodge()) +
   geom_bar(aes(y = nColoc, fill = regionTypeColoc), stat = "identity", position=position_dodge()) +
-  labs(x = "Trait", y = "#Regions") +
-  scale_fill_brewer(palette="Paired") +
-  theme_bw() + theme(text = element_text(size = 4),
-                     axis.text.x = element_text(angle = 60, size = 3),
-                     panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-                     legend.position = "top")
-fig_bar_prop
+  labs(x = NULL, y = "Regions") +
+  scale_fill_brewer(palette = "Paired") + #c("#A6CEE3", "#1F78B4"), c("#B2DF8A", "#33A02C")
+  scale_y_continuous(limits = c(0, y_lim),
+                     sec.axis = sec_axis(~./y_lim, name = "Coloc Proportion")
+                     ) +
+  theme_classic() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "none",
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10, face = "bold"),
+        legend.background = element_rect(color = "black", linetype = "dashed"),
+        legend.key.size= unit(0.5, "cm"),
+        axis.line = element_line(colour="black"),
+        plot.margin=unit(c(10,5,5,5),"mm"),
+        axis.text.x = element_text(angle = 60, hjust=1, vjust = 1, size = 10),
+        axis.text.y = element_text(colour = "black", size = 12),
+        axis.title.y = element_text(angle=90,vjust =2, size=14),
+        axis.title.x = element_text(vjust = -0.2, size=12),
+        axis.title.y.right = element_text(angle = 90) )
+
 
 # figure 2: draw line plot on the colocalized region proportion
 dat_fig_line_prop = res_coloc_reg_prop %>% select(c(Phenocode, trait, propColoc, propPvalColoc)) %>%
@@ -102,26 +127,49 @@ dat_fig_line_prop = res_coloc_reg_prop %>% select(c(Phenocode, trait, propColoc,
 dat_fig_line_prop$Phenocode = with(dat_fig_line_prop,
                                    factor(Phenocode,
                                           levels = unique(Phenocode),
-                                          labels = paste(trait[!duplicated(Phenocode)],
-                                                         Phenocode[!duplicated(Phenocode)],
-                                                         sep = "_"))
+                                          labels = paste(Phenocode[!duplicated(Phenocode)],
+                                                         trait[!duplicated(Phenocode)],
+                                                         sep = ";"))
 )
 
-fig_line_prop <- ggplot(dat_fig_line_prop, aes(x = Phenocode,
-                                               y = proportion, group = Type, color = Type)) +
-  geom_line() +
-  geom_point() +
-  labs(x = "Trait", y = "Coloc Proportion", color = "Region type") +
-  scale_colour_manual(values = c("blue", "green")) +
-  theme_bw() + theme(text = element_text(size = 4),
-                     axis.text.x = element_text(angle = 60, size = 3),
-                     panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-                     legend.position = "top")
-fig_line_prop
+### Don't draw blue regions, only draw green regions, i.e. regions whose lead-SNPs are trans-eQTLs
+dat_fig_line_prop <- dat_fig_line_prop %>% filter(Type == "propPvalColoc")
 
-# combine the plots
-fig <- plot_grid(fig_bar_prop, fig_line_prop, labels = c('A', "B"), ncol = 1)
+
+### Add the proportion line on the second y-axis of the above bar plot
+fig_combined <- fig_bar_prop +
+  geom_line(data = dat_fig_line_prop,
+            aes(x = Phenocode,
+                y = proportion*y_lim, group = Type), color = "blue") +
+  geom_point(data = dat_fig_line_prop,
+             aes(x = Phenocode,
+                 y = proportion*y_lim, group = Type), color = "blue") +
+  theme(axis.text.x = element_text(color = "black"))
+
+
+### save figure object and figure
+saveRDS(fig_combined, 'fig4b_ukbb.rds')
+
+ggsave('plot/fig4b.png', fig_combined, width = 8, height = 6)
+
+
+### Draw line plot
+#fig_line_prop <- ggplot(dat_fig_line_prop,
+#                        aes(x = Phenocode,
+#                            y = proportion, group = Type, color = Type)) +
+#  geom_line() +
+#  geom_point() +
+#  labs(x = NULL, y = "Coloc Proportion", color = "Region type") +
+#  scale_colour_manual(values = c("blue", "green")) +
+#  theme_bw() + theme(text = element_text(size = 4),
+#                     axis.text.x = element_text(angle = 60, size = 3),
+#                     panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#                     legend.position = "top")
+
+
+# combine the bar plot and the line plots
+#fig <- plot_grid(fig_bar_prop, fig_line_prop, labels = c('A', "B"), ncol = 1)
 
 # save plot
-ggsave(file_plot, fig, width = 10, height = 7)
+#ggsave(file_plot, fig, width = 10, height = 7)
 
