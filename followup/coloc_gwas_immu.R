@@ -8,11 +8,9 @@ library(tidyverse)
 args = commandArgs(trailingOnly=TRUE)
 
 ## qtl regions
-file_qtlColocReg = "/scratch/midway2/liliw1/coloc_MSigDB/qtlColocReg.txt.gz"
+file_qtlColocReg = "~/xuanyao_llw/coloc/qtlColocReg.txt.gz"
 
 qtlColocReg = fread(file_qtlColocReg)
-
-rm(list = ls()[!ls() %in% "qtlColocReg"])
 
 
 ########## files and parameters ##########
