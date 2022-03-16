@@ -1,10 +1,10 @@
 rm(list = ls())
-dir_data = "~/xuanyao_llw/DGN_PCO.lambda.01/p/"
-file_signal = "~/xuanyao_llw/DGN_PCO.lambda.01/FDR/signals.chr.module.perm10.FDR10.txt"
-file_indep_signal = "~/xuanyao_llw/DGN_PCO.lambda.01/postanalysis/indep.signals.chr.module.perm10.FDR10.txt"
+dir_data = "~/xuanyao_llw/DGN_no_filter_on_mappability/p/"
+file_signal = "/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt"
+file_indep_signal = "~/xuanyao_llw/DGN_no_filter_on_mappability/postanalysis/indep.signals.chr.module.perm10.fdr10.txt"
 file_annotation = "/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt"
-file_signals_eQTL = "/project2/xuanyao/llw/DGN_PCO.lambda.01/trans_cis/signals_eQTL_FDR10.txt"
-file_signals_sQTL = "/project2/xuanyao/llw/DGN_PCO.lambda.01/trans_cis/signals_sQTL_FDR10.txt"
+#file_signals_eQTL = "/project2/xuanyao/llw/DGN_PCO.lambda.01/trans_cis/signals_eQTL_FDR10.txt"
+#file_signals_sQTL = "/project2/xuanyao/llw/DGN_PCO.lambda.01/trans_cis/signals_sQTL_FDR10.txt"
 
 # prepare gwas data
 {
@@ -36,10 +36,14 @@ file_signals_sQTL = "/project2/xuanyao/llw/DGN_PCO.lambda.01/trans_cis/signals_s
 
 # prepare signals and pvalues
 {
-  require(data.table)
+  library(data.table)
+  dis_cis <- 1e+6
 
-  PCO_trans = read.table(file_signal, header = FALSE, col.names = c("module.snp", "pvalue", "qvalue"), row.names = 1, stringsAsFactors = FALSE)
-  PCO_trans$SNP = sapply(strsplit(rownames(PCO_trans), ":"), function(x) paste(x[[2]], x[[3]], sep = ":"))
+  PCO_trans = fread(file_signal,
+                    header = FALSE,
+                    col.names = c("module.snp", "pvalue", "qvalue"))
+  
+  PCO_trans$SNP = sapply(strsplit(PCO_trans$module.snp, ":"), function(x) paste(x[[2]], x[[3]], sep = ":"))
 
   PCO_trans_uniq = NULL
   for(i in unique(PCO_trans$SNP)){
@@ -57,23 +61,26 @@ file_signals_sQTL = "/project2/xuanyao/llw/DGN_PCO.lambda.01/trans_cis/signals_s
   PCO_trans_uniq$elife = "no"
   PCO_trans_uniq$both = "no"
   PCO_trans_uniq$neargene = "NA"
+  PCO_trans_uniq$nearestgene = "NA"
   for(i in 1:nrow(PCO_trans_uniq)){
 
     chr = as.numeric(strsplit(PCO_trans_uniq$SNP[i], ":")[[1]][1])
     snpos = as.numeric(strsplit(PCO_trans_uniq$SNP[i], ":")[[1]][2])
 
     {
-      ind2 = gene_pos$Chromosome == paste0("chr", chr) & abs(gene_pos$Start - snpos)<5*10^5
+      ind2 = gene_pos$Chromosome == paste0("chr", chr) & abs(gene_pos$Start - snpos) < dis_cis
       dis_snp_gene2 = gene_pos[ind2, "Start"]-snpos
       tmp2 = cbind(gene_pos[ind2, ], 'dis_snp_gene' = dis_snp_gene2)
 
       if(nrow(tmp2)>0){
-        PCO_trans_uniq[i, "neargene"] = tmp2[order(abs(tmp2$dis_snp_gene)), ][1, "GeneSymbol"]
+        PCO_trans_uniq[i, "neargene"] = paste(tmp2[order(abs(tmp2$dis_snp_gene)), ][, "GeneSymbol"],
+                                              collapse = ";")
+        PCO_trans_uniq[i, "nearestgene"] = tmp2[order(abs(tmp2$dis_snp_gene)), ][1, "GeneSymbol"]
       }
     }
   }
 
-  write.table(PCO_trans_uniq, file = "PCO.trans.uniq.txt", quote = FALSE)
+  fwrite(PCO_trans_uniq, file = "PCO.trans.uniq.txt", quote = FALSE, sep = "\t")
 }
 
 
@@ -83,7 +90,7 @@ library(ggrepel)
 library(dplyr)
 
 
-PCO_trans_uniq[PCO_trans_uniq$pvalue==0, "pvalue"] = 1e-18 #pvalues<1e-17 is displayed as 0
+PCO_trans_uniq[PCO_trans_uniq$pvalue==0, "pvalue"] = 1e-20 #pvalues<1e-17 is displayed as 0
 gwasResults$P = 1; gwasResults[match(PCO_trans_uniq$SNP, gwasResults$SNP), "P"] = PCO_trans_uniq$pvalue
 #gwasResults = readRDS("manhattan.rds")
 #PCO_trans_uniq = read.table(file = "PCO.trans.uniq.txt", stringsAsFactors = FALSE, row.names = 1, header = T)
@@ -91,10 +98,10 @@ gwasResults$P = 1; gwasResults[match(PCO_trans_uniq$SNP, gwasResults$SNP), "P"] 
 #PCO_trans_indep[25, 'neargene']='IKZF1'
 {
 
-  signals_eQTL = as.character(read.table(file_signals_eQTL, stringsAsFactors = FALSE)[[1]])
-  signals_sQTL = as.character(read.table(file_signals_sQTL, stringsAsFactors = FALSE)[[1]])
+  #signals_eQTL = as.character(read.table(file_signals_eQTL, stringsAsFactors = FALSE)[[1]])
+  #signals_sQTL = as.character(read.table(file_signals_sQTL, stringsAsFactors = FALSE)[[1]])
 
-  anno_dat = PCO_trans_uniq %>% group_by(neargene) %>% summarise(SNP_annotate_neargene = SNP[which.min(pvalue)] )
+  anno_dat = PCO_trans_uniq %>% group_by(nearestgene) %>% summarise(SNP_annotate_neargene = SNP[which.min(pvalue)] )
   don <- gwasResults %>%
 
     # Compute chromosome size
@@ -114,40 +121,50 @@ gwasResults$P = 1; gwasResults[match(PCO_trans_uniq$SNP, gwasResults$SNP), "P"] 
 
     # Add highlight and annotation information
     mutate(is_draw = ifelse(SNP %in% PCO_trans_uniq$SNP, "yes", "no") ) %>%
-    mutate(is_eQTL = ifelse(SNP %in% signals_eQTL, "yes", "no") ) %>%
-    mutate(is_sQTL = ifelse(SNP %in% signals_sQTL, "yes", "no") ) %>%
+    #mutate(is_eQTL = ifelse(SNP %in% signals_eQTL, "yes", "no") ) %>%
+    #mutate(is_sQTL = ifelse(SNP %in% signals_sQTL, "yes", "no") ) %>%
     mutate(is_annotate_neargene = ifelse(SNP %in% anno_dat$SNP_annotate_neargene, "yes", "no"))
 
   axisdf <- don %>% group_by(CHR) %>% summarize(center=( max(chromosome) + min(chromosome) ) / 2 )
-  label = PCO_trans_uniq[match(don[don$is_annotate_neargene=="yes", "SNP"], PCO_trans_uniq$SNP), "neargene"]
+  label = PCO_trans_uniq[match(don[don$is_annotate_neargene=="yes", "SNP"], PCO_trans_uniq$SNP), ]$nearestgene
   label[label=="NA"] = ""
-
+  
   manhattan_plot <- ggplot(don, aes(x=chromosome, y=-log10(P))) +
-
+    
     # Show all points
     geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3) +
     scale_color_manual(values = rep(c("grey", "grey"), 22 )) +
-
+    
     # custom X axis:
     scale_x_continuous( label = axisdf$CHR, breaks= axisdf$center ) +
-    scale_y_continuous(expand = c(0, 0), limits = c(5, 18.5) ) +     # remove space between plot area and x axis
-    # Add highlighted points
-    geom_point(data=subset(don, is_eQTL=="yes" & is_sQTL=="no"), color="indianred2", shape=19, alpha = 0.7) +
-    geom_point(data=subset(don, is_eQTL=="no" & is_sQTL=="yes"), color="dodgerblue1", shape=19, alpha = 0.5) +
-    geom_point(data=subset(don, is_eQTL=="yes" & is_sQTL=="yes"), color="plum3", shape=19, alpha = 0.7) +
-
-    # Add label using ggrepel to avoid overlapping
-    geom_label_repel( data=subset(don, is_annotate_neargene=="yes"), aes(label=label), segment.colour="grey", size=3, fill = NA) +
-
-    # Custom the theme:
-    theme_bw() +
-    theme(
-      text = element_text(size=10),
-      legend.position="none",
-      panel.border = element_blank(),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor.x = element_blank()
-    )
+    scale_y_continuous(expand = c(0, 0), limits = c(5, 21) ) +
+    geom_point(data=subset(don, is_annotate_neargene=="yes"),
+               color="indianred2", shape=19, alpha = 0.7)
+  
+  manhattan_plot +
+    labs(x = "Chromosome", y = "-Log10(P)") +
+    geom_text_repel( data=subset(don, is_annotate_neargene=="yes"),
+                     aes(label=label),
+                     segment.colour="grey",
+                     size=3,
+                     max.overlaps = 30,
+                     fill = NA) +
+    theme_classic() +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          legend.position = "none",
+          legend.text = element_text(size = 12),
+          legend.title = element_text(size = 12, face = "bold"),
+          legend.background = element_rect(color = "black", linetype = "dashed"),
+          legend.key.size= unit(0.5, "cm"),
+          axis.line = element_line(colour="black"),
+          plot.margin=unit(c(10,5,5,5),"mm"),
+          axis.text=element_text(colour = "black", size=16),
+          axis.title.y = element_text(angle=90,vjust =2, size=16),
+          axis.title.x = element_text(vjust = -0.2, size=16) )
+  
+  manhattan_plot
+  
   ggsave("manhattan_coding.png", manhattan_plot)
   system("bash ~/imgcat manhattan_coding.png")
 
@@ -155,9 +172,9 @@ gwasResults$P = 1; gwasResults[match(PCO_trans_uniq$SNP, gwasResults$SNP), "P"] 
   #system("bash ~/imgcat manhattan.png")
 
 }
-
-
-
+saveRDS(manhattan_plot, "manhattan_plot.rds")
+saveRDS(don, 'don.rds')
+saveRDS(PCO_trans_uniq, "PCO_trans_uniq.rds")
 
 
 ########## miscellanous ###########
