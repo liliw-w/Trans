@@ -1,9 +1,9 @@
 ######## BASH ###########
 ######## Check if trans-eQTLs are cis-eQTLs ###########
-file_trans=$1
-file_cis=$2
-prefix=$3
-if_GTEx_cis=$4
+file_trans=/project2/xuanyao/llw/DGN_no_filter_on_mappability/postanalysis/LD.prun.in.chr.module.perm10.fdr10.txt
+file_cis=/project2/xuanyao/llw/DGN_PCO.lambda.01/DGN_sQTL_signif_variant_gene_pairs.txt.gz
+prefix='sQTL'
+if_GTEx_cis='no'
 
 # cd /scratch/midway2/liliw1/trans_cis/
 
