@@ -6,8 +6,8 @@ library(tidyverse)
 library(locuscomparer)
 library(cowplot)
 
-file_pheno_manifest = "/scratch/midway2/liliw1/coloc/phenotype_manifest_sub.tsv"
-dir_coloc = "/scratch/midway2/liliw1/coloc"
+file_pheno_manifest = "/project2/xuanyao/llw/GWAS/UKB_nealelab/phenotype_manifest.tsv"
+dir_coloc = "/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data"
 
 pheno_manifest = fread(file_pheno_manifest)
 
