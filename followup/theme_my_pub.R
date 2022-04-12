@@ -6,7 +6,7 @@ theme_my_pub <- function(
                          panel.grid.major.y.linetype = "blank",
                          
                          # legend
-                         legend.position = "right",
+                         legend.position = "top",
                          legend.text.size = 12,
                          
                          # axis
@@ -14,7 +14,7 @@ theme_my_pub <- function(
                          axis.title.size = 16,
                          ## axis tick labels
                          axis.text.size = 14,
-                         axis.text.x.angle = 45,
+                         axis.text.x.angle = 0,
                          axis.text.x.vjust = 0.5,
                          ## axis line
                          axis.line.size = 0.7){
