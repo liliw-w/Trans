@@ -9,8 +9,8 @@ qqplot <- function(input,
   input[input == 0] = min(input[input != 0])/10
 
   # number of samples
-  n = length(observed)
-
+  n = length(input)
+  
   # expected
   expected = seq(1, n) / (n+1)
   lexp = -log10(expected)
