@@ -6,7 +6,7 @@ theme_my_pub <- function(
                          panel.grid.major.y.linetype = "blank",
                          
                          # legend
-                         legend.position = "top",
+                         legend.position = "bottom",
                          legend.text.size = 12,
                          
                          # axis
