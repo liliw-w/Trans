@@ -9,7 +9,7 @@ file_coexp_module <- '~/xuanyao_llw/DGN_no_filter_on_mappability/result/coexp.mo
 
 
 battle_QTL <- fread(file_battle_QTL, header = TRUE)
-module_QTL_signals = fread(file_module_QTL_signals, header = FALSE, col.names = c("signal", "p", "q"))
+module_QTL_signals <- fread(file_module_QTL_signals, header = FALSE, col.names = c("signal", "p", "q"))
 coexp_module <- readRDS(file_coexp_module)$moduleLabels
 
 coexp_module <- tibble(module = coexp_module, gene = names(coexp_module))
@@ -20,31 +20,32 @@ module_QTL_signals <- module_QTL_signals %>%
   unite(col = 'SNP_ID', c(chr, pos), sep = ":", remove = FALSE)
 
 # how many unique genes
-battle_QTL %>% group_by(GENE_NAME) %>% summarise()
+battle_QTL %>% distinct(GENE_NAME)
 
 # how many unique SNPs
-battle_QTL %>% group_by(SNP_ID) %>% summarise()
+battle_QTL %>% distinct(SNP_ID)
 
 # battle genes also considered in multi test pipeline
 battle_QTL <- filter(battle_QTL, GENE_NAME %in% dgn_gene)
 
-# how many unique genes
-battle_QTL %>% group_by(GENE_NAME) %>% summarise()
+# how many unique genes & SNPs
+battle_QTL %>% distinct(GENE_NAME)
+battle_QTL %>% distinct(snp)
 
 
 # how many unique SNPs, and their target genes
 battle_QTL_snp <- battle_QTL %>% group_by(snp) %>% summarise(n_gene = n() )
-battle_QTL_snp <- battle_QTL_snp %>% mutate(if_multi = snp %in% unique(module_QTL_signals$SNP_ID) )
+battle_QTL_snp <- battle_QTL_snp %>% mutate(if_rep = snp %in% unique(module_QTL_signals$SNP_ID) )
 
 # how many target genes for uni SNPs
 table(battle_QTL_snp$n_gene)
 
 # how many target genes for uni SNPs that are also multi SNPs
-table(battle_QTL_snp %>% filter(if_multi) %>% select(n_gene))
+table(battle_QTL_snp %>% filter(if_rep) %>% select(n_gene))
 
 # analyze uni SNPs that are not identified as multi SNPs
 battle_QTL_snp %>%
-  filter(!if_multi) %>%
+  filter(!if_rep) %>%
   separate(snp, c('chr', 'pos'), ":", remove = FALSE) %>%
   left_join(battle_QTL %>% select(c(GENE_NAME, snp, LOG_PVAL)), by = "snp" ) %>%
   left_join(coexp_module, by = c("GENE_NAME" = "gene") ) %>%
@@ -55,7 +56,7 @@ battle_QTL_snp %>%
 ### Plot the uni SNPs and those are also multi SNPs
 df_bar <- battle_QTL_snp %>%
   group_by(n_gene) %>%
-  summarise(n_SNP_uni = n(), n_SNP_multi = sum(if_multi) ) %>%
+  summarise(n_SNP_uni = n(), n_SNP_multi = sum(if_rep) ) %>%
   pivot_longer(c("n_SNP_uni", "n_SNP_multi"), "SNP_type", values_to = "n_SNP")
 df_bar$SNP_type <- factor(df_bar$SNP_type,
                           levels = c("n_SNP_uni", "n_SNP_multi"),
