@@ -63,7 +63,9 @@ cis_overlap = rbindlist(apply(res_coloc_leadSNP, 1, function(x) {
              "dis" = paste(tmp_cis_overlap$dis, collapse = ";") )
 }))
 
+
 res_coloc_leadSNP = cbind(res_coloc_leadSNP, cis_overlap)
+
 
 reg_gene = rbindlist(apply(res_coloc_leadSNP %>% filter(N_gene > 0), 1, function(x) {
   data.table("Region" = x["Region"],
