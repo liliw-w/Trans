@@ -52,7 +52,7 @@ theme_my_pub <- function(
           
           
           # plot
-          plot.title = element_text(hjust = 0.5),
+          plot.title = element_text(hjust = 0.5, face = "bold"),
           plot.margin = unit(c(10,5,5,5), "mm")
           )
 }
