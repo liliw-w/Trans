@@ -6,17 +6,19 @@ library(tidyverse)
 library(locuscomparer)
 library(cowplot)
 
-file_pheno_manifest = "/project2/xuanyao/llw/GWAS/UKB_nealelab/phenotype_manifest.tsv"
+file_pheno_manifest = "/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv"
 dir_coloc = "/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data"
 
 pheno_manifest = fread(file_pheno_manifest)
 
 ########## files and parameters ##########
-gwasPhenocode_seq = pheno_manifest$phenocode_uniq
-gwas_trait_type_seq = pheno_manifest$trait_type
-gwas_trait_seq = pheno_manifest$trait
+gwasPhenocode_seq = pheno_manifest$`GWAS ID`
+gwas_trait_type_seq = pheno_manifest$`GWAS Group`
+gwas_trait_seq = pheno_manifest$`Trait Abbreviation`
 n_gwas = nrow(pheno_manifest)
 
+which(pheno_manifest$`GWAS ID` == 30080)
+i <- 1
 
 ########## files and parameter ##########
 pp4Thre = 0.75
@@ -41,9 +43,9 @@ for(i in 1:n_gwas){
   
   ## output files
   setwd(dir_gwas)
-  file_qtlColocReg_gwas = "data/qtlColocReg_gwas.txt.gz"
-  file_gwasColocReg = "data/gwasColocReg.txt.gz"
-  file_resColoc = "data/resColoc.txt.gz"
+  file_qtlColocReg_gwas = "data/pheno30090.qtlColocReg_gwas.txt.gz"
+  file_gwasColocReg = "data/pheno30090.gwasColocReg.txt.gz"
+  file_resColoc = "data/pheno30090.resColoc.txt.gz"
   
   ########## files and parameter, read files ##########
   qtlColocReg_gwas = fread(file_qtlColocReg_gwas)
