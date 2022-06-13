@@ -41,8 +41,8 @@ h2_enrich$trait_id <- factor(h2_enrich$trait_id,
                              levels = h2_enrich$trait_id,
                              labels = paste(h2_enrich$`Trait Abbreviation`))
 
-xlow <- min(h2_enrich$Enrichment - h2_enrich$Enrichment_std_error)
-xupp <- max(h2_enrich$Enrichment + h2_enrich$Enrichment_std_error) + 1
+xlow <- min(h2_enrich$Enrichment - 1.96*h2_enrich$Enrichment_std_error)
+xupp <- max(h2_enrich$Enrichment + 1.96*h2_enrich$Enrichment_std_error) + 1
 
 facet_lab <- paste0("Module ", module)
 names(facet_lab) <- unique(h2_enrich$module)
@@ -54,11 +54,11 @@ base_fig <- ggplot(h2_enrich,
                        color = `GWAS Group`)) +
   facet_wrap(~module, labeller = labeller(module = facet_lab)) +
   geom_point(size = 3) +
-  geom_linerange(aes(xmin = Enrichment - `Enrichment_std_error`, xmax = Enrichment + `Enrichment_std_error`),
+  geom_linerange(aes(xmin = Enrichment - 1.96*`Enrichment_std_error`, xmax = Enrichment + 1.96*`Enrichment_std_error`),
                  size = 1) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "#007300") +
   geom_point(data = filter(h2_enrich, num_coloc > 0),
-             aes(x = Enrichment + `Enrichment_std_error` + 0.5, y = trait_id, shape = "Coloc"),
+             aes(x = Enrichment + 1.96*`Enrichment_std_error` + 0.5, y = trait_id, shape = "Coloc"),
              size = 2, fill = "#328f32", color = "black") +
   labs(y = NULL, color = "Type", shape = NULL)
 
