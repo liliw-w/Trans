@@ -1,0 +1,23 @@
+{
+  "__default__" :
+    {
+      "job-name": "{rule}.{wildcards.module}",
+      "partition": "broadwl",
+      "time": "00:30:00",
+      "nodes": "1",
+      "mem": "15G",
+      "output": "logs/{rule}.{wildcards.module}.log",
+      "error": "logs/{rule}.{wildcards.module}.log",
+      "email-type": "FAIL",
+      "email": "liliw1@uchicago.edu",
+      "ntasks-per-node": "1"
+    },
+  "p_sigma" :
+    {
+      "time": "02:00:00"
+    },
+  "p_sigma_nullz" :
+    {
+      "time": "10:00:00"
+    }
+}

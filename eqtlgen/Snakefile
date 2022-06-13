@@ -1,0 +1,31 @@
+Nmodule=166
+Nchr=22
+
+#MODULE=list(range(7, 12)) + [13, 14, 16, 51, 156] #list(range(1, Nmodule+1))
+MODULE=list(range(1, 7))
+CHR=list(range(1, Nchr+1))
+
+rule all:
+  input:
+    expand('p/p.module{module}.chr{chr}.Sigma_nullz.rds', module=MODULE, chr=CHR)
+    #expand('p/num_gene_snp_used_module{module}.Sigma_nullz.txt', module=MODULE)
+
+rule run_num_gene_snp_used:
+  input:
+  output:
+    'p/num_gene_snp_used_module{module}.Sigma_nullz.txt'
+  params:
+    module='{module}'
+  script:
+    '5_1_num_genes_used_PCO.R'
+
+
+rule run_PCO:
+  input:
+  output:
+    file_p='p/p.module{module}.chr{chr}.Sigma_nullz.rds'
+  params:
+    module='{module}',
+    chr='{chr}'
+  script:
+    '6_PCO_null_SNP.R'

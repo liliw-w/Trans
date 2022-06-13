@@ -1,0 +1,78 @@
+MODULE=list(range(1,11)) + [15, 20, 30, 40, 50, 60, 70, 90, 100, 150, 166]
+
+rule all:
+  input:
+    plot_hist=expand('inflation/plot/plot_hist_Sigma_DGN_module{module}.rds.pdf', module=MODULE),
+    plot_qq=expand('inflation/plot/plot_qq_Sigma_DGN_module{module}.rds.pdf', module=MODULE)
+
+
+
+rule compare_sigma:
+  input:
+    file_sigma='inflation/Sigma_DGN_module{module}.rds',
+    file_p='inflation/p_Sigma_DGN_module{module}.rds',
+    file_p_sigma_nullz='inflation/p_Sigma_nullz_Sigma_DGN_module{module}.rds'
+  output:
+    plot_hist='inflation/plot/plot_hist_Sigma_DGN_module{module}.rds.pdf',
+    plot_qq='inflation/plot/plot_qq_Sigma_DGN_module{module}.rds.pdf'
+  params:
+    module='{module}'
+  script:
+    '9_5_eqtlgen_inflation_compare_sigma.R'
+
+
+rule p_sigma_nullz:
+  input:
+    file_sigma='inflation/Sigma_DGN_module{module}.rds',
+    file_sigma_nullz='inflation/Sigma_nullz_Sigma_DGN_module{module}.rds',
+    file_z='inflation/Z_Sigma_DGN_module{module}.rds'
+  output:
+    file_p_sigma_nullz='inflation/p_Sigma_nullz_Sigma_DGN_module{module}.rds'
+  params:
+    module='{module}'
+  script:
+    '9_4_eqtlgen_inflation_PCO_sigma_nullz.R'
+
+
+rule sigma_nullz:
+  input:
+    file_sigma='inflation/Sigma_DGN_module{module}.rds'
+  output:
+    file_sigma_nullz='inflation/Sigma_nullz_Sigma_DGN_module{module}.rds'
+  params:
+    module='{module}'
+  script:
+    '9_4_0_eqtlgen_inflation_sigma_nullz.R'
+
+
+rule p_sigma:
+  input:
+    file_sigma='inflation/Sigma_DGN_module{module}.rds',
+    file_z='inflation/Z_Sigma_DGN_module{module}.rds'
+  output:
+    file_p='inflation/p_Sigma_DGN_module{module}.rds'
+  params:
+    module='{module}'
+  script:
+    '9_3_eqtlgen_inflation_PCO_sigma_data.R'
+
+
+rule simulate_z:
+  input:
+    file_sigma='inflation/Sigma_DGN_module{module}.rds'
+  output:
+    file_z='inflation/Z_Sigma_DGN_module{module}.rds'
+  params:
+    module='{module}'
+  script:
+    '9_2_eqtlgen_inflation_simulate_z.R'
+
+
+rule select_sigma:
+  input:
+  output:
+    file_sigma='inflation/Sigma_DGN_module{module}.rds'
+  params:
+    module='{module}'
+  script:
+    '9_1_eqtlgen_inflation_select_Sigma.R'
