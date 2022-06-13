@@ -12,9 +12,9 @@ gwasPhenocode <- as.numeric(snakemake@params[['gwasPhenocode']])
 dir_gwas_data <- "/project2/xuanyao/llw/GWAS/UKB_nealelab"
 pop <- "EUR"
 
-file_gwas_bgz <- list.files(dir_gwas_data, paste0(".*-", gwasPhenocode, "-.*.tsv.bgz"), full.names = TRUE)
+file_gwas <- list.files(dir_gwas_data, paste0(".*-", gwasPhenocode, "-.*.tsv.bgz"), full.names = TRUE)
 file_snp_meta <- list.files(dir_gwas_data, "snp.meta.gwas.txt.gz", full.names = TRUE)
-file_gwasTraitInfo <- list.files(dir_gwas_data, "phenotype_manifest.tsv.bgz", full.names = TRUE)
+file_gwas_trait_info <- list.files(dir_gwas_data, "phenotype_manifest.tsv.bgz", full.names = TRUE)
 
 file_out <- paste0("gwas/", gwasPhenocode, ".tsv.gz")
 
@@ -26,13 +26,13 @@ file_out <- paste0("gwas/", gwasPhenocode, ".tsv.gz")
 
 # read data -----
 gwasCol <- c("chr", "pos", "ref", "alt", paste(c("pval", "beta", "se", "low_confidence"), pop, sep = "_") )
-gwas <- fread(cmd = paste("gunzip -c", file_gwas_bgz), select = gwasCol)
+gwas <- fread(cmd = paste("gunzip -c", file_gwas), select = gwasCol)
 
 snp_meta <- fread(file_snp_meta)
 
 gwasTraitInfoCol <- c("trait_type", "phenocode", "pheno_sex", "description",
                       paste(c("n_cases", "n_controls"), pop, sep = "_") )
-gwasTraitInfo <- fread(cmd = paste("gunzip -c", file_gwasTraitInfo), select = gwasTraitInfoCol)
+gwasTraitInfo <- fread(cmd = paste("gunzip -c", file_gwas_trait_info), select = gwasTraitInfoCol)
 
 
 # 1. append rs id to gwas snps -----
