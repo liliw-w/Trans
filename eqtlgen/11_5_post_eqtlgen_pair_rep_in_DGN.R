@@ -17,7 +17,7 @@ file_eqtlgen_sig <- paste0('postanalysis/signal_rm_infl_ratio_', ratio, '.txt')
 file_dgn_all_snp <- "/project2/xuanyao/llw/eQTLGen_DGN/DGN.all_snp.txt"
 file_p_all <- '/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/q.chr.module.perm2.rds'
 
-file_rep <- 'postanalysis/rep_eqtlgen_in_dgn.txt'
+file_out <- 'postanalysis/eqtlgen_in_dgn.txt'
 
 
 # read files -----
@@ -73,7 +73,7 @@ cat(
 )
 
 
-fwrite(eqtlgen_sig_dgn, file_rep,
+fwrite(eqtlgen_sig_dgn, file_out,
        sep = "\t", quote = FALSE)
 
 
