@@ -17,7 +17,7 @@ file_dgn_sig <- '/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/signals.
 file_module_use <- paste0('postanalysis/module_use_ratio_', ratio, '.txt')
 file_p_all <- 'p/p.module_all.Sigma_nullz.rds'
 
-file_rep <- 'postanalysis/rep_dgn_in_eqtlgen.txt'
+file_out <- 'postanalysis/dgn_in_eqtlgen.txt'
 
 
 # read files -----
@@ -54,8 +54,6 @@ dgn_sig_eqtlgen <- dgn_sig %>%
 # define new p threshold for replicated signals  -----
 p_thre <- fdr_level/nrow(dgn_sig_eqtlgen)
 
-dgn_sig_rep_in_eqtlgen <- dgn_sig_eqtlgen %>% filter(p.eqtlgen < p_thre)
-
 
 dgn_sig_eqtlgen <- dgn_sig_eqtlgen %>%
   mutate("if_rep" = p.eqtlgen < p_thre) %>%
@@ -74,7 +72,7 @@ cat(
   "The p-values of these signals in eQTLGen range: (", min(dgn_sig_eqtlgen[dgn_sig_eqtlgen$if_rep, "p.eqtlgen"]), ",", max(dgn_sig_eqtlgen[dgn_sig_eqtlgen$if_rep, "p.eqtlgen"]), "). \n\n"
 )
 
-fwrite(dgn_sig_eqtlgen, file_rep,
+fwrite(dgn_sig_eqtlgen, file_out,
        sep = "\t", quote = FALSE)
 
 
