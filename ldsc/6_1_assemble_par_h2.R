@@ -1,5 +1,5 @@
 ###############################################################
-########### assemble par h2 file across traits for eadch module ###########
+########### assemble par h2 file across traits for a module ###########
 ###############################################################
 rm(list = ls())
 library(data.table)
