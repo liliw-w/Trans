@@ -1,0 +1,78 @@
+Nmodule=166
+
+module_seq=list(range(1, Nmodule+1))
+module_seq.remove(4)
+module_seq.remove(66)
+
+MODULE=['M' + str(x) for x in module_seq]
+CHR=list(range(1, 23))
+
+
+path='/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv'
+with open(path) as f:
+    lines = [x.split(",")[1] for x in f]
+trait_seq=lines[1:]
+
+
+rule all:
+  input:
+    #expand('gwas/{gwasPhenocode}.sumstats.gz', gwasPhenocode=trait_seq)
+    #expand('ldsc_annot/{module}.{chr}.l2.ldscore.gz', module=MODULE, chr=CHR)
+    expand('h2_enrich_par/{gwasPhenocode}_{module}_baseline.results', module=MODULE, gwasPhenocode=trait_seq)
+
+
+rule prep_gwas:
+  input:
+  params:
+    gwasPhenocode='{gwasPhenocode}'
+  output:
+    'gwas/{gwasPhenocode}.tsv.gz'
+  script:
+    '/home/liliw1/Trans/ldsc/5_1_prep_gwas.R'
+
+rule convert_gwas:
+  input:
+    'gwas/{gwasPhenocode}.tsv.gz'
+  output:
+    'gwas/{gwasPhenocode}.sumstats.gz'
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/5_2_convert_gwas.sh {wildcards.gwasPhenocode}
+    """
+
+
+rule make_annot:
+  input:
+    expand('geneset/{module}.GeneSet', module=MODULE)
+  output:
+    expand('ldsc_annot/{module}.{chr}.annot.gz', chr=CHR, allow_missing=True)
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/2_make_annot.sh {wildcards.module}
+    """
+
+rule ldsc_annot:
+  input:
+    expand('ldsc_annot/{module}.{chr}.annot.gz', chr=CHR, allow_missing=True)
+  output:
+    expand('ldsc_annot/{module}.{chr}.l2.ldscore.gz', chr=CHR, allow_missing=True)
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/3_ldsc_annot.sh {wildcards.module}
+    """
+
+rule par_h2:
+  input:
+    expand('ldsc_annot/{module}.{chr}.annot.gz', chr=CHR, allow_missing=True),
+    expand('ldsc_annot/{module}.{chr}.l2.ldscore.gz', chr=CHR, allow_missing=True),
+    expand('gwas/{gwasPhenocode}.sumstats.gz', gwasPhenocode=trait_seq)
+  output:
+    expand('h2_enrich_par/{gwasPhenocode}_{module}_baseline.results', gwasPhenocode=trait_seq, allow_missing=True)
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/6_ldsc_par_h2.sh {wildcards.module}
+    """
