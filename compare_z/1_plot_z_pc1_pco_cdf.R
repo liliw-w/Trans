@@ -5,7 +5,6 @@
 rm(list = ls())
 library(data.table)
 library(tidyverse)
-library(ggpubr)
 
 source('~/Trans/plot/theme_my_pub.R')
 
@@ -61,10 +60,12 @@ for(module in module_seq){
   # add signal type: if it's signal for both PC1 and PCO, or only for PCO or PC1 -----
   df_z <- df_z %>%
     mutate(
-      "if_pco" = snp %in% pco_sig$snp,
-      "if_pc1" = snp %in% pc1_sig$snp,
+      "if_pco" = snp %in% (pco_sig %>% filter(module == !!module) %>% pull(snp)),
+      "if_pc1" = snp %in% (pc1_sig %>% filter(module == !!module) %>% pull(snp)),
       "type" = paste(if_pco, if_pc1, sep = "_")
-    )
+    ) %>%
+    filter(type != "FALSE_FALSE")
+  
   df_z$type <- factor(
     df_z$type,
     levels = c("TRUE_FALSE", "TRUE_TRUE", "FALSE_TRUE"),
@@ -116,9 +117,7 @@ for(module in module_seq){
       strip.text.x = element_blank()
     )
   
-  saveRDS(plt, paste0("pc1/M", module, "_z.rds"))
+  saveRDS(df_z, paste0("pc1/M", module, "_z.rds"))
   ggsave(paste0("pc1/M", module, "_z_cdf.pdf"), plt, height = 4.5, width = 4.5)
-  
 }
-
 
