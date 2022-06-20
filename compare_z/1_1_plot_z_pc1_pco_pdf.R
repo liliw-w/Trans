@@ -5,31 +5,28 @@
 rm(list = ls())
 library(tidyverse)
 library(ggpubr)
-library(ggbeeswarm)
 
 source('~/Trans/plot/theme_my_pub.R')
 
 
 # paras and I/O -----
-# use data stored in cdf plot data
-file_plt_list <- list.files("pc1", "^M\\d+_z.rds$", full.names = TRUE)
+# use already saved data from previous cdf plot
+file_z_list <- list.files("pc1", "^M\\d+_z.rds$", full.names = TRUE)
 
 
-for(file_plt in file_plt_list){
-  cat("File", file_plt, "is running... \n\n")
+for(file_z in file_z_list){
+  cat("File", file_z, "is running... \n\n")
   
   # read files -----
-  plt <- readRDS(file_plt)
+  df_z <- readRDS(file_z)
   
   # organize data -----
-  module <- str_extract(basename(file_plt), "\\d+")
-  df_z <- plt$data
+  module <- str_extract(basename(file_z), "\\d+")
   df_sig <- df_z %>% group_by(type) %>% distinct(snp) %>% ungroup() %>% count(type)
   
   # for pairwise p comparison
   my_comparisons <- list( c("Trans-PCO", "Both"), c("Both", "PC1"), c("Trans-PCO", "PC1") )
   y_max <- max(abs(df_z$z))
-  
   
   # plot violin & boxplot & stat_compare_means -----
   base_plt <- ggplot(df_z, aes(x = type, y = abs(z), color = type, fill = type)) +

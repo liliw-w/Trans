@@ -5,27 +5,26 @@
 rm(list = ls())
 library(tidyverse)
 library(ggpubr)
-library(ggbeeswarm)
 
 source('~/Trans/plot/theme_my_pub.R')
 
 
 # paras and I/O -----
-# use data stored in cdf plot data
-file_plt_list <- list.files("pc1", "^M\\d+_z.rds$", full.names = TRUE)
+# use already saved data from previous cdf plot
+file_z_list <- list.files("pc1", "^M\\d+_z.rds$", full.names = TRUE)
 
 
-for(file_plt in file_plt_list){
-  cat("File", file_plt, "is running... \n\n")
+for(file_z in file_z_list){
+  cat("File", file_z, "is running... \n\n")
   
   # read files -----
-  plt <- readRDS(file_plt)
+  df_z <- readRDS(file_z)
   
   # organize data -----
-  module <- str_extract(basename(file_plt), "\\d+")
+  module <- str_extract(basename(file_z), "\\d+")
   
   # min abs z for each snp across genes in a module
-  df_z <- plt$data %>%
+  df_z <- df_z %>%
     pivot_wider(names_from = gene, values_from = z) %>%
     rowwise(snp:type) %>%
     summarise("min_abs_z" = min(abs(c_across(where(is.numeric))))) %>%
