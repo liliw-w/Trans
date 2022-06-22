@@ -22,6 +22,8 @@ for(file_z in file_z_list){
   
   # organize data -----
   module <- str_extract(basename(file_z), "\\d+")
+  
+  # signal (snp, module) counts for each types: both PC1 and PCO, or only for PCO or PC1
   df_sig <- df_z %>% group_by(type) %>% distinct(snp) %>% ungroup() %>% count(type)
   
   # for pairwise p comparison

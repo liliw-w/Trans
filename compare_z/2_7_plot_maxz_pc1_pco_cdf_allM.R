@@ -1,9 +1,10 @@
 ##############################################
-########### plot cdf of min abs z-scores across genes in a module for a signal SNP ###########
+########### plot cdf of max abs z-scores across genes in a module for a signal SNP ###########
 ########### of all modules ###########
 ########### detected by methods only by trans-PCO, PC1, or both ###########
 ##############################################
 rm(list = ls())
+library(data.table)
 library(tidyverse)
 
 source('~/Trans/plot/theme_my_pub.R')
@@ -14,7 +15,7 @@ source('~/Trans/plot/theme_my_pub.R')
 file_z_list <- list.files("pc1", "^M\\d+_z.rds$", full.names = TRUE)
 
 
-# combine z's of signals of all modules & extract the min abs z for each module -----
+# combine z's of signals of all modules & extract the max abs z for each module -----
 df_z <- rbindlist(
   lapply(file_z_list, function(file_z){
     cat("File", file_z, "is running... \n\n")
@@ -23,29 +24,29 @@ df_z <- rbindlist(
     tmp_df_z <- readRDS(file_z)
     
     # organize data -----
-    module <- str_extract(basename(file_z), "\\d+") |> as.numeric()
+    module <- str_extract(basename(file_z), "\\d+") %>% as.numeric()
     
-    # min abs z for each snp across genes in a module
+    # max abs z for each snp across genes in a module
     tmp_df_z %>%
       pivot_wider(names_from = gene, values_from = z) %>%
       rowwise(snp:type) %>%
-      summarise("min_abs_z" = min(abs(c_across(where(is.numeric))))) %>%
+      summarise("max_abs_z" = max(abs(c_across(where(is.numeric))))) %>%
       ungroup() %>%
       mutate("module" = !!module)
   })
 )
 
-# signal counts for types of snps
+# signal (snp, module) counts for each types: both PC1 and PCO, or only for PCO or PC1
 df_sig <- df_z %>% count(type)
 
 
 # plot cdf -----
-base_plt <- ggplot(df_z, aes(x = min_abs_z, color = type, fill = type)) +
+base_plt <- ggplot(df_z, aes(x = max_abs_z, color = type, fill = type)) +
   stat_ecdf(geom = "step", size = 1) +
   stat_ecdf(alpha = 0.2, geom = "area",color = NA) +
   labs(title = paste0("All modules"),
-       x = quote(~"min|Z|"), y = quote(~"F(min|Z|)"),
-       color = "Method")
+       x = quote(~"max|Z|"), y = quote(~"F(max|Z|)"),
+       color = "Signal")
 
 
 plt <- base_plt +
@@ -80,4 +81,4 @@ plt <- base_plt +
     strip.text.x = element_blank()
   )
 
-ggsave(paste0("pc1/M_all_minz_cdf.pdf"), plt, height = 4, width = 4.5)
+ggsave(paste0("pc1/M_all_maxz_cdf.pdf"), plt, height = 4, width = 4.5)

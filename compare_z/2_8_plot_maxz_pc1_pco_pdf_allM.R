@@ -1,5 +1,5 @@
 ##############################################
-########### plot pdf (violin plot) of min abs z-scores across genes in a module for a signal SNP ###########
+########### plot pdf (violin plot) of max abs z-scores across genes in a module for a signal SNP ###########
 ########### detected by methods only by trans-PCO, PC1, or both ###########
 ##############################################
 rm(list = ls())
@@ -15,7 +15,7 @@ source('~/Trans/plot/theme_my_pub.R')
 file_z_list <- list.files("pc1", "^M\\d+_z.rds$", full.names = TRUE)
 
 
-# combine z's of signals of all modules & extract the min abs z for each module -----
+# combine z's of signals of all modules & extract the max abs z for each module -----
 df_z <- rbindlist(
   lapply(file_z_list, function(file_z){
     cat("File", file_z, "is running... \n\n")
@@ -24,28 +24,28 @@ df_z <- rbindlist(
     tmp_df_z <- readRDS(file_z)
     
     # organize data -----
-    module <- str_extract(basename(file_z), "\\d+") |> as.numeric()
+    module <- str_extract(basename(file_z), "\\d+") %>% as.numeric()
     
-    # min abs z for each snp across genes in a module
+    # max abs z for each snp across genes in a module
     tmp_df_z %>%
       pivot_wider(names_from = gene, values_from = z) %>%
       rowwise(snp:type) %>%
-      summarise("min_abs_z" = min(abs(c_across(where(is.numeric))))) %>%
+      summarise("max_abs_z" = max(abs(c_across(where(is.numeric))))) %>%
       ungroup() %>%
       mutate("module" = !!module)
   })
 )
 
-# signal counts for types of snps
+# signal (snp, module) counts for each types: both PC1 and PCO, or only for PCO or PC1
 df_sig <- df_z %>% count(type)
 
 # for pairwise p comparison
 my_comparisons <- list( c("Trans-PCO", "Both"), c("Both", "PC1"), c("Trans-PCO", "PC1") )
-y_max <- max(abs(df_z$min_abs_z))
+y_max <- max(abs(df_z$max_abs_z))
 
 
 # plot violin & boxplot & stat_compare_means -----
-base_plt <- ggplot(df_z, aes(x = type, y = min_abs_z, color = type, fill = type)) +
+base_plt <- ggplot(df_z, aes(x = type, y = max_abs_z, color = type, fill = type)) +
   geom_violin() +
   #geom_quasirandom(varwidth = FALSE, shape = 16, size = 1, alpha = 0.7) +
   stat_summary(fun = mean, geom = "point", shape = 18, size = 2, color = "black") +
@@ -53,7 +53,7 @@ base_plt <- ggplot(df_z, aes(x = type, y = min_abs_z, color = type, fill = type)
                      vjust = 2, show.legend = FALSE) +
   #stat_compare_means() +
   labs(title = paste0("All modules"),
-       x = NULL, y = quote(~"min|Z|"))
+       x = NULL, y = quote(~"max|Z|"))
 
 plt <- base_plt +
   scale_x_discrete(
@@ -87,4 +87,4 @@ plt <- base_plt +
     strip.text.x = element_blank()
   )
 
-ggsave(paste0("pc1/M_all_minz_pdf.pdf"), plt, height = 4, width = 5)
+ggsave(paste0("pc1/M_all_maxz_pdf.pdf"), plt, height = 4, width = 5)

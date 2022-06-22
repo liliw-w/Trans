@@ -1,5 +1,5 @@
 ##############################################
-########### plot pdf (violin plot) of min abs z-scores across genes in a module for a signal SNP ###########
+########### plot pdf (violin plot) of max abs z-scores across genes in a module for a signal SNP ###########
 ########### detected by methods only by trans-PCO, PC1, or both ###########
 ##############################################
 rm(list = ls())
@@ -23,21 +23,24 @@ for(file_z in file_z_list){
   # organize data -----
   module <- str_extract(basename(file_z), "\\d+")
   
-  # min abs z for each snp across genes in a module
+  # extract max abs z for each snp across genes in a module -----
   df_z <- df_z %>%
     pivot_wider(names_from = gene, values_from = z) %>%
     rowwise(snp:type) %>%
-    summarise("min_abs_z" = min(abs(c_across(where(is.numeric))))) %>%
+    summarise("max_abs_z" = max(abs(c_across(where(is.numeric))))) %>%
     ungroup()
-  df_sig <- df_z %>% count(type)
   
-  # for pairwise p comparison
-  my_comparisons <- list( c("Trans-PCO", "Both"), c("Both", "PC1"), c("Trans-PCO", "PC1") )
-  y_max <- max(abs(df_z$min_abs_z))
+  # signal (snp, module) counts for each types: both PC1 and PCO, or only for PCO or PC1
+  df_sig <- df_z %>% count(type)
   
   
   # plot violin & boxplot & stat_compare_means -----
-  base_plt <- ggplot(df_z, aes(x = type, y = min_abs_z, color = type, fill = type)) +
+  
+  # for pairwise p comparison
+  my_comparisons <- list( c("Trans-PCO", "Both"), c("Both", "PC1"), c("Trans-PCO", "PC1") )
+  y_max <- max(abs(df_z$max_abs_z))
+  
+  base_plt <- ggplot(df_z, aes(x = type, y = max_abs_z, color = type, fill = type)) +
     geom_violin() +
     #geom_quasirandom(varwidth = FALSE, shape = 16, size = 1, alpha = 0.7) +
     stat_summary(fun = mean, geom = "point", shape = 18, size = 2, color = "black") +
@@ -45,7 +48,7 @@ for(file_z in file_z_list){
                        vjust = 2, show.legend = FALSE) +
     #stat_compare_means() +
     labs(title = paste0("M", module),
-         x = NULL, y = quote(~"min|Z|"))
+         x = NULL, y = quote(~"max|Z|"))
   
   plt <- base_plt +
     scale_x_discrete(
@@ -79,6 +82,6 @@ for(file_z in file_z_list){
       strip.text.x = element_blank()
     )
   
-  ggsave(paste0("pc1/M", module, "_minz_pdf.pdf"), plt, height = 4, width = 5)
+  ggsave(paste0("pc1/M", module, "_maxz_pdf.pdf"), plt, height = 4, width = 5)
   
 }

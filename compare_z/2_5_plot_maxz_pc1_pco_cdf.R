@@ -1,5 +1,5 @@
 ##############################################
-########### plot cdf of min abs z-scores across genes in a module for a signal SNP ###########
+########### plot cdf of max abs z-scores across genes in a module for a signal SNP ###########
 ########### detected by methods only by trans-PCO, PC1, or both ###########
 ##############################################
 rm(list = ls())
@@ -22,22 +22,24 @@ for(file_z in file_z_list){
   # organize data -----
   module <- str_extract(basename(file_z), "\\d+")
   
-  # min abs z for each snp across genes in a module
+  # extract max abs z for each snp across genes in a module -----
   df_z <- df_z %>%
     pivot_wider(names_from = gene, values_from = z) %>%
     rowwise(snp:type) %>%
-    summarise("min_abs_z" = min(abs(c_across(where(is.numeric))))) %>%
+    summarise("max_abs_z" = max(abs(c_across(where(is.numeric))))) %>%
     ungroup()
+  
+  # signal (snp, module) counts for each types: both PC1 and PCO, or only for PCO or PC1
   df_sig <- df_z %>% count(type)
   
   
   # plot cdf -----
-  base_plt <- ggplot(df_z, aes(x = min_abs_z, color = type, fill = type)) +
+  base_plt <- ggplot(df_z, aes(x = max_abs_z, color = type, fill = type)) +
     stat_ecdf(geom = "step", size = 1) +
     stat_ecdf(alpha = 0.2, geom = "area",color = NA) +
     labs(title = paste0("M", module),
-         x = quote(~"min|Z|"), y = quote(~"F(min|Z|)"),
-         color = "Method")
+         x = quote(~"max|Z|"), y = quote(~"F(max|Z|)"),
+         color = "Signal")
   
   
   plt <- base_plt +
@@ -72,6 +74,6 @@ for(file_z in file_z_list){
       strip.text.x = element_blank()
     )
   
-  ggsave(paste0("pc1/M", module, "_minz_cdf.pdf"), plt, height = 4, width = 5)
+  ggsave(paste0("pc1/M", module, "_maxz_cdf.pdf"), plt, height = 4, width = 5)
   
 }
