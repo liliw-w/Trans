@@ -33,6 +33,7 @@ theme_my_pub <- function(
           legend.background = element_rect(color = "black",
                                            linetype = "dashed"),
           legend.key.size= unit(0.5, "cm"),
+
           
           # axis
           ## axis title
