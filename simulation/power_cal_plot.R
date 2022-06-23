@@ -83,31 +83,105 @@ for (change in c('N', 'caus')) {
   
   fig <- ggplot(data = df.alt, aes(x=model, y=power, group=method, color=method)) +
     geom_line(linetype = "solid", size = 1) +
-    geom_point(shape = 20, size = 2) +
-    geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
-                  position=position_dodge(0), size = 1) +
+    #geom_point(shape = 20, size = 2) +
+    #geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
+    #              position=position_dodge(0), size = 1) +
+    geom_pointrange(aes(ymin = power-se, ymax = power+se), size = 0.1) +
     labs(x = xlab_name, y = "Power", color = "Method") +
-    scale_colour_manual(values = cbp2) +
+    scale_colour_manual(#values = cbp2,
+                        breaks = c("trans-PCO", "minp", "PC1"),
+                        labels = c("Trans-PCO", "Minp", "PC1-based"),
+                        values = #c("trans-PCO" = "#074e67", "PC1" = "#67074e", "minp" = "#dd9933")
+                          c("trans-PCO" = "#85192d", "minp" = "#e89c31", "PC1" = "#1d349a")
+                        ) +
     theme_classic() +
-    theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          legend.position = c(0.2, 0.8),
+    theme(panel.grid.major.y = element_line(linetype = "dashed", size = 1),
+          
+          legend.position = c(0.25, 0.7),
           legend.text = element_text(size = 12),
           legend.title = element_text(size = 12, face = "bold"),
           legend.background = element_rect(color = "black", linetype = "dashed"),
           legend.key.size= unit(0.5, "cm"),
+          
           axis.line = element_line(colour="black"),
+          axis.line.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          
           plot.margin=unit(c(10,5,5,5),"mm"),
           axis.text=element_text(colour = "black", size=16),
           axis.title.y = element_text(angle=90,vjust =2, size=16),
           axis.title.x = element_text(vjust = -0.2, size=16) ) +
-    coord_fixed(ratio = nlevels(df.alt$model), ylim=c(0, 0.9))
+    coord_fixed(ratio = nlevels(df.alt$model), ylim=c(0, 0.9), xlim = c(1.5, 3.5))
+    
   
   fig
   
-  ggsave(paste0(file_out, ".png"), fig, height = 5, width = 5)
+  ggsave(paste0(file_out, "2.pdf"), fig, height = 5, width = 5)
   
-  cat("Plot stored in", paste0(file_out, ".png"), '\n')
+  
+  #########################################################
+  #########################################################
+  #########################################################
+  ### 3. point range plot
+  dat2 <- res.alt %>% group_by(method, model, change) %>% summarise(m = mean(power), sd = sd(power) ) %>% ungroup()
+  dat2$method <- factor(dat2$method,
+                          levels = c("PCO", "minp", "PC1"),
+                          labels = c("trans-PCO", "minp", "PC1"))
+  dat2$model = factor(dat2$model,
+                        levels = levels(dat2$model),
+                        labels = sapply(levels(dat2$model), function(x) strsplit(x, "=")[[1]][2] )
+  )
+  #dat2$change <- "Sample Size"
+  dat2$change <- factor(dat2$change,
+                        levels = c("Sample Size", "Causality", "Genetic Variance"),
+                        labels = c("Sample Size", "Causality Proportion", "Genetic Variance"))
+  
+  ggplot(dat2, aes(x = model, y = m, color = method)) +
+    #geom_point(data = res.alt,
+    #           aes(x = factor(model), y = power, color = method),
+    #           position = position_jitterdodge(), alpha = 0.1) +
+    geom_pointrange(aes(ymin = m-sd, ymax = m+sd),
+                    fatten = 2.5, size = 0.7,
+                    position = position_dodge(width = 0.3)) +
+    labs(x = "Model", y = "Power", color = "Method") + #x = xlab_name, 
+    facet_wrap(vars(change), scales = "free_x") +
+    scale_colour_manual(#values = cbp2,
+      breaks = c("trans-PCO", "minp", "PC1"),
+      labels = c("Trans-PCO", "Minp", "PC1-based"),
+      values = #c("trans-PCO" = "#074e67", "PC1" = "#67074e", "minp" = "#dd9933")
+        c("trans-PCO" = "#85192d", "minp" = "#e89c31", "PC1" = "#1d349a"),
+      guide = guide_legend(override.aes = list(size = 0.3))
+    ) +
+    theme_classic(base_size = 16) +
+    theme(
+          panel.border = element_rect(color = "black", fill = NA, size = 1),
+          panel.grid.major.y = element_line(linetype = "dashed", size = 0.8),
+          
+          legend.position = "bottom", # c(0.25, 0.8),
+          legend.text = element_text(size = 12),
+          legend.title = element_text(size = 12, face = "bold"),
+          legend.background = element_rect(color = "black", linetype = "dashed"),
+          legend.key.size= unit(0.5, "cm"),
+          
+          axis.line = element_line(colour="black"),
+          axis.line.y = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.y = element_blank(),
+          
+          
+          plot.margin=unit(c(10,5,5,5),"mm"),
+          axis.text=element_text(colour = "black", size=14),
+          axis.title.y = element_text(angle=90,vjust =2, size=16),
+          axis.title.x = element_text(vjust = -0.2, size=16) )
+  
+  
+  ggsave("updated_power_plot.pdf", height = 4, width = 9)
+  
+  dat2[dat2$change=="N", "change"] <- "Sample Size"
+  
+  
+  
+cat("Plot stored in", paste0(file_out, ".png"), '\n')
   fig_all[[change]] = fig
   
   if(change == 'caus'){
