@@ -2,7 +2,7 @@ rm(list = ls())
 
 ### Plot
 library(data.table)
-library(ggplot2)
+library(tidyverse)
 library(ggpubr)
 library(ggsci)
 
@@ -41,7 +41,7 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
   )
   
   # Rename the "mean" column
-  datac <- rename(datac, c("mean" = measurevar))
+  datac <- plyr::rename(datac, c("mean" = measurevar))
   
   datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
   
@@ -82,41 +82,40 @@ for (change in c('N', 'caus')) {
   )
   
   fig <- ggplot(data = df.alt, aes(x=model, y=power, group=method, color=method)) +
-    geom_line(linetype = "solid", size = 1) +
-    #geom_point(shape = 20, size = 2) +
-    #geom_errorbar(aes(ymin=power-se, ymax=power+se), width=.3,
-    #              position=position_dodge(0), size = 1) +
-    geom_pointrange(aes(ymin = power-se, ymax = power+se), size = 0.1) +
+    geom_pointrange(aes(ymin = power-ci, ymax = power+ci),
+                    fatten = 1, size = 0.5,
+                    position = position_dodge(width = 0.3)) +
     labs(x = xlab_name, y = "Power", color = "Method") +
     scale_colour_manual(#values = cbp2,
-                        breaks = c("trans-PCO", "minp", "PC1"),
-                        labels = c("Trans-PCO", "Minp", "PC1-based"),
-                        values = #c("trans-PCO" = "#074e67", "PC1" = "#67074e", "minp" = "#dd9933")
-                          c("trans-PCO" = "#85192d", "minp" = "#e89c31", "PC1" = "#1d349a")
-                        ) +
+      breaks = c("trans-PCO", "PC1", "minp"),
+      labels = c("trans-PCO" = "Trans-PCO", "minp" = "MinP", "PC1" = "PC1"),
+      values = c("trans-PCO" = "#85192d", "minp" = "#e89c31", "PC1" = "#1d349a"),
+      guide = guide_legend(override.aes = list(size = 0.3))
+    ) +
     theme_classic() +
-    theme(panel.grid.major.y = element_line(linetype = "dashed", size = 1),
-          
-          legend.position = c(0.25, 0.7),
-          legend.text = element_text(size = 12),
-          legend.title = element_text(size = 12, face = "bold"),
-          legend.background = element_rect(color = "black", linetype = "dashed"),
-          legend.key.size= unit(0.5, "cm"),
-          
-          axis.line = element_line(colour="black"),
-          axis.line.y = element_blank(),
-          axis.ticks.y = element_blank(),
-          
-          plot.margin=unit(c(10,5,5,5),"mm"),
-          axis.text=element_text(colour = "black", size=16),
-          axis.title.y = element_text(angle=90,vjust =2, size=16),
-          axis.title.x = element_text(vjust = -0.2, size=16) ) +
-    coord_fixed(ratio = nlevels(df.alt$model), ylim=c(0, 0.9), xlim = c(1.5, 3.5))
-    
+    theme(
+      panel.grid.major.y = element_line(linetype = "dashed", size = 0.8),
+      
+      legend.position = "right",
+      legend.text = element_text(size = 12),
+      legend.title = element_text(size = 12, face = "bold"),
+      #legend.background = element_rect(color = "black", linetype = "dashed"),
+      legend.key.size= unit(0.5, "cm"),
+      
+      axis.line = element_line(colour="black"),
+      #axis.line.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      
+      axis.text=element_text(colour = "black", size=12),
+      axis.title.y = element_text(angle=90,vjust =2, size=14),
+      axis.title.x = element_text(vjust = -0.2, size=14),
+      
+      plot.margin=unit(c(10,5,5,5),"mm")
+    ) +
+    coord_cartesian(xlim = c(1.2, n_distinct(df.alt$model)-0.2))
   
-  fig
+  ggsave(paste0(file_out, "3.pdf"), fig, height = 3, width = 4.5)
   
-  ggsave(paste0(file_out, "2.pdf"), fig, height = 5, width = 5)
   
   
   #########################################################
