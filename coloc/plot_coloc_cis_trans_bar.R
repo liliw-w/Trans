@@ -33,7 +33,7 @@ ggplot(plt_df, aes(x = Type, y = Loci, label = Loci)) +
   labs(x = NULL, y = "Number of Loci") +
   scale_x_discrete(
     breaks = c("trans_all", "coloc", "cis_e_cand", "cis_s_cand"),
-    labels = c("Tran-All", "Cis-e/s", "Cis-e", "Cis-s")
+    labels = c("Tran-all", "Cis-e/s", "Cis-e", "Cis-s")
   ) +
   theme_my_pub(base_size = 12, axis.title.size = 14, axis.text.size = 12) +
   theme(
