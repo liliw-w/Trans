@@ -1,196 +1,178 @@
+########## Run coloc on regions for qtl and gwas traits ##########
+########## These traits are part of the 72 traits ##########
+########## Focus on the 14 autoimmune diseases ##########
 rm(list = ls())
 library(data.table)
 library(tidyverse)
+library(coloc)
+
+#setwd('/scratch/midway2/liliw1/coloc_cis_ARHGEF3')
 
 
-########## files and parameters, read files ##########
-pvalThre = 'module_QTL_sig'
-regionDis = 1e5
-cisDis = 5e5
-p_included_thre = 1e-5
-
-file_module_QTL_signals = '~/xuanyao_llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt'
-module_QTL_signals = fread(file_module_QTL_signals, col.names = c("signal", "p", "q"))
-range(module_QTL_signals$p)
-range(module_QTL_signals$q)
-
-file_gene_meta = "/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt"
-file_qtlColocReg = "~/xuanyao_llw/coloc/cis/qtlColocReg.txt.gz"
-
-dir_cis_qtl <- "/project2/xuanyao/llw/DGN_sQTL/"
+## region files
+file_qtlColocReg =  "~/xuanyao_llw/coloc/cis/qtlColocReg.txt.gz"
+file_qtlColocReg_gwas = file.path("data/qtlColocReg_gwas.txt.gz")
+file_gwasColocReg = file.path("data/gwasColocReg.txt.gz")
 file_intron_to_gene <- "/project2/xuanyao/llw/DGN_sQTL/merged_all_intron_to_gene.txt.gz"
 
 
-gene_meta = fread(file_gene_meta, header = TRUE)
-qtlColocReg = fread(file_qtlColocReg)
-qtlColocReg = qtlColocReg %>% filter(rsid != "")
+## output
+file_resColoc = file.path("data/resColoc.txt.gz")
+file_resColocSNP = file.path("data/resColocSNP.txt.gz")
+
+
+qtlColocReg <- fread(file_qtlColocReg, header = TRUE)
+qtlColocReg_gwas <- fread(file_qtlColocReg_gwas)
+gwasColocReg <- fread(file_gwasColocReg)
 intron_to_gene <- fread(file_intron_to_gene,
                         col.names = c("chr_gene", "start_gene", "end_gene", "gene",
                                       "chr_intron", "start_intron", "end_intron", "intron",
                                       "nSNP") )
 
 
-### only remain the light green regions, i.e. regions whose lead-SNPs are trans-eQTL signals
-res_coloc_leadSNP = qtlColocReg %>%
-  group_by(Region) %>%
-  summarise() %>%
-  filter(Region %in% !!module_QTL_signals$signal) %>%
-  ungroup() %>%
-  select(Region) %>%
-  separate(col = Region, into = c("Module", "Chr", "Pos"), sep = ":", remove = FALSE, convert = TRUE)
+gene_sep <- gwasColocReg %>% distinct(intron) %>% pull()
+gwas_pmid_seq <- gene_sep
+gwas_label_seq <- gene_sep
 
 
-########## loop over all traits ##########
-#file_resColoc = paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode_seq, ".resColoc.txt.gz")
-#resColoc_all = rbindlist(lapply(file_resColoc, fread, header = TRUE), use.names = TRUE)
+qtlN = 913
+gwasN <- 913
+qtlType = "quant"
+gwasType = "quant"
+pp4Thre = 0.75
+csThre = 0.95
 
-# only retain regions with module-QTL signals
-#res_coloc_leadSNP = resColoc_all %>% filter(Pval <= pvalThre) %>%
-#  select(c(Phenocode, trait, Region, Pval, nsnps, PP.H4.abf)) %>%
-#  separate(col = Region, into = c("Module", "Chr", "Pos"), sep = ":", remove = FALSE, convert = TRUE)
-
-
-# only consider "protein_coding" or "lincRNA" genes, & convert TSS
-gene_meta = gene_meta %>% filter(Class %in% c("protein_coding", "lincRNA"))
-strand_ind = gene_meta$Strand == "-"
-gene_meta[strand_ind, "Start"] = gene_meta[strand_ind, "End"]
-
-
-# TSS and distance of genes that are overlapped with regions and lead SNPs
-coloc_cis_dis = max(regionDis/2, cisDis/2)
-
-cis_overlap = rbindlist(apply(res_coloc_leadSNP, 1, function(x) {
-  tmp_cis_overlap = gene_meta %>%
-    filter(Chromosome == paste0("chr", as.numeric(x["Chr"]))) %>%
-    mutate(dis = abs(Start-as.numeric(x["Pos"]))) %>%
-    filter(dis < coloc_cis_dis)
-  data.table("N_gene" = length(tmp_cis_overlap$GeneSymbol),
-             "gene" = paste(tmp_cis_overlap$GeneSymbol, collapse = ";"),
-             "dis" = paste(tmp_cis_overlap$dis, collapse = ";") )
-}))
-
-
-res_coloc_leadSNP = cbind(res_coloc_leadSNP, cis_overlap)
-
-
-# add introns of each cis genes of regions
-res_coloc_leadSNP <- cbind(res_coloc_leadSNP,
-      rbindlist(lapply(
-        res_coloc_leadSNP$gene,
-        function(x){
-          tmp_cis_gene = strsplit(x, split = ";") %>% unlist()
-          tmp_intron = filter(intron_to_gene, gene %in% !!tmp_cis_gene) %>% distinct(intron)
-          
-          data.table("N_intron" = nrow(tmp_intron),
-                     "intron" = paste(pull(tmp_intron), collapse = ";") )
-        }
-      ))
-)
-
-
-# introns will be used for coloc of each region
-reg_intron = rbindlist(apply(res_coloc_leadSNP %>% filter(N_gene > 0 & N_intron > 0), 1, function(x) {
-  data.table("Region" = x["Region"],
-             "intron" = unlist(strsplit(x["intron"], ";")))
-}))
-#reg_intron <- left_join(reg_intron, select(intron_to_gene, intron, gene), by = "intron")
-
-
-#reg_gene[which(reg_gene$gene == 'ARHGEF3'), ]
-
-
-#file_cis_sqtl = "/project2/xuanyao/llw/DGN_PCO.lambda.01/nom_10phenoPC_allChr.sQTL.txt.gz"
-#cis_sqtl = fread(file_cis_sqtl, select = c(1, 2, 4, 5))
-#colnames(cis_sqtl) = c("pid", "sid", "dist", "npval", "slope")
-
-
-# extract sqtls of introns that will be used for coloc
-cis_qtl <- NULL
-for(chr in 22:1){
-  file_tmp_cis_qtl <- paste0(dir_cis_qtl, "nom_10phenoPC_", chr, ".maf5e-2.txt.gz")
+gwasColocReg_all_gene <- gwasColocReg
+resColoc = NULL
+resColocSNP = NULL
+for(k in 1:length(gwas_pmid_seq)){
+  gwas_pmid = gwas_pmid_seq[k]
+  gwas_label = gwas_label_seq[k]
   
-  tmp_cis_qtl <- fread(file_tmp_cis_qtl,
-                       col.names = c("pid", "sid", "dist", "npval", "slope"))
+  gwasColocReg <- gwasColocReg_all_gene %>% filter(intron == gwas_pmid)
   
-  tmp_intron_coloc <- distinct(tmp_cis_qtl, pid) %>%
-    separate(pid, c("chr", "l", "r", NA, NA), sep = "[:]", remove = FALSE) %>%
-    unite("intron", chr, l, r, sep = ":") %>%
-    filter(intron %in% !!reg_intron$intron)
+  gwasRegTruncPthre <- gwasColocReg %>% distinct(Region)
   
-  tmp_cis_qtl <- filter(tmp_cis_qtl, pid %in% !!tmp_intron_coloc$pid)
+  ########## prepare coloc files and run coloc ##########
+  nRegion = length(gwasRegTruncPthre$Region)
+  for(reg in gwasRegTruncPthre$Region){
+    ### extract the region for qtl and gwas
+    tmpqtlColocReg_gwas = qtlColocReg_gwas %>% filter(Region == reg)
+    tmpgwasColocReg = gwasColocReg %>% filter(Region == reg)
+    
+    tmpgwasColocReg <- tmpgwasColocReg %>% filter(!duplicated(SNP_ID)) %>% filter(SNP_ID %in% tmpqtlColocReg_gwas$SNP_ID)
+    tmpqtlColocReg_gwas <- tmpqtlColocReg_gwas %>% filter(SNP_ID %in% tmpgwasColocReg$SNP_ID)
+    
+    ### construct coloc dataset D1 & D2
+    D1 = list("pvalues" = tmpqtlColocReg_gwas$Pval,
+              "N" = qtlN,
+              "MAF" = tmpqtlColocReg_gwas$MAF,
+              "type" = qtlType,
+              "snp" = tmpqtlColocReg_gwas$SNP_ID)
+    D2 = list("pvalues" = tmpgwasColocReg$npval,
+              "N" = gwasN,
+              "MAF" = tmpgwasColocReg$MAF,
+              "beta" = tmpgwasColocReg$slope,
+              #"varbeta" = (tmpgwasColocReg[["se"]])^2,
+              "type" = gwasType,
+              #"s" = if(gwasType=="cc" & !is.na(gwasN) ) n_cases/gwasN else if(gwasType=="cc" & is.na(gwasN) ) tmpgwasColocReg[["s"]] else NULL,
+              "snp" = tmpgwasColocReg$SNP_ID)
+    
+    ### do coloc
+    coloc_res = coloc.abf(D1, D2)
+    
+    ### follow-up: credible set
+    if(coloc_res$summary["PP.H4.abf"] > pp4Thre){
+      o <- order(coloc_res$results$SNP.PP.H4,decreasing=TRUE)
+      cs <- cumsum(coloc_res$results$SNP.PP.H4[o])
+      w <- which(cs > csThre)[1]
+      resColocSNP = rbind(resColocSNP, data.table("Region" = reg,
+                                                  "SNP_ID" = as.character(coloc_res$results[o,][1:w,]$snp),
+                                                  "SNP.PP.H4" = coloc_res$results[o,][1:w,]$SNP.PP.H4))
+    }
+    
+    ### organize result
+    resColoc = rbind(resColoc, data.table("Region" = reg, "gwas_label" = gwas_label, t(coloc_res$summary)) )
+    
+    ### in progress
+    cat(grep(reg, gwasRegTruncPthre$Region, fixed = TRUE),
+        "-th region:", reg, "(out of", nRegion, "regions)", "is done!", "\n")
+  }
   
+  cat("Trait", gwas_label, ". \n")
   
-  # convert pid to intron names & only remain introns cis to a coloc region
-  cis_qtl <- rbind(cis_qtl, tmp_cis_qtl)
-  
-  fwrite(tmp_cis_qtl, file = paste0("coloc_intron/coloc_intron_chr", chr, ".txt.gz") )
-  
-  
-  cat("CHR", chr, "\n")
 }
-fwrite(cis_qtl, file = paste0("coloc_intron/coloc_intron_chrall.txt.gz") )
 
 
-# keep only snps also in qtlColocReg
-cis_qtl <- filter(cis_qtl, sid %in% !!qtlColocReg$SNP_ID)
-
-
-reg_intron <- distinct(cis_qtl, pid) %>%
-  separate(pid, c("chr", "l", "r", NA, NA), sep = "[:]", remove = FALSE) %>%
-  unite("intron", chr, l, r, sep = ":") %>%
-  inner_join(reg_intron, by = "intron")
-
-
-# correspond sqtls of introns to regions
-gwasColocReg = reg_intron %>% left_join(cis_qtl, by = c("pid") ) %>% filter(!is.na(npval))
-gwasColocReg = gwasColocReg %>%
-  group_by(Region, pid, intron) %>%
-  summarise("minp" = min(npval)) %>%
+########## Add p-value and trait info to coloc regions ##########
+resColoc = qtlColocReg %>%
+  select(c(Signal, Pval)) %>%
+  right_join(y = resColoc, by = c("Signal" = "Region")) %>%
+  rename("Region" = "Signal")
+resColoc <- resColoc %>%
+  rename("Phenocode" = "gwas_label") %>%
+  left_join(select(intron_to_gene, gene, intron), by = c("Phenocode" = "intron")) %>%
+  group_by(Region, Phenocode) %>%
+  mutate("gene" = paste(gene, collapse = ";")) %>%
   ungroup() %>%
-  filter(minp < p_included_thre) %>%
-  left_join(gwasColocReg, by = c("Region", "pid", "intron") )
+  distinct(Region, Phenocode, .keep_all = TRUE)
 
 
-gwasColocReg = gwasColocReg[gwasColocReg$sid %in% qtlColocReg$SNP_ID, ]
-qtlColocReg_gwas = qtlColocReg[qtlColocReg$Region %in% gwasColocReg$Region & qtlColocReg$SNP_ID %in% gwasColocReg$sid, ]
-gwasColocReg = gwasColocReg[gwasColocReg$sid %in% qtlColocReg_gwas$SNP_ID, ]
-
-gwasColocReg = qtlColocReg_gwas %>%
-  filter(!duplicated(SNP_ID)) %>%
-  select(SNP_ID, MAF) %>%
-  right_join(gwasColocReg, by = c("SNP_ID" = "sid") )
-
-
-#gwasColocReg[which(gwasColocReg$gene == 'ARHGEF3'), ]
-
-#qtlColocReg_gwas[qtlColocReg_gwas$Region =="module4:3:56901292", ]
-
-fwrite(gwasColocReg, "data/gwasColocReg.txt.gz", quote = FALSE, sep = "\t")
-fwrite(qtlColocReg_gwas, "data/qtlColocReg_gwas.txt.gz", quote = FALSE, sep = "\t")
-
-# 165 coloc candidate regions
+########## save results##########
+resColoc = resColoc %>% arrange(desc(PP.H4.abf))
+fwrite(resColoc, file_resColoc, quote = FALSE, sep = "\t")
 
 
 
-########## Plot ##########
-fig1 = ggplot(res_coloc_leadSNP, aes(x = N_gene)) +
-  #facet_wrap(~trait) +
-  geom_line(stat = "bin", binwidth = 1) +
-  geom_point(stat = "bin", binwidth = 1, size = 0.7) +
-  labs(x = "#cis genes", y = "#regions") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+str(resColoc)
+resColoc %>% distinct(Region)
+resColoc %>% group_by(Region) %>%
+  summarise(H0 = max(PP.H0.abf),
+            H1 = max(PP.H1.abf),
+            H2 = max(PP.H2.abf),
+            H3 = max(PP.H3.abf),
+            H4 = max(PP.H4.abf) ) %>%
+  arrange(desc(H4)) %>%
+  filter(
+    H4  > pp4Thre
+  )
 
-res_coloc_dis_trait = res_coloc_leadSNP %>% group_by() %>% summarise(dis_trait = paste0(dis, collapse = ";"))
-res_coloc_dis_trait = data.table("dis" = as.numeric(unlist(strsplit(res_coloc_dis_trait$dis_trait, ";"))) )
 
-fig2 = ggplot(res_coloc_dis_trait, aes(x = dis)) +
-  #facet_wrap(~trait) +
-  geom_line(stat = "bin", binwidth = 5000) +
-  geom_point(stat = "bin", binwidth = 5000, size = 0.7) +
-  labs(x = "dis", y = "#regions") +
-  theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
-fig <- plot_grid(fig1, fig2, labels = c('A', "B"), nrow = 1)
-ggsave("region.cis.gene.png", fig, path = "./plot/", width = 10, height = 5)
+
+
+df_fig <- resColoc %>% group_by(Region) %>% summarise(H0 = max(PP.H0.abf),
+                                                      H1 = max(PP.H1.abf),
+                                                      H2 = max(PP.H2.abf),
+                                                      H3 = max(PP.H3.abf),
+                                                      H4 = max(PP.H4.abf) ) %>%
+  pivot_longer(c('H0', 'H1', 'H2', 'H3', 'H4'), names_to = "type", values_to = "H")
+
+df_fig2 <- resColoc %>%
+  pivot_longer(c('PP.H0.abf', 'PP.H1.abf', 'PP.H2.abf', 'PP.H3.abf', 'PP.H4.abf'), names_to = "type", values_to = "H")
+
+
+library(ggbeeswarm)
+library(RColorBrewer)
+
+custom.col <- c("#FFDB6D", "#C4961A", "#F4EDCA", 
+                "#D16103", "#C3D7A4", "#52854C", "#4E84C4", "#293352")
+
+# The palette with grey:
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# The palette with black:
+cbp2 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+ggplot(df_fig2, mapping = aes(type, H, color = type)) +
+  geom_quasirandom(varwidth = TRUE, size = 1, alpha = 0.6) +
+  scale_color_manual(values = cbp1) +
+  theme_classic()
+
+
+# 255
+# 212
 
 
