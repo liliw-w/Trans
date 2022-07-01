@@ -6,18 +6,18 @@ library(data.table)
 library(tidyverse)
 library(coloc)
 
-setwd('/scratch/midway2/liliw1/coloc_cis_ARHGEF3')
+#setwd('/scratch/midway2/liliw1/coloc_cis_ARHGEF3')
 
 
 ## region files
-file_qtlColocReg =  "~/xuanyao_llw/coloc/cis/data/qtlColocReg.txt.gz"
-file_qtlColocReg_gwas = file.path("qtlColocReg_gwas.txt.gz")
-file_gwasColocReg = file.path("gwasColocReg.txt.gz")
+file_qtlColocReg =  "~/xuanyao_llw/coloc/cis/qtlColocReg.txt.gz"
+file_qtlColocReg_gwas = file.path("/scratch/midway2/liliw1/coloc_cis_eQTL/data/qtlColocReg_gwas.txt.gz")
+file_gwasColocReg = file.path("/scratch/midway2/liliw1/coloc_cis_eQTL/data/gwasColocReg.txt.gz")
 
 
 ## output
-file_resColoc = file.path("resColoc.txt.gz")
-file_resColocSNP = file.path("resColocSNP.txt.gz")
+file_resColoc = file.path("data/resColoc.txt.gz")
+file_resColocSNP = file.path("data/resColocSNP.txt.gz")
 
 
 qtlColocReg <- fread(file_qtlColocReg, header = TRUE)
@@ -25,11 +25,9 @@ qtlColocReg_gwas <- fread(file_qtlColocReg_gwas)
 gwasColocReg <- fread(file_gwasColocReg)
 
 
-gene_sep <- gwasColocReg %>% group_by(gene) %>% summarise() %>% unlist()
+gene_sep <- gwasColocReg %>% distinct(gene) %>% pull()
 gwas_pmid_seq <- gene_sep
 gwas_label_seq <- gene_sep
-
-reg_seq <- gwasColocReg %>% group_by(Region) %>% summarise() %>% unlist()
 
 
 qtlN = 913
@@ -48,7 +46,8 @@ for(k in 1:length(gwas_pmid_seq)){
   
   gwasColocReg <- gwasColocReg_all_gene %>% filter(gene == gwas_pmid)
   
-  gwasRegTruncPthre <- gwasColocReg %>% group_by(Region) %>% summarise()
+  gwasRegTruncPthre <- gwasColocReg %>% distinct(Region)
+  
   
   ########## prepare coloc files and run coloc ##########
   nRegion = length(gwasRegTruncPthre$Region)
@@ -107,7 +106,7 @@ resColoc = qtlColocReg %>%
   right_join(y = resColoc, by = c("Signal" = "Region")) %>%
   rename("Region" = "Signal")
 resColoc <- resColoc %>%
-  mutate(trait = gwas_label) %>%
+  mutate(gene = gwas_label) %>%
   rename("Phenocode" = "gwas_label")
 
 
@@ -116,10 +115,23 @@ resColoc = resColoc %>% arrange(desc(PP.H4.abf))
 fwrite(resColoc, file_resColoc, quote = FALSE, sep = "\t")
 #if(!is.null(resColocSNP)) fwrite(resColocSNP, file_resColocSNP, quote = FALSE, sep = "\t")
 
-str(resColoc)
-str(sum(resColoc$PP.H4.abf > pp4Thre))
 
-resColoc %>% group_by(Region) %>% summarise()
+str(resColoc)
+resColoc %>% distinct(Region)
+resColoc %>% group_by(Region) %>%
+  summarise(H0 = max(PP.H0.abf),
+            H1 = max(PP.H1.abf),
+            H2 = max(PP.H2.abf),
+            H3 = max(PP.H3.abf),
+            H4 = max(PP.H4.abf) ) %>%
+  arrange(desc(H4)) %>%
+  filter(
+    H4  > pp4Thre
+  )
+
+
+
+
 
 df_fig <- resColoc %>% group_by(Region) %>% summarise(H0 = max(PP.H0.abf),
                                                       H1 = max(PP.H1.abf),
