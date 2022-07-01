@@ -9,9 +9,9 @@ library(UpSetR)
 
 
 ### sets
-file_trans <- '/scratch/midway2/liliw1/eQTGen_est_Sigma/postanalysis/LD.prun.in.chr.module.txt'
-file_cis_e <- '/project2/xuanyao/llw/DGN_PCO.lambda.01/DGN_eQTL_signif_variant_gene_pairs.txt.gz'
-file_cis_s <- '/project2/xuanyao/llw/DGN_PCO.lambda.01/DGN_sQTL_signif_variant_gene_pairs.txt.gz'
+file_trans <- '/project2/xuanyao/llw/eQTLGen_est_Sigma/postanalysis/LD.prun.in.chr.module.txt'
+file_cis_e <- '/project2/xuanyao/llw/DGN_sumstat/DGN_eQTL/DGN_eQTL_signif_variant_gene_pairs.txt.gz'
+file_cis_s <- '/project2/xuanyao/llw/DGN_sumstat/DGN_sQTL/DGN_sQTL_signif_variant_gene_pairs.txt.gz'
 
 ### read sets
 trans <- fread(file_trans, header = FALSE)
