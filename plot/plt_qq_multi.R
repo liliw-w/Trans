@@ -1,9 +1,10 @@
 qqplot <- function(input,
                    ci_level = 0.95,
                    group_title = NULL,
-                   group_order = "Type",
-                   is_group_numerical_order = TRUE,
-                   my_theme = "/home/liliw1/Trans/followup/theme_my_pub.R"){
+                   group_order = NULL,
+                   group_label = NULL,
+                   is_group_numerical_order = FALSE,
+                   my_theme = "/home/liliw1/Trans/plot/theme_my_pub.R"){
   require(tidyverse)
   source(my_theme)
   
@@ -32,7 +33,8 @@ qqplot <- function(input,
     pivot_longer(-c(x, ci_l, ci_r), names_to = "Type", values_to = "y")
   # set group order in plt
   group_order = if(is.null(group_order)) unique(df_plt$Type) else group_order
-  df_plt$Type = factor(df_plt$Type, levels = group_order)
+  group_label = if(is.null(group_label)) group_order else group_label
+  df_plt$Type = factor(df_plt$Type, levels = group_order, labels = group_label)
   
   if(is_group_numerical_order){
     ggplot(df_plt, aes(x = x, y = y, group = Type)) +
@@ -47,17 +49,16 @@ qqplot <- function(input,
       scale_color_brewer(palette = "Reds", direction = -1) +
       theme_my_pub()
   }else{
-    return(
-      ggplot(df_plt, aes(x = x, y = y, group = Type)) +
-        geom_ribbon(aes(ymin = ci_l, ymax = ci_r), fill = "grey80", color="grey80") +
-        geom_abline(slope = 1, intercept = 0, color = "black", size = 1) +
-        geom_point(aes(color = Type), size = 0.5) +
-        labs(x = bquote(Expected -log[10]~italic((P))),
-             y = bquote(Observed -log[10]~italic((P))),
-             color = group_title) +
-        scale_color_manual(values = c(RColorBrewer::brewer.pal(8, "Dark2"),
-                                      RColorBrewer::brewer.pal(8, "Set1")) ) +
-        theme_my_pub()
-    )
+    ggplot(df_plt, aes(x = x, y = y, group = Type)) +
+      geom_ribbon(aes(ymin = ci_l, ymax = ci_r), fill = "#e5e5e5", color = "#e5e5e5") +
+      geom_abline(slope = 1, intercept = 0, color = "#595959", size = 0.7) +
+      geom_point(aes(color = Type), size = 0.5) +
+      labs(x = bquote(Expected -log[10]~italic((P))),
+           y = bquote(Observed -log[10]~italic((P))),
+           color = group_title) +
+      scale_color_manual(values = c("#85192d", "#0028a1", "#e89c31",
+                                    RColorBrewer::brewer.pal(8, "Dark2"),
+                                    RColorBrewer::brewer.pal(8, "Set1")) ) +
+      theme_my_pub()
   }
 }
