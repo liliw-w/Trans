@@ -24,9 +24,9 @@ df_z <- mutate(df_z, abs_z = replace(abs_z, is.infinite(abs_z), inf_replace_val)
 # number of signal snps for categories
 df_sig <- df_z %>%
   group_by(type_trait, type) %>%
-  summarise("abs_z" = max(abs_z), "n" = n()) %>%
+  dplyr::summarise("abs_z" = max(abs_z), "n" = n()) %>%
   ungroup() %>%
-  mutate("type_trait_num" = as.numeric(type_trait))
+  dplyr::mutate("type_trait_num" = as.numeric(type_trait))
 
 
 # for pairwise p comparison
@@ -86,11 +86,15 @@ plt <- base_plt +
     panel.grid.major.y = element_line(linetype = "dashed"),
     
     legend.background = element_blank(),
-    legend.position = "bottom",
+    legend.position = "right",
     legend.key.size= unit(0.2, "cm"),
-    legend.text = element_text(size = 10)
+    legend.text = element_text(size = 10),
+    
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12)
   )
 plt
 
-ggsave(paste0("uni/maxz_cat_sig_pdf.pdf"), plt, height = 3.5, width = 4.5)
+ggsave(paste0("uni/maxz_cat_sig_pdf.pdf"), plt, height = 3, width = 5)
+saveRDS(plt, paste0("uni/maxz_cat_sig_pdf.rds"))
 

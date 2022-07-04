@@ -3,9 +3,8 @@
 ########### detected by methods only by trans-PCO, PC1, or both ###########
 ##############################################
 rm(list = ls())
-library(tidyverse)
 library(ggpubr)
-library(ggbeeswarm)
+library(tidyverse)
 
 source('~/Trans/plot/theme_my_pub.R')
 
@@ -30,14 +29,14 @@ df_z <- rbindlist(
     tmp_df_z %>%
       pivot_wider(names_from = gene, values_from = z) %>%
       rowwise(snp:type) %>%
-      summarise("max_abs_z" = max(abs(c_across(where(is.numeric))))) %>%
+      dplyr::summarise("max_abs_z" = max(abs(c_across(where(is.numeric))))) %>%
       ungroup() %>%
       mutate("module" = !!module)
   })
 )
 
 # signal (snp, module) counts for each types: both PC1 and PCO, or only for PCO or PC1
-df_sig <- df_z %>% count(type)
+df_sig <- df_z %>% dplyr::count(type)
 
 # for pairwise p comparison
 my_comparisons <- list( c("Trans-PCO", "Both"), c("Both", "PC1"), c("Trans-PCO", "PC1") )
@@ -52,7 +51,7 @@ base_plt <- ggplot(df_z, aes(x = type, y = max_abs_z, color = type, fill = type)
   stat_compare_means(comparisons = my_comparisons,
                      vjust = 2, show.legend = FALSE) +
   #stat_compare_means() +
-  labs(title = paste0("All modules"),
+  labs(#title = paste0("All modules"),
        x = NULL, y = quote(~"max|Z|"))
 
 plt <- base_plt +
@@ -83,8 +82,10 @@ plt <- base_plt +
     
     plot.title = element_text(vjust = -1),
     
-    strip.background = element_blank(),
-    strip.text.x = element_blank()
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12)
   )
 
-ggsave(paste0("pc1/M_all_maxz_pdf.pdf"), plt, height = 4, width = 5)
+ggsave(paste0("pc1/M_all_maxz_pdf.pdf"), plt, height = 3, width = 3.5)
+saveRDS(plt, paste0("pc1/M_all_maxz_pdf.rds"))
+
