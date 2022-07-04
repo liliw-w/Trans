@@ -81,12 +81,17 @@ for (change in c('N', 'caus')) {
                         labels = sapply(levels(df.alt$model), function(x) strsplit(x, "=")[[1]][2] )
   )
   
-  fig <- ggplot(data = df.alt, aes(x=model, y=power, group=method, color=method)) +
+  fig <- ggplot(data = df.alt, aes(x = model, y = power, color = method, group = method)) +
     geom_pointrange(aes(ymin = power-ci, ymax = power+ci),
                     fatten = 1, size = 0.5,
                     position = position_dodge(width = 0.3)) +
+    geom_line(
+      position = position_dodge(width = 0.3),
+      show.legend = FALSE,
+      alpha = 0.5
+    ) +
     labs(x = xlab_name, y = "Power", color = "Method") +
-    scale_colour_manual(#values = cbp2,
+    scale_colour_manual(
       breaks = c("trans-PCO", "PC1", "minp"),
       labels = c("trans-PCO" = "Trans-PCO", "minp" = "MinP", "PC1" = "PC1"),
       values = c("trans-PCO" = "#85192d", "minp" = "#e89c31", "PC1" = "#1d349a"),
