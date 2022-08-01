@@ -89,7 +89,7 @@ for(i in 1:n_gwas){
       )
     
     saveRDS(fig, paste0("plot/", reg, ".", gwasPhenocode, ".reg.coloc.rds"))
-    ggsave(paste0("plot/", reg, ".", gwasPhenocode, ".reg.coloc.pdf"), fig, width = 4, height = 3.5)
+    ggsave(paste0("plot/", reg, ".", gwasPhenocode, ".reg.coloc.pdf"), fig, width = 4, height = 2.5)
     
     ### in progress
     cat(grep(reg, resColoc$Region, fixed = TRUE),
