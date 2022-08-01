@@ -63,14 +63,14 @@ base_fig <- ggplot(h2_enrich,
 base_fig +
   scale_x_continuous(
     limits = c(xlow, xupp),
-    breaks = c(0, seq(-100, 100, by = 2))
+    breaks = c(0, seq(-100, 100, by = 10))
   ) +
   scale_colour_manual(
     breaks = c("TRUE", "FALSE"),
     labels = c("Coloc", "No coloc"),
     values = c("TRUE" = "#005900", "FALSE" = "#8c8c8c")
   ) +
-  theme_my_pub() +
+  theme_my_pub(axis.text.x.angle = 90) +
   theme(
     #panel.border = element_rect(colour = "black", fill = NA, size = 1.5),
     panel.grid.major.y = element_line(linetype = "dotted"),
@@ -82,8 +82,11 @@ base_fig +
     
     strip.text = element_text(face = "bold", size = 14),
     #strip.background = element_rect(colour = "black", fill = NA, size = 1.5),
-    strip.background = element_blank()
+    strip.background = element_blank(),
+    
+    axis.text = element_text(size = 8)
   )
 
 ggsave(file_fig,
-       height = 3, width = 5)
+       height = 15, width = 5)
+
