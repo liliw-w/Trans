@@ -19,7 +19,7 @@ snp <- "3:56849749"
 chr <- 3
 
 
-file_eqtlgen_sig_dgn <- 'postanalysis/eqtlgen_spec_to_dgn.txt'
+file_eqtlgen_sig_dgn <- 'postanalysis/eqtlgen_spec_pair_to_dgn.txt'
 file_snp_meta <- '/project2/xuanyao/llw/eQTLGen/eQTLGen.used_snp.meta.txt'
 file_gene_meta <- '/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt'
 
@@ -35,8 +35,9 @@ gene_meta <- fread(file_gene_meta)
 eqtlgen_sig_dgn <- eqtlgen_sig_dgn %>%
   filter(meta == snp) %>%
   separate(module, into = c(NA, "module"), sep = "module", convert = TRUE)
-module_list <- eqtlgen_sig_dgn$module
-module_list <- sapply(module_list, function(x) strsplit(x, "module") %>% unlist() %>% .[2] %>% as.numeric()) %>% sort()
+module_list <- eqtlgen_sig_dgn$module %>% sort()
+#module_list <- sapply(module_list, function(x) strsplit(x, "module") %>% unlist() %>% .[2] %>% as.numeric()) %>% sort()
+
 
 file_z_eqtlgen <- paste0("/project2/xuanyao/llw/eQTLGen/z_dgn_166_module/z.module", module_list, ".chr", chr, ".txt.gz")
 file_z_dgn <- paste0("/project2/xuanyao/llw/DGN_no_filter_on_mappability/z/z.module", module_list, ".chr", chr, ".txt.gz")
@@ -85,7 +86,7 @@ z_eqtlgen <- left_join(z_eqtlgen,
   rename("gene" = "GeneSymbol") %>%
   mutate("snp" = !!snp)
 
-z_dgn <- z_dgn %>% filter(gene %in% z_eqtlgen$GeneSymbol)
+z_dgn <- z_dgn %>% filter(gene %in% z_eqtlgen$gene)
 
 
 
