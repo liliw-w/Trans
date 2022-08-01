@@ -9,7 +9,7 @@ library(ggplot2)
 ## I/O
 file_null_SNP <- 'null_SNP/num_nullSNP.rds'
 file_plot_null_SNP <- 'null_SNP/num_nullSNP.pdf'
-source('~/Trans/followup/theme_my_pub.R')
+source('~/Trans/plot/theme_my_pub.R')
 
 res_nullSNP <- readRDS(file_null_SNP)
 
@@ -27,7 +27,7 @@ base_fig <- ggplot(data = res_nullSNP, aes(x = factor(module)) ) +
 
 ## adjust themes
 fig <- base_fig +
-  theme_my_pub() +
+  theme_my_pub(axis.text.x.angle = 45) +
   theme(axis.text.x = element_text(size = 7),
         axis.ticks.x = element_blank()) +
   scale_color_brewer(palette = "Dark2")
