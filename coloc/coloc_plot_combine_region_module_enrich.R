@@ -10,8 +10,8 @@ pvalThre = 'module_QTL_sig'
 
 file_resEnrich_blood = paste0("/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data_enrich/all.traits.enrich.", pvalThre, ".txt")
 file_resEnrich_immu = paste0("/project2/xuanyao/llw/coloc/immune_traits/pmid_all/data_enrich/all.traits.enrich.", pvalThre, ".txt")
-file_plot = 'fig4a_ukbb_immun.png'
-file_plot_num = 'fig4a_ukbb_immun.png.txt'
+file_plot = 'ukbb_immun_module.pdf'
+file_plot_num = 'ukbb_immun_module.txt'
 
 ### read module v.s. chr v.s. regions file for blood traits & immune traits
 # blood traits
@@ -53,7 +53,7 @@ x_axis_text_color <- NULL
     group_by(`GWAS Group`) %>%
     summarise() %>%
     ungroup() %>%
-    mutate("trait_color" = c("#339900", "#000000", "#b41f2e", "grey55"))
+    mutate("trait_color" = c("#339900", "#0028a1", "#85192d", "#e89c31"))
   
   ### assign color to each trait
   trait_type <- trait_type %>%
@@ -68,7 +68,7 @@ x_axis_text_color <- NULL
   
   ### get color for each trait
   x_axis_text_color <- resPlot %>%
-    group_by(Phenocode, Phenocode_w_id) %>%
+    group_by(Phenocode, trait, Phenocode_w_id) %>%
     summarise(trait_color = unique(trait_color)) %>%
     ungroup()
 }
@@ -82,32 +82,41 @@ Module_order = resPlot %>%
   summarise(n_coloc_regions = sum(num_of_regions),
             n_coloc_trait = n()) %>%
   ungroup() %>%
-  arrange(n_coloc_trait, n_coloc_regions)
+  arrange(desc(n_coloc_trait), desc(n_coloc_regions))
 # order the modules and change labels
 resPlot$Module = factor(resPlot$Module,
                         levels = Module_order$Module,
-                        labels = paste0("M", Module_order$module_num))
+                        labels = paste0(Module_order$module_num))
+
+# phenotype order
+pheno_order <- resPlot %>%
+  group_by(`GWAS Group`, Phenocode, trait) %>%
+  summarise(n_coloc_regions = sum(num_of_regions),
+            n_coloc_m = n()) %>%
+  ungroup() %>%
+  group_by(`GWAS Group`) %>%
+  arrange(n_coloc_m, n_coloc_regions, .by_group = TRUE) %>%
+  ungroup()
+resPlot$Phenocode = factor(resPlot$Phenocode,
+                           levels = pheno_order$Phenocode,
+                           labels = pheno_order$trait)
 
 ### order x-axis labels of traits by their trait type, if there are various trait types
-resPlot$Phenocode = factor(resPlot$Phenocode)
 if(exists("trait_type")){
   trait_type[`GWAS Group` == "immune", ]$Phenocode_w_id <- trait_type[`GWAS Group` == "immune", `Trait Abbreviation`]
   
-  resPlot$Phenocode = factor(resPlot$Phenocode,
-                             levels = trait_type$`GWAS ID`,
-                             labels =  trait_type$Phenocode_w_id)
   ### obtain the color for x-axis text labels, aligned with order of labels
-  x_axis_text_color <- x_axis_text_color[match(levels(resPlot$Phenocode), x_axis_text_color$Phenocode_w_id), ]
+  x_axis_text_color <- x_axis_text_color[match(levels(resPlot$Phenocode), x_axis_text_color$trait), ]
 }
 
 
-#low = "#A6CEE3", mid = "#93c3dd", high = "#144c73"
+
 ########## tile plot trait v.s. module v.s. coloc region ##########
-fig_tile <- ggplot(resPlot, aes(Phenocode, Module)) +
+fig_tile <- ggplot(resPlot, aes(Module, Phenocode)) +
   geom_tile(aes(fill = num_of_regions)) +
   scale_fill_gradientn(colors = RColorBrewer::brewer.pal(8, "Blues")[3:8],
                        na.value = "red") +
-  labs(x = NULL, y = "Module", fill = "Number of \n Coloc Regions") +
+  labs(y = NULL, x = "Module", fill = "Number of \n Coloc Regions") +
   theme_classic() +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
@@ -117,18 +126,18 @@ fig_tile <- ggplot(resPlot, aes(Phenocode, Module)) +
         legend.title = element_text(size = 10, face = "bold"),
         legend.background = element_rect(color = "black", linetype = "dashed"),
         legend.key.size= unit(0.5, "cm"),
-        axis.line = element_line(colour="black"),
+        axis.line = element_line(colour = "black"),
         plot.margin=unit(c(10,5,5,5),"mm"),
-        axis.text.x = element_text(colour = x_axis_text_color$trait_color,
-                                   angle = 60, hjust=1, vjust = 1, size = 9),
-        axis.text.y = element_text(colour = "black", size=8),
-        axis.title.x = element_text(vjust = -0.2, size=14),
-        axis.title.y = element_text(angle=90,vjust =2, size=14) )
+        axis.text.y = element_text(colour = x_axis_text_color$trait_color, size = 8),
+        axis.text.x = element_text(colour = "black", size = 8,
+                                   angle = 60, hjust = 1, vjust = 1),
+        axis.title.y = element_text(vjust = -0.2, size = 12),
+        axis.title.x = element_text(vjust = 2, size = 12))
 fig_tile
 
 ### save figure object and figure
 saveRDS(fig_tile, 'fig4a_ukbb_immun.rds')
-ggsave(file_plot, fig_tile, width = 7, height = 8)
+ggsave(file_plot, fig_tile, width = 8.5, height = 5)
 
 
 ######################################################
