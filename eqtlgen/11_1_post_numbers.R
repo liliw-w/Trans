@@ -7,7 +7,7 @@ library(tidyverse)
 
 
 ### paras and I/O
-ratio <- 50
+ratio <- 100
 file_signal <- paste0('postanalysis/signal_rm_infl_ratio_', ratio, '.txt')
 
 
