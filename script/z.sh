@@ -40,11 +40,15 @@ if (( nBatch >= 1 )); then
     fi
   done
   
-  nsucBatch=$(ls $prefix.[1-$nBatch].trans_qtl_pairs_z.txt | wc -l)
+  #nsucBatch=$(ls $prefix.[1-$nBatch].trans_qtl_pairs_z.txt | wc -l)
+  nsucBatch=$(ls $prefix.[1-9]*.trans_qtl_pairs_z.txt | wc -l)
   if ((nsucBatch == nBatch)); then
-    cat $prefix.[1-$nBatch].trans_qtl_pairs_z.txt | awk 'BEGIN{print "snp\tgene\tzscore"}{print $0}' > \
+    cat $prefix.[1-9]*.trans_qtl_pairs_z.txt | awk 'BEGIN{print "snp\tgene\tzscore"}{print $0}' > \
     $prefix.trans_qtl_pairs_z.txt
-    rm $prefix.[1-$nBatch].trans_qtl_pairs_z.txt
+    rm $prefix.[1-9]*.trans_qtl_pairs_z.txt
+  else
+    printf '%s\n' "TensorQTL failed" >&2  # write error message to stderr
+    exit 1
   fi
   
 else
