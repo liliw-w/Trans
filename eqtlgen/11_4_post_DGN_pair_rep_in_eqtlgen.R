@@ -10,14 +10,14 @@ library(tidyverse)
 
 # paras and I/O -----
 fdr_level <- 0.1
-ratio <- 50
+ratio <- 100
 
 file_dgn_sig <- '/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt'
 
 file_module_use <- paste0('postanalysis/module_use_ratio_', ratio, '.txt')
 file_p_all <- 'p/p.module_all.Sigma_nullz.rds'
 
-file_out <- 'postanalysis/dgn_in_eqtlgen.txt'
+file_out <- paste0('postanalysis/dgn_in_eqtlgen_ratio_', ratio, '.txt')
 
 
 # read files -----
