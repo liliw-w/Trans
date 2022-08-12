@@ -8,8 +8,8 @@ source('~/Trans/plot/theme_my_pub.R')
 
 
 # paras and I/O -----
-gwasPhenocode <- '28067908_ibd'
-facet_lab <- "Inflammaroty bowel disease"
+gwasPhenocode <- '29083406_Allergy'
+facet_lab <- "Allergy"
 # Allergic diseases
 
 file_h2_enrich <- paste0('h2_enrich_par/T_', gwasPhenocode, '_all_modules.results')
@@ -63,7 +63,7 @@ base_fig <- ggplot(h2_enrich,
 base_fig +
   scale_x_continuous(
     limits = c(xlow, xupp),
-    breaks = c(0, seq(-100, 100, by = 10))
+    breaks = c(0, seq(-100, 100, by = 2))
   ) +
   scale_colour_manual(
     breaks = c("TRUE", "FALSE"),
@@ -85,7 +85,8 @@ base_fig +
     strip.background = element_blank(),
     
     axis.text = element_text(size = 8)
-  )
+  ) +
+  coord_cartesian(xlim = c(-10, 10))
 
 ggsave(file_fig,
        height = 15, width = 5)
