@@ -9,7 +9,7 @@ library(tidyverse)
 
 ### paras and I/O
 thre_p_z <- 1e-4
-ratio <- 50
+ratio <- 100
 n_SNP <- 9918
 
 
@@ -23,7 +23,7 @@ file_signal_LD <- 'postanalysis/LD.prun.in.chr.module.txt'
 
 ### read files
 p_all <- readRDS(file_p_all)
-module_use <- fread(module_use, header = TRUE)
+module_use <- fread(file_module_use, header = TRUE)
 
 
 ### filter out module with #NULL SNPs/Module size ratio less than the given ratio
