@@ -8,7 +8,10 @@ library(tidyverse)
 
 
 # paras and I/O -----
-file_eqtlgen_sig_dgn <- 'postanalysis/eqtlgen_in_dgn.txt'
+ratio <- 100
+
+file_eqtlgen_sig_dgn <- paste0('postanalysis/eqtlgen_in_dgn_ratio_', ratio, '.txt')
+
 file_dgn_sig <- '/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt'
 
 file_gene_meta <- '/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt'
@@ -16,7 +19,7 @@ dis_cis <- 1e+6
 
 buffer_reg <- c(1e+5, 2e+5, 5e+5, 1e+6)
 
-file_out <- 'postanalysis/eqtlgen_spec_pair_to_dgn.txt'
+file_out <- paste0('postanalysis/eqtlgen_spec_pair_to_dgn_ratio_', ratio, '.txt')
 
 
 # read files -----

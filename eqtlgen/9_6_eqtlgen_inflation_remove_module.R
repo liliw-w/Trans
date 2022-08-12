@@ -10,7 +10,7 @@ library(tidyverse)
 
 ### paras and I/O
 thre_p_z <- 1e-4
-ratio <- 50
+ratio <- 100
 
 file_null_SNP <- 'null_SNP/num_nullSNP.rds'
 
