@@ -11,8 +11,8 @@ library(coloc)
 
 ## region files
 file_qtlColocReg =  "~/xuanyao_llw/coloc/cis/qtlColocReg.txt.gz"
-file_qtlColocReg_gwas = file.path("/scratch/midway2/liliw1/coloc_cis_eQTL/data/qtlColocReg_gwas.txt.gz")
-file_gwasColocReg = file.path("/scratch/midway2/liliw1/coloc_cis_eQTL/data/gwasColocReg.txt.gz")
+file_qtlColocReg_gwas = file.path("/project2/xuanyao/llw/coloc/cis/cis_e/data/qtlColocReg_gwas.txt.gz")
+file_gwasColocReg = file.path("/project2/xuanyao/llw/coloc/cis/cis_e/data/gwasColocReg.txt.gz")
 
 
 ## output
@@ -59,12 +59,19 @@ for(k in 1:length(gwas_pmid_seq)){
     tmpgwasColocReg <- tmpgwasColocReg %>% filter(!duplicated(SNP_ID)) %>% filter(SNP_ID %in% tmpqtlColocReg_gwas$SNP_ID)
     tmpqtlColocReg_gwas <- tmpqtlColocReg_gwas %>% filter(SNP_ID %in% tmpgwasColocReg$SNP_ID)
     
+    tmpqtlColocReg_gwas <- tmpqtlColocReg_gwas %>% filter(rsid %in% rownames(tmp_ld))
+    tmpgwasColocReg <- tmpgwasColocReg %>% filter(SNP_ID %in% tmpqtlColocReg_gwas$SNP_ID)
+    
+    rownames(tmp_ld) <- tmpqtlColocReg_gwas %>% slice(match(rownames(tmp_ld), rsid)) %>% pull(SNP_ID)
+    colnames(tmp_ld) <- rownames(tmp_ld)
+    
     ### construct coloc dataset D1 & D2
     D1 = list("pvalues" = tmpqtlColocReg_gwas$Pval,
               "N" = qtlN,
               "MAF" = tmpqtlColocReg_gwas$MAF,
               "type" = qtlType,
-              "snp" = tmpqtlColocReg_gwas$SNP_ID)
+              "snp" = tmpqtlColocReg_gwas$SNP_ID,
+              "LD" = tmp_ld)
     D2 = list("pvalues" = tmpgwasColocReg$npval,
               "N" = gwasN,
               "MAF" = tmpgwasColocReg$MAF,
@@ -72,7 +79,58 @@ for(k in 1:length(gwas_pmid_seq)){
               #"varbeta" = (tmpgwasColocReg[["se"]])^2,
               "type" = gwasType,
               #"s" = if(gwasType=="cc" & !is.na(gwasN) ) n_cases/gwasN else if(gwasType=="cc" & is.na(gwasN) ) tmpgwasColocReg[["s"]] else NULL,
-              "snp" = tmpgwasColocReg$SNP_ID)
+              "snp" = tmpgwasColocReg$SNP_ID,
+              "LD" = tmp_ld)
+    
+    D1$z <- sqrt(qchisq(D1$pvalues, 1, lower.tail = FALSE))
+    D2$z <- sqrt(qchisq(D2$pvalues, 1, lower.tail = FALSE)) * sign(D2$beta)
+    D1$position <- sapply(D1$snp, function(x) strsplit(x, ":", fixed = TRUE)[[1]][2]) %>% as.numeric()
+    D2$position <- sapply(D2$snp, function(x) strsplit(x, ":", fixed = TRUE)[[1]][2]) %>% as.numeric()
+    
+    
+    check_dataset(D2)
+    
+    S1 = runsusie(D1)
+    summary(S1)$cs
+    
+    S2 = runsusie(D2)
+    summary(S2)$cs
+    
+    sum(sign(D1$z))
+    
+    
+    if(requireNamespace("susieR",quietly=TRUE)) {
+      susie.res=coloc.susie(S1, S2)
+      print(susie.res$summary)
+    }
+    tmp_neg_1 <- susie.res$summary
+    
+    
+    View(susie.res$summary)
+    
+    if(requireNamespace("susieR",quietly=TRUE)) {
+      sensitivity(susie.res,"H4 > 0.9",row=1,dataset1=D1,dataset2=D2)
+      sensitivity(susie.res,"H4 > 0.9",row=2,dataset1=D1,dataset2=D2)
+    }
+    
+    
+    library(patchwork)
+    
+    
+    snp_interest <- unique(c(susie.res$summary$hit1, susie.res$summary$hit2))
+    p1 <- ggplot(tmpqtlColocReg_gwas, aes(x = Pos, y = -log10(Pval))) +
+      geom_point() +
+      geom_text(data=filter(tmpqtlColocReg_gwas, SNP_ID %in% snp_interest), aes(label = SNP_ID))
+    
+    tmpgwasColocReg$Pos <- sapply(tmpgwasColocReg$SNP_ID, function(x) strsplit(x, ":", fixed = TRUE)[[1]][2]) %>% as.numeric()
+    p2 <- ggplot(tmpgwasColocReg, aes(x = Pos, y = -log10(npval))) +
+      geom_point() +
+      geom_text(data=filter(tmpgwasColocReg, SNP_ID %in% snp_interest), aes(label = SNP_ID))
+    
+    p2 / p1
+    
+    
+    
     
     ### do coloc
     coloc_res = coloc.abf(D1, D2)

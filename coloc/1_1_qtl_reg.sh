@@ -10,4 +10,4 @@
 #module load R/3.6.1
 cd /scratch/midway2/liliw1/coloc_MSigDB
 
-Rscript --no-restore --no-save /scratch/midway2/liliw1/Trans/followup/coloc_qtl.R
+Rscript --no-restore --no-save /home/liliw1/Trans/coloc/1_qtl_reg.R
