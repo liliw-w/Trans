@@ -95,6 +95,13 @@ resPlot <- mutate(resPlot,
 axis_text_color <- resPlot %>% slice(match(levels(trait), trait))
 
 
+# save module, trait order and colors for future use -----
+saveRDS(
+  select(resPlot, trait_type, trait, Module, trait_color),
+  "coloc_m_trait_order.rds"
+)
+
+
 # tile plot of merged coloc regions for (module, trait) -----
 fig_tile <- ggplot(resPlot, aes(Module, trait)) +
   geom_tile(aes(fill = num_of_regions_merg)) +
