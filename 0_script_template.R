@@ -1,6 +1,7 @@
 ##############################################
 ###########  ###########
 ##############################################
+# load packages -----
 rm(list = ls())
 library(data.table)
 library(tidyverse)
@@ -17,5 +18,5 @@ library(tidyverse)
 # organize data -----
 
 
-# print out key message and write out -----
+# print out key message or write out -----
 
