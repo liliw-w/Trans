@@ -2,42 +2,41 @@
 ########### Are there inflations in eQTLGen signals? ###########
 ########### Compare p's using real-data sigma and nullz sigma ###########
 ###############################################################
+module <- as.numeric(snakemake@params[['module']])
+
+# load packages -----
 library(tidyverse)
-source('~/Trans/followup/plt_qq_multi.R')
+source('~/Trans/plot/plt_qq_multi.R')
 
 
-### I/O
-module <- 2
+# I/O & paras -----
 thre_p_z <- 1e-4
 
-
-file_coexp_module <- '~/xuanyao_llw/DGN_no_filter_on_mappability/result/coexp.module.rds'
-#file_Sigma <- list.files(path = "inflation",
-#                         pattern = paste0("^Sigma_DGN_module", module, "\\_K\\d*\\.rds$"),
-#                         full.names = TRUE)
-file_Sigma <- list.files(path = "inflation",
-                         pattern = paste0("^Sigma_DGN_module", module, "\\.rds$"),
-                         full.names = TRUE)
+file_Sigma <- paste0("inflation/Sigma_DGN_module", module, ".rds")
 file_p <- paste0('inflation/p_', basename(file_Sigma))
 file_p_nullz_seq <- list.files(path = "inflation",
                                pattern = paste0("^p_Sigma_nullz\\d+\\_", basename(file_Sigma)),
                                full.names = TRUE)
 # for formatting plt tile
+file_coexp_module <- '~/xuanyao_llw/DGN_no_filter_on_mappability/result/coexp.module.rds'
 file_null_SNP <- 'null_SNP/num_nullSNP.rds'
 
+## output -----
 file_plot_hist <- paste0('inflation/plot/plot_hist_', basename(file_Sigma), '.pdf')
 file_plot_qq <- paste0('inflation/plot/plot_qq_', basename(file_Sigma), '.pdf')
 
 
-### read data & important paras
-# to use module size K
+# read files & important paras -----
+## for formatting plt tile
 coexp_module <- readRDS(file_coexp_module)$moduleLabels
-
-# all p from various sigma
-p_all <- lapply(c(file_p, file_p_nullz_seq), readRDS) %>% do.call(cbind, .) %>% as_tibble()
 res_nullSNP <- readRDS(file_null_SNP)
 
-# extract numbers from file names
+## all p from various sigma
+p_all <- lapply(c(file_p, file_p_nullz_seq), readRDS) %>% do.call(cbind, .) %>% as_tibble()
+
+
+# organize data -----
+## extract numbers from file names to calculate actual ratio used -----
 digit_in_file <- strsplit(file_p_nullz_seq, "\\D") %>%
   unlist() %>%
   as.numeric() %>%
@@ -50,11 +49,11 @@ K <- sum(coexp_module==module) #digit_in_file[3, ] %>% unlist(use.names = FALSE)
 ratio <- n_nullz_seq / K
 
 
-# assign names to p's with their correspoding sigma
+## assign names to p's with their correspoding sigma -----
 colnames(p_all)[-1] <- paste0("Nnull", n_nullz_seq, "_Ratio", ratio)
 colnames(p_all)[1] <- paste0("Real Sigma")
 
-# format plt title
+## format plt title -----
 eqtlgen_ratio <- res_nullSNP %>%
   filter(thre_z == thre_p_z) %>%
   mutate(prop_dim = num_nullSNP_indep/module_size) %>%
@@ -66,9 +65,8 @@ plt_title <- paste0("M", module, "_Size", K, "_Ratio", eqtlgen_ratio)
 
 
 
-###############################################################
-### visualization
-# 1. hist
+# visualization -----
+## 1. hist -----
 plt_dt <- p_all %>% pivot_longer(everything(), names_to = "Sigma", values_to = "p")
 plt_dt$Sigma <- factor(plt_dt$Sigma,
                        levels = colnames(p_all)[c(1, order(ratio, decreasing = TRUE) + 1)])
@@ -93,7 +91,7 @@ ggsave(file_plot_hist, plt_obj, width = 9, height = 6)
 saveRDS(plt_obj, paste0(file_plot_hist, ".rds"))
 
 
-# 2. QQ-plot
+## 2. QQ-plot -----
 fig <- qqplot(p_all,
               group_title = "Sigma",
               group_order = colnames(p_all)[c(1, order(ratio, decreasing = TRUE) + 1)])
@@ -108,6 +106,4 @@ plt_obj <- fig +
 ggsave(file_plot_qq, plt_obj, width = 6, height = 6, useDingbats = TRUE)
 saveRDS(plt_obj, paste0(file_plot_qq, ".rds"))
 
-
-# 3. Number of signals under various p threshold
 

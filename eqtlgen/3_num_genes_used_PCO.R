@@ -37,7 +37,7 @@ for(module in 1:Nmodule){
     gene_w_pos <- gene_meta[gene_meta$GeneNameConv %in% colnames(z_mat), ]
     gene_trans <- gene_w_pos[gene_w_pos$chr != paste0("chr", chr), ]$GeneNameConv
     
-    z_mat_trans <- z_mat[, gene_trans]
+    z_mat_trans <- z_mat[, gene_trans, drop=FALSE]
     
     
     for(snp in rownames(z_mat_trans) ){
@@ -47,7 +47,7 @@ for(module in 1:Nmodule){
         strsplit(split = ";") %>%
         unlist()
       
-      z_mat_trans_cross <- z_mat_trans[, !colnames(z_mat_trans) %in% gene_cross]
+      z_mat_trans_cross <- z_mat_trans[, !colnames(z_mat_trans) %in% gene_cross, drop=FALSE]
       
       num_gene_snp_used <- rbind(num_gene_snp_used,
                                  c("module" = module,

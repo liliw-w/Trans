@@ -5,7 +5,7 @@
 rm(list = ls())
 library(data.table)
 library(tidyverse)
-source("~/Trans/followup/theme_my_pub.R")
+source("~/Trans/plot/theme_my_pub.R")
 
 ### I/O
 file_num_gene_snp_used_all<- 'p/num_gene_snp_used_module_all.Sigma_nullz.txt'

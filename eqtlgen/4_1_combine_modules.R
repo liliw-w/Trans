@@ -29,7 +29,7 @@ saveRDS(p_all, 'p/p.module_all.Sigma_nullz.rds')
 
 ###############################################################
 ########### check which modules don't have p-value output ################
-################ combine p-values across 22 chr for a moduke ############
+################ combine p-values across 22 chr for a module ############
 ###############################################################
 
 ### check what modules don't have p values yet

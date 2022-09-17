@@ -3,7 +3,7 @@
 ########### under a pre-spefified z-score threshold for being null ###########
 ############################################################
 rm(list = ls())
-library(ggplot2)
+library(tidyverse)
 library(ggforce)
 
 
@@ -11,8 +11,10 @@ library(ggforce)
 thre_p_z <- 1e-4
 file_null_SNP <- 'null_SNP/num_nullSNP.rds'
 
+# output
 file_plot_nullSNP_module_size <- paste0('plot/plot_nullSNP_module_size_pthre', thre_p_z, '.pdf')
 file_plot_nullSNP_module_size_line <- paste0('plot/plot_nullSNP_module_size_pthre', thre_p_z, '_ratio.pdf')
+file_ratio_module <- 'null_SNP/ratio_module.txt'
 
 
 ### read data
@@ -96,4 +98,13 @@ fig +
 
 # save figure
 ggsave(file_plot_nullSNP_module_size_line, height = 5, width = 10)
+
+
+# save ratios for each module
+fwrite(
+  fig_dat_line,
+  file_ratio_module,
+  quote = FALSE, sep = "\t"
+)
+
 
