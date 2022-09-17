@@ -1,0 +1,45 @@
+MODULE=list(range(1,11)) + [15, 20, 30, 40, 50, 60, 70, 90, 100, 150, 166]
+
+rule all:
+  input:
+    plot_hist=expand('inflation/plot/plot_hist_Sigma_DGN_module{module}.rds.pdf', module=MODULE),
+    plot_qq=expand('inflation/plot/plot_qq_Sigma_DGN_module{module}.rds.pdf', module=MODULE)
+    #expand('inflation/p_Sigma_nullz_Sigma_DGN_module{module}.rds', module=MODULE)
+
+
+rule plot_compare_sigma:
+  input:
+    file_sigma='/project2/xuanyao/llw/eQTLGen_est_Sigma/inflation/Sigma_DGN_module{module}.rds',
+    file_p='/project2/xuanyao/llw/eQTLGen_est_Sigma/inflation/p_Sigma_DGN_module{module}.rds',
+    file_p_sigma_nullz='inflation/p_Sigma_nullz_Sigma_DGN_module{module}.rds'
+  output:
+    plot_hist='inflation/plot/plot_hist_Sigma_DGN_module{module}.rds.pdf',
+    plot_qq='inflation/plot/plot_qq_Sigma_DGN_module{module}.rds.pdf'
+  params:
+    module='{module}'
+  script:
+    '/home/liliw1/Trans/modules/7_3_eqtlgen_inflation_plot_p_sigma.R'
+
+
+rule p_sigma_nullz:
+  input:
+    file_sigma='/project2/xuanyao/llw/eQTLGen_est_Sigma/inflation/Sigma_DGN_module{module}.rds',
+    file_z='/project2/xuanyao/llw/eQTLGen_est_Sigma/inflation/Z_Sigma_DGN_module{module}.rds',
+    file_sigma_nullz='inflation/Sigma_nullz_Sigma_DGN_module{module}.rds'
+  output:
+    file_p_sigma_nullz='inflation/p_Sigma_nullz_Sigma_DGN_module{module}.rds'
+  params:
+    module='{module}'
+  script:
+    '/home/liliw1/Trans/modules/7_2_eqtlgen_inflation_PCO_sigma_nullz.R'
+
+
+rule sigma_nullz:
+  input:
+    file_sigma='/project2/xuanyao/llw/eQTLGen_est_Sigma/inflation/Sigma_DGN_module{module}.rds'
+  output:
+    file_sigma_nullz='inflation/Sigma_nullz_Sigma_DGN_module{module}.rds'
+  params:
+    module='{module}'
+  script:
+    '/home/liliw1/Trans/modules/7_1_eqtlgen_inflation_sigma_nullz.R'
