@@ -1,16 +1,29 @@
+##############################################
+########### nearest and cis genes of signals ###########
+##############################################
 rm(list = ls())
 library(data.table)
 library(tidyverse)
 
-file.qtl = 'FDR/signals.chr.module.perm10.fdr10.txt'
-file.gene.meta = '/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt'
-file_signal_cis_genes = 'postanalysis/signal_cis_genes.txt'
-dis_cis = 1e+6
 
-qtl = fread(file.qtl, header = FALSE, col.names = c("signal", "p", "q"))
-gene.meta = fread(file.gene.meta, header = TRUE)
+# I/O & paras -----
+file.qtl <- 'FDR/signals.chr.module.perm10.fdr10.txt'
+file.gene.meta <- '/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt'
+dis_cis <- 1e+6
 
-qtl = qtl %>%
+## output -----
+file_signal_cis_genes <- 'postanalysis/signal_cis_genes.txt'
+
+
+
+# read files -----
+qtl <- fread(file.qtl, header = FALSE, col.names = c("signal", "p", "q"))
+gene.meta <- fread(file.gene.meta, header = TRUE)
+
+
+# organize data -----
+## extract signals' module, chr, pos -----
+qtl <- qtl %>%
   separate("signal",
            into = c("module", "chr", "pos"),
            sep = ":", remove = FALSE, convert = TRUE) %>%
@@ -18,11 +31,14 @@ qtl = qtl %>%
         c("chr", "pos"),
         sep = ":", remove = FALSE)
 
-gene.meta = gene.meta %>%
+## extract protein_coding, lincRNA, auto-chr genes -----
+gene.meta <- gene.meta %>%
   filter(Class %in% c("protein_coding", "lincRNA") & Chromosome %in% paste0("chr",1:22)) %>%
   separate("Chromosome", c(NA, "chr"), sep = "chr", remove = FALSE)
 
-cis.gene.meta = sapply(1:nrow(qtl), function(x){
+
+# nearest and cis genes of each signal, with distance -----
+cis.gene.meta <- sapply(1:nrow(qtl), function(x){
   tmp_qtl = qtl[x, ]
   tmp_cis.gene.meta = gene.meta %>%
     filter(chr %in% tmp_qtl$chr) %>%
@@ -36,10 +52,20 @@ cis.gene.meta = sapply(1:nrow(qtl), function(x){
     paste(tmp_cis.gene.meta$dis, collapse = ";")
   )
 })
-cis.gene.meta = as.data.table(t(cis.gene.meta))
-colnames(cis.gene.meta) = c("nearest_gene", "nearest_dis", "near_genes", "near_dis")
+cis.gene.meta <- as.data.table(t(cis.gene.meta))
+colnames(cis.gene.meta) <- c("nearest_gene", "nearest_dis", "near_genes", "near_dis")
 
 
-qtl = bind_cols(qtl, cis.gene.meta)
+## add cis gene info to signals -----
+qtl <- bind_cols(qtl, cis.gene.meta)
 
-fwrite(qtl, file_signal_cis_genes, quote = FALSE, sep = "\t")
+
+
+# print out key message or write out -----
+fwrite(
+  qtl,
+  file_signal_cis_genes,
+  quote = FALSE,
+  sep = "\t"
+)
+
