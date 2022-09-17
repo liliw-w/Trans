@@ -1,6 +1,6 @@
 sig_uniq=$1
 sig_indp=$2
-dir_geno=/project2/xuanyao/llw/DGN/data/
+dir_geno=/project2/xuanyao/llw/DGN_data/geno/
 geno_prefix=chr
 geno_suffix=_QCed
 
