@@ -4,7 +4,7 @@ qqplot <- function(input,
                    group_order = NULL,
                    group_label = NULL,
                    is_group_numerical_order = FALSE,
-                   my_theme = "/home/liliw1/Trans/plot/theme_my_pub.R"){
+                   my_theme = "/home/liliw1/Trans/plot/theme_my_pub.R", ...){
   require(tidyverse)
   source(my_theme)
   
@@ -47,7 +47,7 @@ qqplot <- function(input,
            shape = group_title) +
       scale_shape_manual(values = 1:nlevels(df_plt$Type)) +
       scale_color_brewer(palette = "Reds", direction = -1) +
-      theme_my_pub()
+      theme_my_pub(...)
   }else{
     ggplot(df_plt, aes(x = x, y = y, group = Type)) +
       geom_ribbon(aes(ymin = ci_l, ymax = ci_r), fill = "#e5e5e5", color = "#e5e5e5") +
@@ -59,6 +59,7 @@ qqplot <- function(input,
       scale_color_manual(values = c("#85192d", "#0028a1", "#e89c31",
                                     RColorBrewer::brewer.pal(8, "Dark2"),
                                     RColorBrewer::brewer.pal(8, "Set1")) ) +
-      theme_my_pub()
+      theme_my_pub(...)
   }
 }
+
