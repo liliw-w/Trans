@@ -5,12 +5,20 @@ navbar:
   left:
     - text: "Home"
       href: index.html
-    - text: Vignettes
+    - text: "Vignettes"
       menu:
-      - text: A minimal example
+      - text: "A minimal example"
         href: mini_example.html
-    - text: "About"
-      href: about.html
+      - text: "A simple simulation"
+        href: simulation.html
+      - text: "Visualization"
+        href: vis.html
+      - text: "Colocalization"
+        href: coloc.html
+      - text: "Partitioned LD score regression"
+        href: sldsc.html
+    - text: "Reference"
+      href: ref.html
   right:
   - icon: fa-github
     text: Source
@@ -19,6 +27,6 @@ output:
   html_document:
     toc: yes
     toc_float: yes
-    theme: cosmo
+    #theme: cosmo
     highlight: textmate
     css: style.css

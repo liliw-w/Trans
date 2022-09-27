@@ -1,16 +1,15 @@
 ---
-title: "My Website"
+title: "Trans-PCO: trans-eQTLs detection of cellular pathways and gene networks"
 output:
   html_document:
     toc: false
 ---
 
-Hello, Website!
+## Introduction of the website & method & input & output
 
-For more information about simple R Markdown websites, please read the documentation at https://bookdown.org/yihui/rmarkdown/rmarkdown-site.html.
+## Illustration figure
 
-Please also note that simple R Markdown sites are _not_ based on **blogdown**. They are probably good for websites with only a few Rmd documents. For larger-scale and more sophisticated websites (such as blogs), you may want to use **blogdown** instead: https://github.com/rstudio/blogdown.
+## Key steps
 
-## title 1
+## link to wip
 
-### title 2

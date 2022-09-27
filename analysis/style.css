@@ -1,7 +1,7 @@
 /*------------- Whole Document---------------- */
 body {
   /*background-color: coral;*/
-  color: #000000;
+  color: #323232;
   font-family: 'Helvetica', 'Helvetica','Helvetica';
 }
 
@@ -11,8 +11,9 @@ h1,
 h2,
 h3,
 h4 {
-  color: #000000;
+  color: #323232;
   font-family: 'Helvetica', 'Helvetica','Helvetica';
+  font-size: 20pt;
 }
 
 
@@ -35,7 +36,7 @@ a:hover {
 /* Active TOC links*/
 .list-group-item.active,
 .list-group-item.active:hover{
-  color: #e5e5e5;
+  color: #ececec;
   background-color: #800000;
   border-color: #ccc;
 }
@@ -43,6 +44,6 @@ a:hover {
 /* Hovered TOC links*/
 .list-group-item:hover {
   color: #800000;
-  background-color: #e5e5e5;
+  background-color: #ececec;
   border: none;
 }
