@@ -1,0 +1,48 @@
+/*------------- Whole Document---------------- */
+body {
+  /*background-color: coral;*/
+  color: #000000;
+  font-family: 'Helvetica', 'Helvetica','Helvetica';
+}
+
+
+/* Header font */
+h1,
+h2,
+h3,
+h4 {
+  color: #000000;
+  font-family: 'Helvetica', 'Helvetica','Helvetica';
+}
+
+
+
+/* links */
+a {
+  color: #800000;
+}
+
+a:hover {
+  color: #00007f; /* darker color when hovering */
+}
+
+
+/* TOC */
+#TOC {
+  color: black;
+}
+
+/* Active TOC links*/
+.list-group-item.active,
+.list-group-item.active:hover{
+  color: #e5e5e5;
+  background-color: #800000;
+  border-color: #ccc;
+}
+
+/* Hovered TOC links*/
+.list-group-item:hover {
+  color: #800000;
+  background-color: #e5e5e5;
+  border: none;
+}

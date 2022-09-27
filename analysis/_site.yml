@@ -1,0 +1,24 @@
+name: "Trans-PCO"
+output_dir: ../docs
+navbar:
+  title: "Trans-PCO"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: Vignettes
+      menu:
+      - text: A minimal example
+        href: mini_example.html
+    - text: "About"
+      href: about.html
+  right:
+  - icon: fa-github
+    text: Source
+    href: https://github.com/liliw-w/Trans
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: cosmo
+    highlight: textmate
+    css: style.css
