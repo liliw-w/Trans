@@ -7,5 +7,4 @@
 *tmp*
 *.Rproj.user
 .Rproj.user
-analysis/site_libs
-docs/site_libs
+#docs/site_libs
