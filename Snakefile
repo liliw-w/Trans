@@ -9,14 +9,10 @@ MODULE=list(range(1, Nmodule+1))
 CHRS=list(range(1, config['Nchr']+1))
 PERM=list(range(1, config['Nperm']+1))
 fdr_thre_chr_module=config['fdr_level']
-fdr_thre_chr=config['fdr_level']/Nmodule
-fdr_thre=config['fdr_level']/Nmodule/config['Nchr']
 
 rule all:
   input:
     #expand('p/p.module{module}.chr{chr}.rds', module=MODULE, chr=CHRS)
-    #'postanalysis/indep.signals.perm'+str(config['Nperm'])+'.txt',
-    #'postanalysis/indep.signals.chr.perm'+str(config['Nperm'])+'.txt',
     'postanalysis/indep.signals.chr.module.perm'+str(config['Nperm'])+'.txt'
 
 rule prep_bed:
@@ -99,65 +95,6 @@ rule p_null:
     'script/'+config['script_p']
 
 
-rule FDR:
-  input:
-    file_p='p/p.module{module}.chr{chr}.rds',
-    file_p_null='p/p.null.module{module}.chr{chr}.perm{perm}.rds'
-  output:
-    file_q='FDR/q.module{module}.chr{chr}.perm{perm}.rds'
-  script:
-    'script/'+config['script_q']
-
-
-rule average_perm:
-  input:
-    file_q=expand('FDR/q.module{module}.chr{chr}.perm{perm}.rds', perm=PERM, allow_missing=True)
-  output:
-    file_signals=temp('FDR/signals.module{module}.chr{chr}.perm'+str(config['Nperm'])+'.txt')
-  params:
-    fdr_thre=fdr_thre
-  script:
-    'script/'+config['script_average_perm']
-
-rule aggregate:
-  input:
-    expand('FDR/signals.module{module}.chr{chr}.perm{Nperm}.txt', chr=CHRS, module=MODULE, Nperm=config['Nperm'])
-  output:
-    'FDR/signals.perm'+str(config['Nperm'])+'.txt'
-  shell:
-    """
-	  cat {input} | awk "BEGIN{{printf "snp\\tp\\tq\\n"}}{{print \$0}}" > {output}
-	  """
-
-rule FDR_chr:
-  input:
-    file_p=expand('p/p.module{module}.chr{chr}.rds',chr=CHRS, allow_missing=True),
-    file_p_null=expand('p/p.null.module{module}.chr{chr}.perm{perm}.rds',chr=CHRS, allow_missing=True)
-  output:
-    file_q='FDR/q.chr.module{module}.perm{perm}.rds'
-  script:
-    'script/'+config['script_q']
-
-rule average_perm_chr:
-  input:
-    file_q=expand('FDR/q.chr.module{module}.perm{perm}.rds', perm=PERM, allow_missing=True)
-  output:
-    file_signals=temp('FDR/signals.chr.module{module}.perm'+str(config['Nperm'])+'.txt')
-  params:
-    fdr_thre=fdr_thre_chr
-  script:
-    'script/'+config['script_average_perm']
-
-rule aggregate_chr:
-  input:
-    expand('FDR/signals.chr.module{module}.perm{Nperm}.txt',module=MODULE, Nperm=config['Nperm'])
-  output:
-    'FDR/signals.chr.perm'+str(config['Nperm'])+'.txt'
-  shell:
-    """
-	  cat {input} | awk "BEGIN{{printf "snp\\tp\\tq\\n"}}{{print \$0}}" > {output}
-	  """
-
 rule FDR_chr_module:
   input:
     file_p=expand('p/p.module{module}.chr{chr}.rds',chr=CHRS,module=MODULE),
@@ -177,17 +114,6 @@ rule average_perm_chr_module:
   script:
     'script/'+config['script_average_perm']
 
-rule post:
-  input: 'FDR/signals.perm'+str(config['Nperm'])+'.txt'
-  output: sig_uniq='postanalysis/LD.prun.in.perm'+str(config['Nperm'])+'.txt', sig_indp='postanalysis/indep.signals.perm'+str(config['Nperm'])+'.txt'
-  params: dir_geno=config['dir_geno'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
-  shell: 'bash script/'+config['script_post']+' {input} {output.sig_uniq} {output.sig_indp} {params.dir_geno} {params.geno_prefix} {params.geno_suffix}'
-
-rule post_chr:
-  input: 'postanalysis/indep.signals.perm'+str(config['Nperm'])+'.txt', sig='FDR/signals.chr.perm'+str(config['Nperm'])+'.txt'
-  output: sig_uniq='postanalysis/LD.prun.in.chr.perm'+str(config['Nperm'])+'.txt', sig_indp='postanalysis/indep.signals.chr.perm'+str(config['Nperm'])+'.txt'
-  params: dir_geno=config['dir_geno'], geno_prefix=config['geno_prefix'], geno_suffix=config['geno_suffix']
-  shell: 'bash script/'+config['script_post']+' {input.sig} {output.sig_uniq} {output.sig_indp} {params.dir_geno} {params.geno_prefix} {params.geno_suffix}'
 
 rule post_chr_module:
   input: sig='FDR/signals.chr.module.perm'+str(config['Nperm'])+'.txt'

@@ -52,12 +52,6 @@
       "output": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log",
       "error": "logs/{rule}.{wildcards.module}.{wildcards.chr}.%J.log"
     },
-  "FDR_chr" :
-    {
-      "job-name": "FDR.chr.{wildcards.perm}",
-      "time": "2:00:00",
-      "mem": "10G"
-    },
   "FDR_chr_module" :
     {
       "job-name": "FDR.chr.module.{wildcards.perm}",
