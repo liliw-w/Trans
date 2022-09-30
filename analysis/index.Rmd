@@ -68,6 +68,6 @@ Figure: Three main steps in trans-PCO pipeline. The first step of trans-PCO pre-
 
 ## Weekly updates
 
-I also host a website (a [wflowr](https://github.com/workflowr/workflowr) project) to keep track of my weekly work in progress.
+I also host [a website to keep track of my weekly work in progress](https://liliw-w.github.io/GradLog/) (a [wflowr](https://github.com/workflowr/workflowr) project).
 
 
