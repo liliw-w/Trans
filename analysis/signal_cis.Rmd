@@ -1,0 +1,226 @@
+---
+title: "Cis genes of trans signals"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', message = FALSE)
+knitr::opts_knit$set(root.dir = '../')
+
+# load packages -----
+rm(list = ls())
+library(data.table)
+library(tidyverse)
+library(ggrepel)
+source('~/Trans/plot/theme_my_pub.R')
+```
+
+
+## Goal
+
+Annotate cis genes of the identified trans signals to help understand the mechanisms of trans regulation.
+
+
+## Find cis genes of trans signals
+
+I looked at what genes are nearest or near (<1Mb) to each trans signals.
+
+```{r eval=FALSE}
+# I/O & paras -----
+file_qtl <- '/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt'
+file_gene_meta <- '/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt'
+dis_cis <- 1e+6
+
+
+# read files -----
+qtl <- fread(file_qtl, header = FALSE, col.names = c("signal", "p", "q"))
+gene_meta <- fread(file_gene_meta, header = TRUE)
+
+
+# organize data -----
+## extract signals' module, chr, pos -----
+qtl <- qtl %>%
+  separate("signal",
+           into = c("module", "chr", "pos"),
+           sep = ":", remove = FALSE, convert = TRUE) %>%
+  unite(col = "SNP",
+        c("chr", "pos"),
+        sep = ":", remove = FALSE)
+
+## extract protein_coding, lincRNA, auto-chr genes -----
+gene_meta <- gene_meta %>%
+  filter(Class %in% c("protein_coding", "lincRNA") & Chromosome %in% paste0("chr",1:22)) %>%
+  separate("Chromosome", c(NA, "chr"), sep = "chr", remove = FALSE)
+
+
+# nearest and cis genes of each signal, with distance -----
+cis_gene_meta <- sapply(1:nrow(qtl), function(x){
+  tmp_qtl = qtl[x, ]
+  tmp_cis_gene_meta = gene_meta %>%
+    filter(chr %in% tmp_qtl$chr) %>%
+    mutate("dis" = abs(tmp_qtl$pos - Start)) %>%
+    filter(dis < dis_cis/2) %>%
+    arrange(dis)
+  c(
+    tmp_cis_gene_meta$GeneSymbol[1],
+    tmp_cis_gene_meta$dis[1],
+    paste(tmp_cis_gene_meta$GeneSymbol, collapse = ";"),
+    paste(tmp_cis_gene_meta$dis, collapse = ";")
+  )
+})
+cis_gene_meta <- as.data.table(t(cis_gene_meta))
+colnames(cis_gene_meta) <- c("nearest_gene", "nearest_dis", "near_genes", "near_dis")
+
+
+## add cis gene info to signals -----
+qtl <- bind_cols(qtl, cis_gene_meta)
+```
+
+
+Let's look at one example.
+
+```{r}
+qtl <- fread('/project2/xuanyao/llw/DGN_no_filter_on_mappability/postanalysis/signal_cis_genes.txt')
+```
+
+Columns are,
+
+```{r}
+colnames(qtl)
+```
+
+The last four columns give the nearest and near genes, and the distance between the trans-eQTL on each row and corresponding genes. For example,
+
+```{r}
+knitr::kable(qtl[1, ])
+```
+The trans-eQTL "4:6696460" (with target module 1) is nearest to gene S100P. The last column also gives all genes within 1Mb of this signal.
+
+
+## Annotate transcription factors and interesting genes near trans signals
+
+I wanted to look at what transcription factors or master trans regulator genes are near the identified trans-eQTLs. And then annotate them on a gene manhattan plot.
+
+```{r}
+# I/O & paras -----
+file_signal_cis_genes <- '/project2/xuanyao/llw/DGN_no_filter_on_mappability/postanalysis/signal_cis_genes.txt'
+file_chr_pos <- '/scratch/midway2/liliw1/sig_module_chr/chromosome_location.rds'
+
+
+# read files -----
+signal_cis_genes <- fread(file_signal_cis_genes, header = TRUE)
+chr_pos <- readRDS(file_chr_pos)
+
+
+# one p for one snp across modules -----
+snp_cis_genes <- signal_cis_genes %>%
+  group_by(SNP, chr, pos, nearest_gene, near_genes, nearest_dis, near_dis) %>%
+  summarise('p' = min(p),
+            'n_module' = n()) %>%
+  mutate('-logp' = -log10(p)) %>%
+  ungroup()
+
+snp_cis_genes <- separate_rows(
+  snp_cis_genes,
+  near_genes, near_dis,
+  sep = ";", convert = TRUE
+)
+
+# change 0 p -----
+snp_cis_genes[is.infinite(snp_cis_genes$`-logp`), "-logp"] <-
+  (max(snp_cis_genes$`-logp`[!is.infinite(snp_cis_genes$`-logp`)]) + 1) %>% ceiling()
+
+
+# genes of interest -----
+gene_of_interest <- c("BAZ2B", "NFKBIA", "PLAGL1", "NFE2", "IKZF1", "KLF1", "KLF14", "NFKB1", "NFKBIA", "ZNF229", "BAZ2B", #TF
+                      "ARHGEF3", "SENP7")
+
+
+# nearest & near gene of interest col -----
+snp_cis_genes <- mutate(
+  snp_cis_genes,
+  "if_gene_of_interest_nearest" = nearest_gene %in% !!gene_of_interest,
+  "if_gene_of_interest_near" = near_genes %in% !!gene_of_interest,
+)
+
+plt_dat <- snp_cis_genes %>%
+  left_join(chr_pos, by = c("chr" = "CHR")) %>%
+  mutate(def_pos = pos + tot)
+
+
+# same annotation, pick the smallest p ----
+annot_gene <- filter(plt_dat, if_gene_of_interest_near) %>%
+  mutate("label_gene_of_interest" = near_genes) %>%
+  group_by(label_gene_of_interest) %>%
+  summarise(`-logp` = max(`-logp`),
+            chr = chr, pos = pos, def_pos = def_pos) %>%
+  ungroup() %>%
+  distinct(label_gene_of_interest, .keep_all = TRUE)
+
+
+annot_snp <- filter(plt_dat, if_gene_of_interest_near) %>%
+  mutate("label_gene_of_interest" = near_genes)
+```
+
+These are the genes of interest to be annotated,
+
+```{r}
+knitr::kable(annot_gene)
+```
+
+
+Plot these genes on the manhattan plot,
+
+```{r}
+# Manhattan plot of cis TF's -----
+base_plt <- ggplot(plt_dat, aes(x = def_pos, y = `-logp`)) +
+  geom_rect(
+    aes(xmin = tot, xmax = xmax,
+        ymin = -Inf, ymax = Inf,
+        fill = factor(chr))
+  ) +
+  geom_point(aes(color = factor(chr)), alpha = 0.5, size = 1, shape = 16) +
+  geom_point(data = annot_snp,
+             color = "#e2bebe", alpha = 0.5, size = 1) +
+  geom_point(data = annot_gene,
+             color = "#b20000", fill = "#b20000", shape=23, size = 3) +
+  geom_text_repel(data = annot_gene,
+                  aes(label = label_gene_of_interest),
+                  segment.colour="black",
+                  size = 4,
+                  min.segment.length = 0,
+                  max.overlaps = 5,
+                  nudge_x = -0.5,
+                  nudge_y = 30,
+                  box.padding = 1,
+                  segment.curvature = -0.1,
+                  segment.ncp = 5,
+                  segment.angle = 20,
+                  direction = "y",
+                  hjust = "left",
+                  segment.linetype = 6,
+                  arrow = arrow(length = unit(0.015, "npc"))
+  ) +
+  labs(x = "Chromosome", y = quote(-Log[10](P)))
+
+base_plt +
+  scale_x_continuous(
+    limits = c(0, max(chr_pos$center)*2 - max(chr_pos$tot)),
+    label = chr_pos$CHR,
+    breaks = chr_pos$center,
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(6.5, 21) ) +
+  scale_color_manual(values = rep(c("#7e7e7e", "#bfbfbf"), 22), guide = "none") +
+  scale_fill_manual(values = rep(c("#efefef", "#ffffff"), 22), guide = "none") +
+  theme_my_pub()
+```
+
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+

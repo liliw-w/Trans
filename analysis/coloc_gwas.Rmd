@@ -1,0 +1,121 @@
+---
+title: "Perform colocalization of trans-eQTLs and GWAS loci"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../')
+
+# load packages -----
+rm(list = ls())
+library(tidyverse)
+library(data.table)
+```
+
+## Goal
+
+Perform colocalization analysis of trans-eQTL loci and GWAS trait loci.
+
+
+## Define coloc region for trans-eQTL loci
+
+A coloc region is defined as a flanking region (100kb) centered at a trans-eQTL signal.
+
+```{bash eval=FALSE}
+Rscript coloc/1_qtl_reg.R
+```
+
+Let's take a look at the defined coloc regions,
+
+```{r}
+file_qtl_reg <- '/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data/qtlColocReg.txt.gz'
+qtl_reg <- fread(file_qtl_reg)
+
+distinct(qtl_reg, Region) %>% str()
+```
+
+There are 2364 defined regions in total. Each region is defined as the target module and lead SNP with smallest p-value in that region.
+
+
+## Define coloc region for GWAS trait loci
+
+I considered a few GWAS traits, including blood related traits,
+
+```{r}
+file_pheno_manifest <- '/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv'
+pheno_manifest <- fread(file_pheno_manifest)
+
+knitr::kable(pheno_manifest)
+```
+
+autoimmune diseases,
+
+```{bash}
+ls /project2/xuanyao/llw/coloc/immune_traits | grep -v 'all'
+```
+
+and also a few more other traits,
+
+```{r}
+file_pheno_manifest <- "/project2/xuanyao/llw/coloc/ukbb_coloc_more_traits/phenotype_manifest_sub.tsv"
+pheno_manifest <- fread(file_pheno_manifest)
+
+knitr::kable(select(pheno_manifest, phenocode_uniq, trait))
+```
+
+Lastly, based on the previously defined trans-eQTL loci, GWAS loci at the same location are defined.
+
+```{bash eval=FALSE}
+Rscript 3_1_gwas_reg_ukbb.R
+Rscript 3_2_gwas_reg_immu.R
+```
+
+## Perform colocalization
+
+For a coloc loci of a pair of (trans-eQTL loci, GWAS loci), I performed coloc using `coloc` package.
+
+```{bash eval=FALSE}
+Rscript 4_1_coloc_ukbb.R
+Rscript 4_2_coloc_immu.R
+```
+
+Let's take a look at what the coloc results look like. Take trait 30010 (Red blood cell count) for an example.
+
+```{r}
+file_res_coloc <- '/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data/pheno30010.resColoc.txt.gz'
+res_coloc <- fread(file_res_coloc)
+
+knitr::kable(head(res_coloc))
+```
+
+For example, for the first coloc region `module4:1:248039451`, it indicates module 4 has shared coloc signal with trait RBC near loci `1:248039451` (PP4>0.99).
+
+
+## Visualize colocalzation
+
+Take the coloc region `module4:1:248039451` as an example, to look at the associations near coloc regions.
+
+```{r fig.width = 6, fig.asp = 0.5, fig.align = "center"}
+library(locuscomparer)
+
+figTitle <- "Region: module4:1:248039451; #SNPs: 376; PP.H4.abf: 1"
+file_gwasVis <- "/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/colocVisData/module4:1:248039451.gwas.reg.coloc.txt"
+file_qtlVis <- "/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/colocVisData/module4:1:248039451.qtl.reg.coloc.txt"
+
+base_plt <- locuscompare(in_fn1 = file_gwasVis, in_fn2 = file_qtlVis,
+                        title1 = 'GWAS', title2 = 'QTL',
+                        population = "EUR", genome = 'hg19')
+base_plt +
+  labs(title = figTitle) +
+  theme(plot.title = element_text(hjust = 0.5, size = 12))
+
+```
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+

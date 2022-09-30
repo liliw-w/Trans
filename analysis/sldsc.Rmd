@@ -1,10 +1,174 @@
 ---
-title: "Partitioned LD score regression"
+title: "Enrichment of trait heritability in gene modules"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../')
+
+# load packages -----
+rm(list = ls())
+library(tidyverse)
+library(data.table)
+```
+
+## Goal
+
+To evaluate the enrichment of trait heritability in gene modules by stratified LD score regression (S_LDSC).
+
+
+## Perform S-LDSC
+
+I compiled the workflow to perform S-LDSc into a snakemake file. Specifically, there are a few main steps,
+
+1. Prepare gene sets for each module.
+
+2. Make annotations for genes in each module by using SNPs within genes and an additional buffer region (100kb) around genes.
+
+3. Calcualte LD scores for annotations.
+
+4. Reformat GWAS sum stats.
+
+5. Calculate the partitioned heritability enrichment for each pair of (module, trait).
+
+
+```{bash eval=FALSE}
+Nmodule=166
+
+module_seq=list(range(1, Nmodule+1))
+module_seq.remove(4)
+module_seq.remove(66)
+
+MODULE=['M' + str(x) for x in module_seq]
+CHR=list(range(1, 23))
+
+
+path='/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv'
+with open(path) as f:
+    lines = [x.split(",")[1] for x in f]
+trait_seq=lines[1:]
+
+
+rule all:
+  input:
+    expand('h2_enrich_par/{gwasPhenocode}_{module}_baseline.results', module=MODULE, gwasPhenocode=trait_seq)
+
+
+rule prep_gene_set:
+  input:
+    file_gene_meta='/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/gene.meta.txt'
+    file_coexp_module='/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/coexp.module.rds'
+  output:
+    expand('geneset/{module}.GeneSet', module=MODULE)
+  script:
+    '/home/liliw1/Trans/ldsc/1_prep_gene_set.R'
+
+
+rule make_annot:
+  input:
+    expand('geneset/{module}.GeneSet', module=MODULE)
+  output:
+    expand('ldsc_annot/{module}.{chr}.annot.gz', chr=CHR, allow_missing=True)
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/2_make_annot.sh {wildcards.module}
+    """
+
+rule ldsc_annot:
+  input:
+    expand('ldsc_annot/{module}.{chr}.annot.gz', chr=CHR, allow_missing=True)
+  output:
+    expand('ldsc_annot/{module}.{chr}.l2.ldscore.gz', chr=CHR, allow_missing=True)
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/3_ldsc_annot.sh {wildcards.module}
+    """
+
+rule prep_gwas:
+  input:
+  params:
+    gwasPhenocode='{gwasPhenocode}'
+  output:
+    'gwas/{gwasPhenocode}.tsv.gz'
+  script:
+    '/home/liliw1/Trans/ldsc/5_1_prep_gwas.R'
+
+rule convert_gwas:
+  input:
+    'gwas/{gwasPhenocode}.tsv.gz'
+  output:
+    'gwas/{gwasPhenocode}.sumstats.gz'
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/5_2_convert_gwas.sh {wildcards.gwasPhenocode}
+    """
+
+rule par_h2:
+  input:
+    expand('ldsc_annot/{module}.{chr}.annot.gz', chr=CHR, allow_missing=True),
+    expand('ldsc_annot/{module}.{chr}.l2.ldscore.gz', chr=CHR, allow_missing=True),
+    expand('gwas/{gwasPhenocode}.sumstats.gz', gwasPhenocode=trait_seq)
+  output:
+    expand('h2_enrich_par/{gwasPhenocode}_{module}_baseline.results', gwasPhenocode=trait_seq, allow_missing=True)
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/6_1_ldsc_h2.sh {wildcards.module}
+    """
+```
+
+
+## Assemble heritability enrichment in a module across all traits
+
+Next, I compiled the S-LDSC results of a module for all traits into one file. In total, there are 166 modules. Here, I take one module (module 4) for an example.
+
+
+```{r}
+# paras and I/O -----
+module <- 4
+
+files_par_h2 <- list.files('/project2/xuanyao/llw/ldsc/h2_enrich_par', paste0("^\\d+_M", module, "_baseline.results"), full.names = TRUE)
+file_gwasTraitInfo <- '/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv'
+
+# read data -----
+par_h2 <- map_dfr(
+  files_par_h2,
+  ~fread(cmd = paste("sed -n -e 1p -e 99p", .x), sep = "\t")
+)
+if(!all(par_h2$Category == "L2_1")) stop("Not all extracted rows are from custom annotation.")
+
+gwasTraitInfo <- fread(file_gwasTraitInfo, sep = ",", header = TRUE)
+
+
+# re-arrange data -----
+# add annotation name & trait info
+par_h2 <- par_h2 %>%
+  mutate(Category = str_extract(basename(!!files_par_h2), paste0("^\\d+_M", !!module))) %>%
+  separate(Category, c("trait_id", "module"), sep = "_", remove = FALSE, convert = TRUE) %>%
+  separate(module, c(NA, "module"), sep = "M", convert = TRUE) %>%
+  left_join(gwasTraitInfo, by = c("trait_id" = "GWAS ID")) %>%
+  relocate(`GWAS Group`, `GWAS Trait`, `Trait Abbreviation`, .after = trait_id)
+```
+
+The enrichment of module 4 across traits,
+
+```{r}
+filter(par_h2, complete.cases(par_h2)) %>%
+  select(trait_id, `GWAS Group`, `GWAS Trait`, Enrichment, Enrichment_std_error, Enrichment_p) %>%
+  arrange(Enrichment_p) %>%
+  knitr::kable()
+```
+
+
+
+## Session info
+
+```{r}
+sessionInfo()
 ```
 
 

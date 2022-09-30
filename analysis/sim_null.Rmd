@@ -1,0 +1,216 @@
+---
+title: "Run null simulations"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../')
+```
+
+## Goal
+
+Run null simulations to show trans-pco and the other two methods, i.e. minP and PC1, are well-calibrated.
+
+
+## Run three association tests on simulated null z-scores
+
+First, load required packages.
+
+```{r}
+rm(list = ls())
+library(mvtnorm)
+source("/home/liliw1/Trans/plot/theme_my_pub.R")
+```
+
+
+Give input files and parameters. To make it simple (and fast), here I simulate only $10^3$ simulations (in the paper, $10^7$ tests were simulated).
+
+```{r}
+n_sim <- 10^3
+```
+
+
+```{r}
+# I/O & paras -----
+dir_pco <- 'simulation/script_lambda0.1/'
+file_Sigma <- '/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/Sigma-new_DGN_module29_K101.rds'
+```
+
+
+Read files and source pco test scripts.
+
+```{r}
+# read files -----
+# source pco test
+source(paste0(dir_pco, "ModifiedPCOMerged.R"))
+source(paste0(dir_pco, "liu.R"))
+source(paste0(dir_pco, "liumod.R"))
+source(paste0(dir_pco, "davies.R"))
+dyn.load(paste0(dir_pco, "qfc.so"))
+source(paste0(dir_pco, "ModifiedSigmaOEstimate.R"))
+
+Sigma <- as.matrix(readRDS(file_Sigma))
+K <- dim(Sigma)[1]
+```
+
+
+Simulate null z-scores using the given $\Sigma$ of a gene module from real dataset.
+
+```{r}
+# simulate null z-scores -----
+set.seed(123)
+
+p_null_all  <- list()
+z_null <- rmvnorm(n_sim, rep(0, K), Sigma)
+```
+
+
+Run pco test and calculate p-values,
+
+```{r}
+# prepare eigenvalues and eigenvectors as input for three methods -----
+SigmaO <- ModifiedSigmaOEstimate(Sigma)
+eigen_res <- eigen(Sigma)
+eigen_lamb <- eigen_res$values
+eigen_vec <- eigen_res$vectors
+
+# PCO
+p_null_all$'p.null.PCO' <- ModifiedPCOMerged(
+  Z.mat = z_null, Sigma = Sigma, SigmaO = SigmaO
+) |> as.numeric()
+
+cat("PCO done. \n\n")
+```
+
+
+Run pc1 test and calculate p-values,
+
+```{r}
+# PC1
+PC1 <- z_null %*% eigen_vec[, 1]
+p_null_all$'p.null.PC1' <- 2*pnorm(-abs(PC1/sqrt(eigen_lamb[1])))|> as.numeric()
+
+cat("PC1 done. \n\n")
+```
+
+
+Run minp test and calculate p-values,
+
+```{r}
+# univariate minp
+p_null_all$'p.null.minp' <- apply(z_null, 1, function(x) min(1-pchisq(x^2, 1))*length(x) )
+
+cat("minp done. \n\n")
+```
+
+Finally, take a look at the calculated p-values on null z's.
+
+```{r}
+str(p_null_all)
+```
+
+
+## QQ-plot of null p-values by three association tests
+
+First, load required packages.
+
+```{r}
+rm(list = ls())
+library(tidyverse)
+source("/home/liliw1/Trans/plot/theme_my_pub.R")
+```
+
+Files of simulated null p-values,
+
+```{r}
+# I/O & paras -----
+file_dat_null <- "/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/simulation.null.lambda0.1.K101.rds"
+ci_level <- 0.95
+```
+
+
+```{r}
+# read files -----
+p_null_all <- readRDS(file_dat_null)
+
+
+
+# organize data -----
+## reset obs p-values that are 0 to a fixed value, here I use the min non-zero p/10 -----
+input <- as_tibble(p_null_all)
+input[input == 0] <- min(input[input != 0])/10
+
+## number of samples -----
+n <- nrow(input)
+
+## expected null p -----
+expected <- seq(1, n) / (n+1)
+lexp <- -log10(expected)
+
+## order statistic of null p -----
+ci_l <- -log10( qbeta(p = (1 - ci_level) / 2, shape1 = 1:n, shape2 = n:1) )
+ci_r <- -log10( qbeta(p = (1 + ci_level) / 2, shape1 = 1:n, shape2 = n:1) )
+
+## obs -----
+observed <- apply(input, 2, sort) %>% as.data.frame()
+lobs <- -log10(observed)
+
+
+## take only a subset of null p's, to save image space -----
+ind_sub <- c(
+  1:sum(lexp > 4),
+  seq(from = sum(lexp > 4), to = sum(lexp > 2), length.out = 2000) %>% ceiling(),
+  seq(from = sum(lexp > 2), to = n, length.out = 2000) %>% ceiling()
+)
+
+
+# data for plt -----
+df_plt <- cbind(data.frame(x = lexp, ci_l = ci_l, ci_r = ci_r), lobs) %>%
+  slice(ind_sub) %>%
+  pivot_longer(-c(x, ci_l, ci_r), names_to = "Type", values_to = "y")
+
+## set group order in plt -----
+group_order <- c("p.null.PCO", "p.null.PC1", "p.null.minp")
+group_label <- c("Trans-PCO", "PC1", "MinP")
+
+group_order <- if(is.null(group_order)) unique(df_plt$Type) else group_order
+group_label <- if(is.null(group_label)) group_order else group_label
+df_plt$Type <- factor(df_plt$Type, levels = group_order, labels = group_label)
+
+
+# QQ-plot of null p-values by three association tests -----
+base_plt <- ggplot(df_plt, aes(x = x, y = y, group = Type)) +
+  geom_ribbon(aes(ymin = ci_l, ymax = ci_r), fill = "#e5e5e5", color = "#e5e5e5") +
+  geom_abline(slope = 1, intercept = 0, color = "#595959", size = 0.7) +
+  geom_point(aes(color = Type), size = 0.5) +
+  labs(x = bquote(Expected -log[10]~italic((P))),
+       y = bquote(Observed -log[10]~italic((P))),
+       color = NULL)
+base_plt +
+  scale_color_manual(
+    values = c("#85192d", "#0028a1", "#e89c31"),
+    guide = guide_legend(override.aes = list(size = 2))
+  ) +
+  theme_my_pub() +
+  theme(
+    panel.grid.major.x = element_line(linetype = "dotted"),
+    panel.grid.major.y = element_line(linetype = "dotted"),
+    
+    legend.background = element_blank(),
+    legend.position = "right",
+    
+    axis.title = element_text(size = 14), 
+    axis.text = element_text(colour = "black", size = 12)
+  )
+```
+
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+
+

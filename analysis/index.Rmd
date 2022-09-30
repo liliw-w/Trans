@@ -1,15 +1,67 @@
 ---
-title: "Trans-PCO: trans-eQTLs detection of cellular pathways and gene networks"
+title: "Trans-PCO: to detect trans-eQTLs of cellular pathways and gene networks"
 output:
   html_document:
     toc: false
 ---
 
-## Introduction of the website & method & input & output
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
 
-## Illustration figure
 
-## Key steps
+## Introduction
 
-## link to wip
+We developed the trans-PCO pipeline to detect trans-eQTLs that are associated with the expression levels of a group of genes (gene module) by using a PC-based multivariate association test [@liu2019geometric] that combines multiple gene expression PCs.
+
+Trans-PCO allows the use of many types of gene groups or sets. For example, genes with correlated expression levels in a co-expression gene network, or genes in the same pathway, or protein-protein interaction network.
+
+
+```{r out.width="60%", fig.cap="Figure: Three main steps in trans-PCO pipeline. The first step of trans-PCO pre-processes RNA-seq data to reduce false positive trans-eQTL associations due to read alignment errors. The second step involves grouping genes into gene sets, such as co-expression modules or biological pathways. The last step tests for trans-eQTLs of each gene set by a PC-based multivariate association test.", fig.show='hold',fig.align='center'}
+knitr::include_graphics(c("asset/pipeline.pdf"), error = FALSE)
+```
+
+
+## Main analysis
+
+### Simulations to evaluate the power of Trans-PCO
+
+  - [Null simulations to show trans-PCO is well-calibrated](sim_null.html)
+  
+  - [Power simulation to compare trans-PCO to two other commonly used methods.](sim_alt.html)
+
+### Calculate p-values of SNPs across the genome for each gene module by trans-PCO
+
+  - [Analyze a RNA-seq dataset by trans-PCO pipeline](rna_seq.html)
+  
+  - [Look at the distribution of identified trans-eQTLs](vis_distri_sig.html)
+  
+  - [Look at cis genes of trans signals](signal_cis.html)
+
+
+### Colocalization analysis of trans signals and complex traits
+
+  - [Perform colocalization analysis](coloc_gwas.html)
+  
+  - [Colocalization proportion of trans-eQTLs with GWAS loci](coloc_vis_prop.html)
+
+
+### S-LDSC to eveluate the enrichment of trait heritability in gene modules
+
+  - [Perform S-LDSC between gene modules and complex traits](sldsc.html)
+  
+  - [Visualize the heritability enrichment of traits in gene modules](vis_sldsc.html)
+
+
+### Colocalization analysis of trans signals and cis genes
+
+  - [Perform colocalization analysis of trans signals and cis genes](coloc_cis.html)
+  
+  - [Visualization]()
+
+
+## Weekly updates
+
+I also host a website (a [wflowr](https://github.com/workflowr/workflowr) project) to keep track of my weekly work in progress.
+
 

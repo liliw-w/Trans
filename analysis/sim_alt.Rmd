@@ -1,0 +1,185 @@
+---
+title: "Run simulations under alternatives"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../')
+
+library(tidyverse)
+```
+
+## Goal
+
+To simulate alternative z-scores and calculate p-values under various scenarios using three association tests: trans-pco, minP, PC1.
+
+
+## Simulations of alternatives under various scenarios
+
+- Scenarios under various sample size: 200, 400, 600, 800.
+
+```{bash eval=FALSE}
+Rscript --no-restore --no-save simulation/2_1_sim_alt.R \
+N \
+0.1 \
+simulation/script_lambda0.1/ \
+/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/Sigma-new_DGN_module29_K101.rds \
+simulation/result/simulation.alt.N.lambda0.1.varb1e-3.K101.rds \
+0.001 \
+0.3 \
+500 \
+10000 \
+1000
+```
+
+
+- Scenarios under various proportions of target genes in a module: 1%, 5%, 10%, 30%, 50%
+```{bash eval=FALSE}
+Rscript --no-restore --no-save simulation/2_1_sim_alt.R \
+caus \
+0.1 \
+simulation/script_lambda0.1/ \
+/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/Sigma-new_DGN_module29_K101.rds \
+simulation/result/simulation.alt.caus.lambda0.1.varb1e-3.K101.rds \
+0.001 \
+0.3 \
+500 \
+10000 \
+1000
+```
+
+
+- Scenarios under various genetic variances: 0.002, 0.003, 0.004, 0.005, 0.006
+
+```{bash eval=FALSE}
+Rscript --no-restore --no-save simulation/2_1_sim_alt.R \
+var \
+0.1 \
+simulation/script_lambda0.1/ \
+/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/Sigma-new_DGN_module29_K101.rds \
+simulation/result/simulation.alt.var.lambda0.1.varb1e-3.K101.rds \
+0.001 \
+0.3 \
+500 \
+10000 \
+1000
+```
+
+
+## Calculate power
+
+Calculate power using empirical FDR correction for three tests, under various sample sizes for example.
+
+```{bash eval=FALSE}
+Rscript --no-restore --no-save simulation/3_cal_power.R \
+simulation/result/simulation.alt.N.lambda0.1.varb1e-3.K101.rds \
+simulation/result/simulation.null.lambda0.1.K101.rds \
+simulation/result/power.N.lambda0.1.varb1e-3.K101.rds \
+0.1 \
+True
+```
+
+
+## Visualize power
+
+Compare the power of three association tests: trans-pco, minP, PC1, under various scenarios.
+
+
+```{r power plot}
+plt_power <- function(file_power, xlab_name){
+  res.alt = map_dfr(
+  readRDS(file_power),
+  ~as_tibble(.x, rownames = "model") %>%
+    pivot_longer(!model, names_to = NULL, values_to = "power") %>%
+    mutate("model" = str_extract(model, "\\d+.*\\d+$")),
+  .id = "method"
+)
+res.alt$method = factor(res.alt$method, c("PCO", "PC1", "minp"), c("Trans-PCO", "PC1", "MinP"))
+
+
+# point range & line plot ----
+base_plt = ggplot(data = res.alt, aes(x = model, y = power, color = method, group = method)) +
+  stat_summary(
+    geom = "pointrange",
+    fun.data = "mean_cl_normal",
+    fun.args = list(conf.int = .95),
+    position = position_dodge(width = 0.3),
+    fatten = 1, size = 0.5
+  ) +
+  stat_summary(
+    geom = "line",
+    fun = "mean",
+    position = position_dodge(width = 0.3),
+    alpha = 0.5, show.legend = FALSE
+  ) +
+  labs(x = xlab_name, y = "Power", color = "Method")
+
+base_plt +
+  scale_colour_manual(
+    breaks = c("Trans-PCO", "PC1", "MinP"),
+    values = c("Trans-PCO" = "#85192d", "PC1" = "#1d349a", "MinP" = "#e89c31"),
+    guide = guide_legend(override.aes = list(size = 0.3))
+  ) +
+  theme_classic() +
+  theme(
+    panel.grid.major.y = element_line(linetype = "dashed", size = 0.8),
+    
+    legend.position = "right",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold"),
+    #legend.background = element_rect(color = "black", linetype = "dashed"),
+    legend.key.size= unit(0.5, "cm"),
+    
+    axis.line = element_line(colour="black"),
+    #axis.line.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    
+    axis.text=element_text(colour = "black", size=12),
+    axis.title.y = element_text(angle=90,vjust =2, size=14),
+    axis.title.x = element_text(vjust = -0.2, size=14),
+    
+    plot.margin=unit(c(10,5,5,5),"mm")
+  ) +
+  coord_cartesian(xlim = c(1.2, n_distinct(res.alt$model) - 0.2))
+}
+```
+
+
+- Power plot under various sample sizes
+
+```{r results='hold'}
+plt_power(
+  '/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/power.N.lambda0.1.varb1e-3.K101.rds',
+  "Sample Size"
+)
+```
+
+
+- Power plot under various proportions of target genes in a module
+
+```{r results='hold'}
+plt_power(
+  '/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/power.caus.lambda0.1.varb1e-3.K101.rds',
+  "Causal Proportion"
+)
+```
+
+
+- Power plot under various genetic variances
+
+```{r results='hold'}
+plt_power(
+  '/project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/power.var.lambda0.1.varb1e-3.K101.rds',
+  "Genetic Variance"
+)
+```
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+
+

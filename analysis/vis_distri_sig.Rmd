@@ -1,0 +1,172 @@
+---
+title: "Run simulations under alternatives"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../')
+
+# load packages -----
+rm(list = ls())
+library(data.table)
+library(tidyverse)
+source('~/Trans/plot/theme_my_pub.R')
+```
+
+
+## Goal
+
+This page is to visualize the identified trans-eQTLs in the RNA-seq dataset.
+
+
+## Look at the co-expression modules and module sizes
+```{r}
+file_coexp_module <- "/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/coexp.module.rds"
+coexp_module <- readRDS(file_coexp_module)$moduleLabels
+
+
+# modules and their sizes
+df_module <- tibble("gene" = names(coexp_module),
+                       "module" = coexp_module)
+df_module_size <- df_module %>% group_by(module) %>% summarise(module_size = n())
+```
+
+There are 166 co-expression modules in total, consisting of 12,132 genes.
+
+```{r}
+cat(
+  'There are', max(df_module$module),
+  'co-expression modules in total, consisting of',
+  nrow(df_module), 'genes. \n\n'
+)
+```
+
+
+The module sizes are distributed as below.
+
+```{r}
+# histogram of number of modules v.s. module size
+base_plt <- ggplot(df_module_size) +
+  geom_histogram(aes(x = module_size, fill = after_stat(count)),
+                 binwidth = 10,
+                 color = "white") +
+  scale_fill_gradientn(colors = RColorBrewer::brewer.pal(8, "Blues")[8:4],
+                       na.value = "red") +
+  labs(x = "Module Size", y = "Number of Modules")
+
+base_plt +
+  theme_classic() +
+  theme(panel.grid.major.y = element_line(linetype = "dashed"),
+        panel.background = element_rect(fill = "white"),
+        
+        legend.position = "none",
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10, face = "bold"),
+        legend.background = element_rect(color = "black", linetype = "dashed"),
+        legend.key.size= unit(0.5, "cm"),
+        
+        axis.line = element_line(colour="black", size = 0.7),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        
+        plot.margin=unit(c(10,5,5,5),"mm"),
+        axis.text.x = element_text(colour="black", hjust=1, vjust = 1, size = 12),
+        axis.text.y = element_text(colour = "black", size = 12),
+        axis.title.x = element_text(vjust = -0.2, size=14),
+        axis.title.y = element_text(angle=90,vjust =2, size=14)
+  )
+```
+
+
+
+## Trans signals and their corresponding trans target modules
+
+Figure below: Signals of each module on chromosomes. Y-axis is chromosome position. X-axis shows module. Each point is a signal. Point size means -logP.
+
+```{r}
+# I/O & paras -----
+file_chr_pos <- '/scratch/midway2/liliw1/sig_module_chr/chromosome_location.rds'
+file_qtl <- '/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt'
+
+
+# read files -----
+chr_pos <- readRDS(file_chr_pos)
+qtl <- fread(file_qtl, header = FALSE, col.names = c("signal", "p", "q"))
+
+
+# organize data -----
+qtl <- qtl %>%
+  separate(signal, c("module", "chr", "pos"), ":", remove = FALSE, convert = TRUE) %>%
+  unite("SNP_ID", chr, pos, sep = ":", remove = FALSE) %>%
+  separate(module, c(NA, "module"), sep = 'module', convert = TRUE)
+
+
+# plot -logp for (cht pos, module) -----
+plt_dat <- qtl %>%
+  left_join(chr_pos, by = c("chr" = "CHR")) %>%
+  mutate(def_pos = pos + tot)
+
+base_plt <- ggplot(plt_dat, aes(y = def_pos, x = factor(module))) +
+  geom_rect(
+    aes(ymin = tot, ymax = xmax,
+        xmin = -Inf, xmax = Inf,
+        fill = factor(chr))
+  ) +
+  geom_vline(aes(xintercept = factor(module)),
+             linetype = "dotted", color = "#e5e5e5") +
+  geom_point(aes(size = -log10(p), color = factor(chr)),
+             alpha = 0.5, shape = 1) +
+  labs(x = "Module", y = "Chromosome", size = quote(-Log[10](P)))
+
+base_plt +
+  scale_y_continuous(
+    limits = c(0, max(chr_pos$center)*2 - max(chr_pos$tot)),
+    label = chr_pos$CHR,
+    breaks = chr_pos$center,
+    expand = c(0, 0)
+  ) +
+  scale_size(guide = guide_legend(override.aes = list(alpha = 1)), range = c(0.5, 3)) +
+  scale_color_manual(values = rep(c("#843232", "#000099"), 22), guide = "none") +
+  scale_fill_manual(values = rep(c("#e5e5e5", "#ffffff"), 22), guide = "none") +
+  theme_my_pub() +
+  theme(
+    axis.text.x = element_text(angle = 90, size = 8)
+  )
+
+```
+
+
+## Distribution of trans signals on their corresponding target modules
+
+```{r}
+ggplot(qtl) +
+  geom_bar(aes(x = as.factor(module))) +
+  labs(x = "Module", y = "Number of trans signals") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 90, size = 8)
+  )
+```
+
+
+## Distribution of trans signals on chromosomes
+
+```{r}
+ggplot(qtl) +
+  geom_bar(aes(x = as.factor(chr))) +
+  labs(x = "Chromosome", y = "Number of trans signals") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 90, size = 8)
+  )
+```
+
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+

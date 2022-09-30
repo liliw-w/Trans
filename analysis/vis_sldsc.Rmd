@@ -1,0 +1,241 @@
+---
+title: "Visualize enrichment of trait heritability in gene modules"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../')
+
+# load packages -----
+rm(list = ls())
+library(tidyverse)
+library(data.table)
+source('~/Trans/plot/theme_my_pub.R')
+```
+
+## Goal
+
+
+## Visualize the enrichment for a module
+
+To visualize the above enrichment result of a module across traits,
+
+```{r fig.width=4, fig.asp=1.2, fig.align='center'}
+# paras and I/O -----
+module <- 4
+
+file_h2_enrich <- paste0('/project2/xuanyao/llw/ldsc/h2_enrich_comb/M', module, '_blood_traits.results')
+
+# read data -----
+h2_enrich <- fread(file_h2_enrich, header = TRUE, sep = "\t")
+
+
+# plot -----
+h2_enrich <- arrange(h2_enrich, `GWAS Group`, desc(trait_id))
+h2_enrich$trait_id <- factor(h2_enrich$trait_id,
+                             levels = h2_enrich$trait_id,
+                             labels = paste(h2_enrich$`Trait Abbreviation`))
+
+# 95% CI
+xlow <- min(h2_enrich$Enrichment - 1.96*h2_enrich$Enrichment_std_error)
+xupp <- max(h2_enrich$Enrichment + 1.96*h2_enrich$Enrichment_std_error) + 1
+
+# title
+facet_lab <- paste0("Module ", module)
+names(facet_lab) <- unique(h2_enrich$module)
+
+# order traits by enrichment score
+h2_enrich$trait_id <- factor(h2_enrich$trait_id,
+                             levels = h2_enrich %>%
+                               group_by(`GWAS Group`) %>%
+                               arrange(desc(Enrichment), .by_group = TRUE) %>%
+                               ungroup() %>%
+                               pull(trait_id))
+# plot error bar
+base_fig <- ggplot(h2_enrich,
+                   aes(x = Enrichment,
+                       y = trait_id,
+                       color = `GWAS Group`)) +
+  facet_wrap(~module, labeller = labeller(module = facet_lab)) +
+  geom_point(size = 2) +
+  geom_linerange(aes(xmin = Enrichment - 1.96*`Enrichment_std_error`, xmax = Enrichment + 1.96*`Enrichment_std_error`),
+                 size = 0.5) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "#007300") +
+  labs(y = NULL, color = "Type", shape = NULL)
+
+base_fig +
+  scale_x_continuous(
+    limits = c(xlow, xupp),
+    breaks = c(0, seq(-100, 100, by = 2))
+  ) +
+  scale_colour_manual(
+    breaks = c("White blood cells", "Red blood cells", "Platelets"),
+    values = c("Platelets" = "#0028a1", "Red blood cells" = "#85192d", "White blood cells" = "#e89c31"),
+    guide = guide_legend(label.position = "bottom",
+                         label.theme = element_text(angle = -90, size = 10))
+  ) +
+  theme_my_pub() +
+  theme(
+    panel.grid.major.y = element_line(linetype = "dotted"),
+    legend.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 12),
+    strip.background = element_blank(),
+    axis.text = element_text(size = 8)
+  )
+```
+
+Another module,
+
+```{r echo=FALSE, fig.width=4, fig.asp=1.2, fig.align='center'}
+# paras and I/O -----
+module <- 151
+
+file_h2_enrich <- paste0('/project2/xuanyao/llw/ldsc/h2_enrich_comb/M', module, '_blood_traits.results')
+
+# read data -----
+h2_enrich <- fread(file_h2_enrich, header = TRUE, sep = "\t")
+
+
+# plot -----
+h2_enrich <- arrange(h2_enrich, `GWAS Group`, desc(trait_id))
+h2_enrich$trait_id <- factor(h2_enrich$trait_id,
+                             levels = h2_enrich$trait_id,
+                             labels = paste(h2_enrich$`Trait Abbreviation`))
+
+# 95% CI
+xlow <- min(h2_enrich$Enrichment - 1.96*h2_enrich$Enrichment_std_error)
+xupp <- max(h2_enrich$Enrichment + 1.96*h2_enrich$Enrichment_std_error) + 1
+
+# title
+facet_lab <- paste0("Module ", module)
+names(facet_lab) <- unique(h2_enrich$module)
+
+# order traits by enrichment score
+h2_enrich$trait_id <- factor(h2_enrich$trait_id,
+                             levels = h2_enrich %>%
+                               group_by(`GWAS Group`) %>%
+                               arrange(desc(Enrichment), .by_group = TRUE) %>%
+                               ungroup() %>%
+                               pull(trait_id))
+# plot error bar
+base_fig <- ggplot(h2_enrich,
+                   aes(x = Enrichment,
+                       y = trait_id,
+                       color = `GWAS Group`)) +
+  facet_wrap(~module, labeller = labeller(module = facet_lab)) +
+  geom_point(size = 2) +
+  geom_linerange(aes(xmin = Enrichment - 1.96*`Enrichment_std_error`, xmax = Enrichment + 1.96*`Enrichment_std_error`),
+                 size = 0.5) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "#007300") +
+  labs(y = NULL, color = "Type", shape = NULL)
+
+base_fig +
+  scale_x_continuous(
+    limits = c(xlow, xupp),
+    breaks = c(0, seq(-100, 100, by = 2))
+  ) +
+  scale_colour_manual(
+    breaks = c("White blood cells", "Red blood cells", "Platelets"),
+    values = c("Platelets" = "#0028a1", "Red blood cells" = "#85192d", "White blood cells" = "#e89c31"),
+    guide = guide_legend(label.position = "bottom",
+                         label.theme = element_text(angle = -90, size = 10))
+  ) +
+  theme_my_pub() +
+  theme(
+    panel.grid.major.y = element_line(linetype = "dotted"),
+    legend.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 12),
+    strip.background = element_blank(),
+    axis.text = element_text(size = 8)
+  )
+```
+
+
+## Visualize the overall enrichment patterns across all modules and all traits
+
+To look into the pattern of enrichment of trait heritability across modules, I plotted the enrichment p-values for every pair of (module, trait).
+
+```{r get h2_enrich, echo=FALSE}
+# paras and I/O -----
+file_h2_enrich <- c(
+  list.files(
+    '/project2/xuanyao/llw/ldsc/h2_enrich_comb',
+    '^M\\d+_blood_traits.results$',
+    full.names = TRUE
+  ),
+  
+  list.files(
+    '/project2/xuanyao/llw/ldsc/h2_enrich_comb',
+    '^T.*_all_modules.results$',
+    full.names = TRUE
+  )
+)
+Nmodule <- 166
+
+# read files -----
+h2_enrich <- lapply(file_h2_enrich,
+                    fread,
+                    header = TRUE, sep = "\t",
+                    select = c("GWAS Group", "trait_id", "Trait Abbreviation", "module", "Enrichment_p")) %>%
+  rbindlist(fill = TRUE)
+```
+
+
+```{r}
+library(ComplexHeatmap)
+
+# I/O & paras -----
+file_coloc_fig_order <- '/project2/xuanyao/llw/ldsc/plots/coloc_m_trait_order.rds'
+coloc_fig_order <- readRDS(file_coloc_fig_order)
+
+
+h2_mat <- h2_enrich %>%
+  mutate(`Trait Abbreviation` = paste(`Trait Abbreviation`, trait_id, sep = "-")) %>%
+  filter(module %in% as.numeric(levels(coloc_fig_order$Module))) %>%
+  pivot_wider(
+    id_cols = module,
+    names_from = `Trait Abbreviation`,
+    values_from = Enrichment_p
+  ) %>%
+  column_to_rownames(var = "module") %>%
+  as.matrix() %>%
+  t()
+
+
+col_break <- c(0, 1:4, 10)
+annot_trait <- h2_enrich %>%
+  mutate(`Trait Abbreviation` = paste(`Trait Abbreviation`, trait_id, sep = "-")) %>%
+  distinct(`GWAS Group`, `Trait Abbreviation`) %>%
+  left_join(
+    distinct(coloc_fig_order, trait_type, trait_color),
+    by = c("GWAS Group" = "trait_type")
+  ) %>%
+  column_to_rownames(var = "Trait Abbreviation")
+annot_trait <- annot_trait[rownames(h2_mat), ]
+
+
+row_ha <- HeatmapAnnotation('Group' = annot_trait$`GWAS Group`,
+                            col = list("Group" = setNames(annot_trait$trait_color, annot_trait$`GWAS Group`)),
+                            which = "row")
+
+
+Heatmap(-log10(h2_mat), 
+        name = "-Log10p", #title of legend
+        column_title = "Module", row_title = "Trait",
+        row_names_gp = gpar(fontsize = 7), # Text size for row names
+        column_names_gp = gpar(fontsize = 7),
+        right_annotation = row_ha,
+        col = circlize::colorRamp2(col_break,
+                                   c("white", RColorBrewer::brewer.pal(n = length(col_break), name = "Blues")[-1]))
+)
+```
+
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+

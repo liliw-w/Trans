@@ -7,16 +7,26 @@ navbar:
       href: index.html
     - text: "Vignettes"
       menu:
-      - text: "A minimal example"
-        href: mini_example.html
-      - text: "A simple simulation"
-        href: simulation.html
-      - text: "Visualization"
-        href: vis.html
-      - text: "Colocalization"
-        href: coloc.html
-      - text: "Partitioned LD score regression"
+      - text: "Null simulations"
+        href: sim_null.html
+      - text: "Power comparison in simulations"
+        href: sim_alt.html
+      - text: "Analyze a RNA-seq dataset"
+        href: rna_seq.html
+      - text: "Visualize trans signals"
+        href: vis_distri_sig.html
+      - text: "Cis genes of trans signals"
+        href: signal_cis.html
+      - text: "Colocalization analysis of trans loci and GWAS"
+        href: coloc_gwas.html
+      - text: "Colocalization proportion of trans-eQTLs"
+        href: coloc_vis_prop.html
+      - text: "Perform S-LDSC"
         href: sldsc.html
+      - text: "Visualize the trait heritability enrichment"
+        href: vis_sldsc.html
+      - text: "Colocalization analysis of trans loci and cis genes"
+        href: coloc_cis.html
     - text: "Reference"
       href: ref.html
   right:
@@ -30,3 +40,4 @@ output:
     #theme: cosmo
     highlight: textmate
     css: style.css
+
