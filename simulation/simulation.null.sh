@@ -10,6 +10,5 @@
 #SBATCH --job-name=null
 
 module load R/3.6.1
-cd /scratch/midway2/liliw1/simulation_lambda0.1
 
-Rscript --no-restore --no-save simulation.null.R
+Rscript --no-restore --no-save 1_sim_null.R
