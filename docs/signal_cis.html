@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Cis genes of trans signals</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Trans-PCO</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Vignettes
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="sim_null.html">Null simulations</a>
+    </li>
+    <li>
+      <a href="sim_alt.html">Power comparison in simulations</a>
+    </li>
+    <li>
+      <a href="rna_seq.html">Analyze a RNA-seq dataset</a>
+    </li>
+    <li>
+      <a href="vis_distri_sig.html">Visualize trans signals</a>
+    </li>
+    <li>
+      <a href="signal_cis.html">Cis genes of trans signals</a>
+    </li>
+    <li>
+      <a href="coloc_gwas.html">Colocalization analysis of trans loci and GWAS</a>
+    </li>
+    <li>
+      <a href="coloc_vis_prop.html">Colocalization proportion of trans-eQTLs</a>
+    </li>
+    <li>
+      <a href="sldsc.html">Perform S-LDSC</a>
+    </li>
+    <li>
+      <a href="vis_sldsc.html">Visualize the trait heritability enrichment</a>
+    </li>
+    <li>
+      <a href="coloc_cis.html">Colocalization analysis of trans loci and cis genes</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="ref.html">Reference</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/liliw-w/Trans">
+    <span class="fa fa-github"></span>
+     
+    Source
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Cis genes of trans signals</h1>
+
+</div>
+
+
+<div id="goal" class="section level2">
+<h2>Goal</h2>
+<p>Annotate cis genes of the identified trans signals to help understand the mechanisms of trans regulation.</p>
+</div>
+<div id="find-cis-genes-of-trans-signals" class="section level2">
+<h2>Find cis genes of trans signals</h2>
+<p>I looked at what genes are nearest or near (&lt;1Mb) to each trans signals.</p>
+<pre class="r"><code># I/O &amp; paras -----
+file_qtl &lt;- &#39;/project2/xuanyao/llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt&#39;
+file_gene_meta &lt;- &#39;/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt&#39;
+dis_cis &lt;- 1e+6
+
+
+# read files -----
+qtl &lt;- fread(file_qtl, header = FALSE, col.names = c(&quot;signal&quot;, &quot;p&quot;, &quot;q&quot;))
+gene_meta &lt;- fread(file_gene_meta, header = TRUE)
+
+
+# organize data -----
+## extract signals&#39; module, chr, pos -----
+qtl &lt;- qtl %&gt;%
+  separate(&quot;signal&quot;,
+           into = c(&quot;module&quot;, &quot;chr&quot;, &quot;pos&quot;),
+           sep = &quot;:&quot;, remove = FALSE, convert = TRUE) %&gt;%
+  unite(col = &quot;SNP&quot;,
+        c(&quot;chr&quot;, &quot;pos&quot;),
+        sep = &quot;:&quot;, remove = FALSE)
+
+## extract protein_coding, lincRNA, auto-chr genes -----
+gene_meta &lt;- gene_meta %&gt;%
+  filter(Class %in% c(&quot;protein_coding&quot;, &quot;lincRNA&quot;) &amp; Chromosome %in% paste0(&quot;chr&quot;,1:22)) %&gt;%
+  separate(&quot;Chromosome&quot;, c(NA, &quot;chr&quot;), sep = &quot;chr&quot;, remove = FALSE)
+
+
+# nearest and cis genes of each signal, with distance -----
+cis_gene_meta &lt;- sapply(1:nrow(qtl), function(x){
+  tmp_qtl = qtl[x, ]
+  tmp_cis_gene_meta = gene_meta %&gt;%
+    filter(chr %in% tmp_qtl$chr) %&gt;%
+    mutate(&quot;dis&quot; = abs(tmp_qtl$pos - Start)) %&gt;%
+    filter(dis &lt; dis_cis/2) %&gt;%
+    arrange(dis)
+  c(
+    tmp_cis_gene_meta$GeneSymbol[1],
+    tmp_cis_gene_meta$dis[1],
+    paste(tmp_cis_gene_meta$GeneSymbol, collapse = &quot;;&quot;),
+    paste(tmp_cis_gene_meta$dis, collapse = &quot;;&quot;)
+  )
+})
+cis_gene_meta &lt;- as.data.table(t(cis_gene_meta))
+colnames(cis_gene_meta) &lt;- c(&quot;nearest_gene&quot;, &quot;nearest_dis&quot;, &quot;near_genes&quot;, &quot;near_dis&quot;)
+
+
+## add cis gene info to signals -----
+qtl &lt;- bind_cols(qtl, cis_gene_meta)</code></pre>
+<p>Let’s look at one example.</p>
+<pre class="r"><code>qtl &lt;- fread(&#39;/project2/xuanyao/llw/DGN_no_filter_on_mappability/postanalysis/signal_cis_genes.txt&#39;)</code></pre>
+<p>Columns are,</p>
+<pre class="r"><code>colnames(qtl)</code></pre>
+<pre><code>##  [1] &quot;signal&quot;       &quot;module&quot;       &quot;SNP&quot;          &quot;chr&quot;          &quot;pos&quot;         
+##  [6] &quot;p&quot;            &quot;q&quot;            &quot;nearest_gene&quot; &quot;nearest_dis&quot;  &quot;near_genes&quot;  
+## [11] &quot;near_dis&quot;</code></pre>
+<p>The last four columns give the nearest and near genes, and the distance between the trans-eQTL on each row and corresponding genes. For example,</p>
+<pre class="r"><code>knitr::kable(qtl[1, ])</code></pre>
+<table>
+<colgroup>
+<col width="4%" />
+<col width="1%" />
+<col width="2%" />
+<col width="0%" />
+<col width="1%" />
+<col width="0%" />
+<col width="0%" />
+<col width="3%" />
+<col width="2%" />
+<col width="48%" />
+<col width="32%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">signal</th>
+<th align="left">module</th>
+<th align="left">SNP</th>
+<th align="right">chr</th>
+<th align="right">pos</th>
+<th align="right">p</th>
+<th align="right">q</th>
+<th align="left">nearest_gene</th>
+<th align="right">nearest_dis</th>
+<th align="left">near_genes</th>
+<th align="left">near_dis</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">module1:4:6696460</td>
+<td align="left">module1</td>
+<td align="left">4:6696460</td>
+<td align="right">4</td>
+<td align="right">6696460</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">S100P</td>
+<td align="right">1664</td>
+<td align="left">S100P;AC093323.1;RP11-539L10.2;MRFAP1L1;AC093323.3;BLOC1S4;RP11-539L10.3;MRFAP1;KIAA0232;MAN2B2;TBC1D14;CCDC96;TADA2B;GRPEL1;PPP2R2C;RP11-367J11.3;WFS1;RP11-1406H17.1;RP11-586D19.2;RP11-586D19.1;SORCS2</td>
+<td align="left">1664;2678;7285;12968;21282;21382;24008;54642;86642;119558;214509;346119;347166;364173;374155;399838;424884;455292;492405;494000;497805</td>
+</tr>
+</tbody>
+</table>
+<p>The trans-eQTL “4:6696460” (with target module 1) is nearest to gene S100P. The last column also gives all genes within 1Mb of this signal.</p>
+</div>
+<div id="annotate-transcription-factors-and-interesting-genes-near-trans-signals" class="section level2">
+<h2>Annotate transcription factors and interesting genes near trans signals</h2>
+<p>I wanted to look at what transcription factors or master trans regulator genes are near the identified trans-eQTLs. And then annotate them on a gene manhattan plot.</p>
+<pre class="r"><code># I/O &amp; paras -----
+file_signal_cis_genes &lt;- &#39;/project2/xuanyao/llw/DGN_no_filter_on_mappability/postanalysis/signal_cis_genes.txt&#39;
+file_chr_pos &lt;- &#39;/scratch/midway2/liliw1/sig_module_chr/chromosome_location.rds&#39;
+
+
+# read files -----
+signal_cis_genes &lt;- fread(file_signal_cis_genes, header = TRUE)
+chr_pos &lt;- readRDS(file_chr_pos)
+
+
+# one p for one snp across modules -----
+snp_cis_genes &lt;- signal_cis_genes %&gt;%
+  group_by(SNP, chr, pos, nearest_gene, near_genes, nearest_dis, near_dis) %&gt;%
+  summarise(&#39;p&#39; = min(p),
+            &#39;n_module&#39; = n()) %&gt;%
+  mutate(&#39;-logp&#39; = -log10(p)) %&gt;%
+  ungroup()
+
+snp_cis_genes &lt;- separate_rows(
+  snp_cis_genes,
+  near_genes, near_dis,
+  sep = &quot;;&quot;, convert = TRUE
+)
+
+# change 0 p -----
+snp_cis_genes[is.infinite(snp_cis_genes$`-logp`), &quot;-logp&quot;] &lt;-
+  (max(snp_cis_genes$`-logp`[!is.infinite(snp_cis_genes$`-logp`)]) + 1) %&gt;% ceiling()
+
+
+# genes of interest -----
+gene_of_interest &lt;- c(&quot;BAZ2B&quot;, &quot;NFKBIA&quot;, &quot;PLAGL1&quot;, &quot;NFE2&quot;, &quot;IKZF1&quot;, &quot;KLF1&quot;, &quot;KLF14&quot;, &quot;NFKB1&quot;, &quot;NFKBIA&quot;, &quot;ZNF229&quot;, &quot;BAZ2B&quot;, #TF
+                      &quot;ARHGEF3&quot;, &quot;SENP7&quot;)
+
+
+# nearest &amp; near gene of interest col -----
+snp_cis_genes &lt;- mutate(
+  snp_cis_genes,
+  &quot;if_gene_of_interest_nearest&quot; = nearest_gene %in% !!gene_of_interest,
+  &quot;if_gene_of_interest_near&quot; = near_genes %in% !!gene_of_interest,
+)
+
+plt_dat &lt;- snp_cis_genes %&gt;%
+  left_join(chr_pos, by = c(&quot;chr&quot; = &quot;CHR&quot;)) %&gt;%
+  mutate(def_pos = pos + tot)
+
+
+# same annotation, pick the smallest p ----
+annot_gene &lt;- filter(plt_dat, if_gene_of_interest_near) %&gt;%
+  mutate(&quot;label_gene_of_interest&quot; = near_genes) %&gt;%
+  group_by(label_gene_of_interest) %&gt;%
+  summarise(`-logp` = max(`-logp`),
+            chr = chr, pos = pos, def_pos = def_pos) %&gt;%
+  ungroup() %&gt;%
+  distinct(label_gene_of_interest, .keep_all = TRUE)
+
+
+annot_snp &lt;- filter(plt_dat, if_gene_of_interest_near) %&gt;%
+  mutate(&quot;label_gene_of_interest&quot; = near_genes)</code></pre>
+<p>These are the genes of interest to be annotated,</p>
+<pre class="r"><code>knitr::kable(annot_gene)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">label_gene_of_interest</th>
+<th align="right">-logp</th>
+<th align="right">chr</th>
+<th align="right">pos</th>
+<th align="right">def_pos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ARHGEF3</td>
+<td align="right">17.000000</td>
+<td align="right">3</td>
+<td align="right">56848953</td>
+<td align="right">549073711</td>
+</tr>
+<tr class="even">
+<td align="left">BAZ2B</td>
+<td align="right">7.974534</td>
+<td align="right">2</td>
+<td align="right">160427158</td>
+<td align="right">409601840</td>
+</tr>
+<tr class="odd">
+<td align="left">IKZF1</td>
+<td align="right">17.000000</td>
+<td align="right">7</td>
+<td align="right">50258234</td>
+<td align="right">1282856609</td>
+</tr>
+<tr class="even">
+<td align="left">KLF14</td>
+<td align="right">7.640718</td>
+<td align="right">7</td>
+<td align="right">130536491</td>
+<td align="right">1363134866</td>
+</tr>
+<tr class="odd">
+<td align="left">NFE2</td>
+<td align="right">8.204420</td>
+<td align="right">12</td>
+<td align="right">54685880</td>
+<td align="right">2004114576</td>
+</tr>
+<tr class="even">
+<td align="left">NFKB1</td>
+<td align="right">8.915563</td>
+<td align="right">4</td>
+<td align="right">103444474</td>
+<td align="right">793508162</td>
+</tr>
+<tr class="odd">
+<td align="left">NFKBIA</td>
+<td align="right">17.000000</td>
+<td align="right">14</td>
+<td align="right">35372518</td>
+<td align="right">2233699109</td>
+</tr>
+<tr class="even">
+<td align="left">PLAGL1</td>
+<td align="right">17.000000</td>
+<td align="right">6</td>
+<td align="right">144278562</td>
+<td align="right">1205967141</td>
+</tr>
+<tr class="odd">
+<td align="left">SENP7</td>
+<td align="right">17.000000</td>
+<td align="right">3</td>
+<td align="right">100831857</td>
+<td align="right">593056615</td>
+</tr>
+<tr class="even">
+<td align="left">ZNF229</td>
+<td align="right">17.000000</td>
+<td align="right">19</td>
+<td align="right">44889660</td>
+<td align="right">2702138865</td>
+</tr>
+</tbody>
+</table>
+<p>Plot these genes on the manhattan plot,</p>
+<pre class="r"><code># Manhattan plot of cis TF&#39;s -----
+base_plt &lt;- ggplot(plt_dat, aes(x = def_pos, y = `-logp`)) +
+  geom_rect(
+    aes(xmin = tot, xmax = xmax,
+        ymin = -Inf, ymax = Inf,
+        fill = factor(chr))
+  ) +
+  geom_point(aes(color = factor(chr)), alpha = 0.5, size = 1, shape = 16) +
+  geom_point(data = annot_snp,
+             color = &quot;#e2bebe&quot;, alpha = 0.5, size = 1) +
+  geom_point(data = annot_gene,
+             color = &quot;#b20000&quot;, fill = &quot;#b20000&quot;, shape=23, size = 3) +
+  geom_text_repel(data = annot_gene,
+                  aes(label = label_gene_of_interest),
+                  segment.colour=&quot;black&quot;,
+                  size = 4,
+                  min.segment.length = 0,
+                  max.overlaps = 5,
+                  nudge_x = -0.5,
+                  nudge_y = 30,
+                  box.padding = 1,
+                  segment.curvature = -0.1,
+                  segment.ncp = 5,
+                  segment.angle = 20,
+                  direction = &quot;y&quot;,
+                  hjust = &quot;left&quot;,
+                  segment.linetype = 6,
+                  arrow = arrow(length = unit(0.015, &quot;npc&quot;))
+  ) +
+  labs(x = &quot;Chromosome&quot;, y = quote(-Log[10](P)))
+
+base_plt +
+  scale_x_continuous(
+    limits = c(0, max(chr_pos$center)*2 - max(chr_pos$tot)),
+    label = chr_pos$CHR,
+    breaks = chr_pos$center,
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(6.5, 21) ) +
+  scale_color_manual(values = rep(c(&quot;#7e7e7e&quot;, &quot;#bfbfbf&quot;), 22), guide = &quot;none&quot;) +
+  scale_fill_manual(values = rep(c(&quot;#efefef&quot;, &quot;#ffffff&quot;), 22), guide = &quot;none&quot;) +
+  theme_my_pub()</code></pre>
+<p><img src="signal_cis_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 4.1.2 (2021-11-01)
+## Platform: x86_64-conda-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.3 LTS
+## 
+## Matrix products: default
+## BLAS/LAPACK: /scratch/midway2/liliw1/conda_env/rstudio-server/lib/libopenblasp-r0.3.18.so
+## 
+## locale:
+##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+##  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+##  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] ggrepel_0.9.1     forcats_0.5.1     stringr_1.4.0     dplyr_1.0.7      
+##  [5] purrr_0.3.4       readr_2.1.2       tidyr_1.2.0       tibble_3.1.7     
+##  [9] ggplot2_3.3.6     tidyverse_1.3.1   data.table_1.14.2
+## 
+## loaded via a namespace (and not attached):
+##  [1] tidyselect_1.1.1 xfun_0.29        bslib_0.3.1      haven_2.4.3     
+##  [5] colorspace_2.0-3 vctrs_0.4.1      generics_0.1.2   htmltools_0.5.2 
+##  [9] yaml_2.2.2       utf8_1.2.2       rlang_1.0.3      jquerylib_0.1.4 
+## [13] pillar_1.7.0     withr_2.5.0      glue_1.6.2       DBI_1.1.3       
+## [17] dbplyr_2.1.1     modelr_0.1.8     readxl_1.3.1     lifecycle_1.0.1 
+## [21] cellranger_1.1.0 munsell_0.5.0    gtable_0.3.0     rvest_1.0.2     
+## [25] evaluate_0.14    labeling_0.4.2   knitr_1.37       tzdb_0.2.0      
+## [29] fastmap_1.1.0    fansi_1.0.3      highr_0.9        Rcpp_1.0.8.3    
+## [33] broom_0.7.12     backports_1.4.1  scales_1.2.0     jsonlite_1.7.3  
+## [37] farver_2.1.1     fs_1.5.2         hms_1.1.1        digest_0.6.29   
+## [41] stringi_1.7.6    grid_4.1.2       cli_3.3.0        tools_4.1.2     
+## [45] magrittr_2.0.3   sass_0.4.0       crayon_1.5.1     pkgconfig_2.0.3 
+## [49] ellipsis_0.3.2   xml2_1.3.3       reprex_2.0.1     lubridate_1.8.0 
+## [53] assertthat_0.2.1 rmarkdown_2.11   httr_1.4.2       rstudioapi_0.13 
+## [57] R6_2.5.1         compiler_4.1.2</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

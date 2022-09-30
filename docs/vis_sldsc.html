@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Visualize enrichment of trait heritability in gene modules</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Trans-PCO</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Vignettes
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="sim_null.html">Null simulations</a>
+    </li>
+    <li>
+      <a href="sim_alt.html">Power comparison in simulations</a>
+    </li>
+    <li>
+      <a href="rna_seq.html">Analyze a RNA-seq dataset</a>
+    </li>
+    <li>
+      <a href="vis_distri_sig.html">Visualize trans signals</a>
+    </li>
+    <li>
+      <a href="signal_cis.html">Cis genes of trans signals</a>
+    </li>
+    <li>
+      <a href="coloc_gwas.html">Colocalization analysis of trans loci and GWAS</a>
+    </li>
+    <li>
+      <a href="coloc_vis_prop.html">Colocalization proportion of trans-eQTLs</a>
+    </li>
+    <li>
+      <a href="sldsc.html">Perform S-LDSC</a>
+    </li>
+    <li>
+      <a href="vis_sldsc.html">Visualize the trait heritability enrichment</a>
+    </li>
+    <li>
+      <a href="coloc_cis.html">Colocalization analysis of trans loci and cis genes</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="ref.html">Reference</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/liliw-w/Trans">
+    <span class="fa fa-github"></span>
+     
+    Source
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Visualize enrichment of trait heritability in gene modules</h1>
+
+</div>
+
+
+<div id="goal" class="section level2">
+<h2>Goal</h2>
+</div>
+<div id="visualize-the-enrichment-for-a-module" class="section level2">
+<h2>Visualize the enrichment for a module</h2>
+<p>To visualize the above enrichment result of a module across traits,</p>
+<pre class="r"><code># paras and I/O -----
+module &lt;- 4
+
+file_h2_enrich &lt;- paste0(&#39;/project2/xuanyao/llw/ldsc/h2_enrich_comb/M&#39;, module, &#39;_blood_traits.results&#39;)
+
+# read data -----
+h2_enrich &lt;- fread(file_h2_enrich, header = TRUE, sep = &quot;\t&quot;)
+
+
+# plot -----
+h2_enrich &lt;- arrange(h2_enrich, `GWAS Group`, desc(trait_id))
+h2_enrich$trait_id &lt;- factor(h2_enrich$trait_id,
+                             levels = h2_enrich$trait_id,
+                             labels = paste(h2_enrich$`Trait Abbreviation`))
+
+# 95% CI
+xlow &lt;- min(h2_enrich$Enrichment - 1.96*h2_enrich$Enrichment_std_error)
+xupp &lt;- max(h2_enrich$Enrichment + 1.96*h2_enrich$Enrichment_std_error) + 1
+
+# title
+facet_lab &lt;- paste0(&quot;Module &quot;, module)
+names(facet_lab) &lt;- unique(h2_enrich$module)
+
+# order traits by enrichment score
+h2_enrich$trait_id &lt;- factor(h2_enrich$trait_id,
+                             levels = h2_enrich %&gt;%
+                               group_by(`GWAS Group`) %&gt;%
+                               arrange(desc(Enrichment), .by_group = TRUE) %&gt;%
+                               ungroup() %&gt;%
+                               pull(trait_id))
+# plot error bar
+base_fig &lt;- ggplot(h2_enrich,
+                   aes(x = Enrichment,
+                       y = trait_id,
+                       color = `GWAS Group`)) +
+  facet_wrap(~module, labeller = labeller(module = facet_lab)) +
+  geom_point(size = 2) +
+  geom_linerange(aes(xmin = Enrichment - 1.96*`Enrichment_std_error`, xmax = Enrichment + 1.96*`Enrichment_std_error`),
+                 size = 0.5) +
+  geom_vline(xintercept = 1, linetype = &quot;dashed&quot;, color = &quot;#007300&quot;) +
+  labs(y = NULL, color = &quot;Type&quot;, shape = NULL)
+
+base_fig +
+  scale_x_continuous(
+    limits = c(xlow, xupp),
+    breaks = c(0, seq(-100, 100, by = 2))
+  ) +
+  scale_colour_manual(
+    breaks = c(&quot;White blood cells&quot;, &quot;Red blood cells&quot;, &quot;Platelets&quot;),
+    values = c(&quot;Platelets&quot; = &quot;#0028a1&quot;, &quot;Red blood cells&quot; = &quot;#85192d&quot;, &quot;White blood cells&quot; = &quot;#e89c31&quot;),
+    guide = guide_legend(label.position = &quot;bottom&quot;,
+                         label.theme = element_text(angle = -90, size = 10))
+  ) +
+  theme_my_pub() +
+  theme(
+    panel.grid.major.y = element_line(linetype = &quot;dotted&quot;),
+    legend.background = element_blank(),
+    strip.text = element_text(face = &quot;bold&quot;, size = 12),
+    strip.background = element_blank(),
+    axis.text = element_text(size = 8)
+  )</code></pre>
+<p><img src="vis_sldsc_files/figure-html/unnamed-chunk-1-1.png" width="384" style="display: block; margin: auto;" /></p>
+<p>Another module,</p>
+<p><img src="vis_sldsc_files/figure-html/unnamed-chunk-2-1.png" width="384" style="display: block; margin: auto;" /></p>
+</div>
+<div id="visualize-the-overall-enrichment-patterns-across-all-modules-and-all-traits" class="section level2">
+<h2>Visualize the overall enrichment patterns across all modules and all traits</h2>
+<p>To look into the pattern of enrichment of trait heritability across modules, I plotted the enrichment p-values for every pair of (module, trait).</p>
+<pre><code>## Warning in FUN(X[[i]], ...): Column name &#39;Enrichment_p&#39; not found in column name
+## header (case sensitive), skipping.</code></pre>
+<pre class="r"><code>library(ComplexHeatmap)</code></pre>
+<pre><code>## Loading required package: grid</code></pre>
+<pre><code>## ========================================
+## ComplexHeatmap version 2.10.0
+## Bioconductor page: http://bioconductor.org/packages/ComplexHeatmap/
+## Github page: https://github.com/jokergoo/ComplexHeatmap
+## Documentation: http://jokergoo.github.io/ComplexHeatmap-reference
+## 
+## If you use it in published research, please cite:
+## Gu, Z. Complex heatmaps reveal patterns and correlations in multidimensional 
+##   genomic data. Bioinformatics 2016.
+## 
+## The new InteractiveComplexHeatmap package can directly export static 
+## complex heatmaps into an interactive Shiny app with zero effort. Have a try!
+## 
+## This message can be suppressed by:
+##   suppressPackageStartupMessages(library(ComplexHeatmap))
+## ========================================</code></pre>
+<pre class="r"><code># I/O &amp; paras -----
+file_coloc_fig_order &lt;- &#39;/project2/xuanyao/llw/ldsc/plots/coloc_m_trait_order.rds&#39;
+coloc_fig_order &lt;- readRDS(file_coloc_fig_order)
+
+
+h2_mat &lt;- h2_enrich %&gt;%
+  mutate(`Trait Abbreviation` = paste(`Trait Abbreviation`, trait_id, sep = &quot;-&quot;)) %&gt;%
+  filter(module %in% as.numeric(levels(coloc_fig_order$Module))) %&gt;%
+  pivot_wider(
+    id_cols = module,
+    names_from = `Trait Abbreviation`,
+    values_from = Enrichment_p
+  ) %&gt;%
+  column_to_rownames(var = &quot;module&quot;) %&gt;%
+  as.matrix() %&gt;%
+  t()
+
+
+col_break &lt;- c(0, 1:4, 10)
+annot_trait &lt;- h2_enrich %&gt;%
+  mutate(`Trait Abbreviation` = paste(`Trait Abbreviation`, trait_id, sep = &quot;-&quot;)) %&gt;%
+  distinct(`GWAS Group`, `Trait Abbreviation`) %&gt;%
+  left_join(
+    distinct(coloc_fig_order, trait_type, trait_color),
+    by = c(&quot;GWAS Group&quot; = &quot;trait_type&quot;)
+  ) %&gt;%
+  column_to_rownames(var = &quot;Trait Abbreviation&quot;)
+annot_trait &lt;- annot_trait[rownames(h2_mat), ]
+
+
+row_ha &lt;- HeatmapAnnotation(&#39;Group&#39; = annot_trait$`GWAS Group`,
+                            col = list(&quot;Group&quot; = setNames(annot_trait$trait_color, annot_trait$`GWAS Group`)),
+                            which = &quot;row&quot;)
+
+
+Heatmap(-log10(h2_mat), 
+        name = &quot;-Log10p&quot;, #title of legend
+        column_title = &quot;Module&quot;, row_title = &quot;Trait&quot;,
+        row_names_gp = gpar(fontsize = 7), # Text size for row names
+        column_names_gp = gpar(fontsize = 7),
+        right_annotation = row_ha,
+        col = circlize::colorRamp2(col_break,
+                                   c(&quot;white&quot;, RColorBrewer::brewer.pal(n = length(col_break), name = &quot;Blues&quot;)[-1]))
+)</code></pre>
+<p><img src="vis_sldsc_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 4.1.2 (2021-11-01)
+## Platform: x86_64-conda-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.3 LTS
+## 
+## Matrix products: default
+## BLAS/LAPACK: /scratch/midway2/liliw1/conda_env/rstudio-server/lib/libopenblasp-r0.3.18.so
+## 
+## locale:
+##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+##  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+##  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+##  [1] ComplexHeatmap_2.10.0 data.table_1.14.2     forcats_0.5.1        
+##  [4] stringr_1.4.0         dplyr_1.0.7           purrr_0.3.4          
+##  [7] readr_2.1.2           tidyr_1.2.0           tibble_3.1.7         
+## [10] ggplot2_3.3.6         tidyverse_1.3.1      
+## 
+## loaded via a namespace (and not attached):
+##  [1] httr_1.4.2          sass_0.4.0          jsonlite_1.7.3     
+##  [4] foreach_1.5.2       modelr_0.1.8        bslib_0.3.1        
+##  [7] assertthat_0.2.1    highr_0.9           stats4_4.1.2       
+## [10] cellranger_1.1.0    yaml_2.2.2          pillar_1.7.0       
+## [13] backports_1.4.1     glue_1.6.2          digest_0.6.29      
+## [16] RColorBrewer_1.1-3  rvest_1.0.2         colorspace_2.0-3   
+## [19] htmltools_0.5.2     pkgconfig_2.0.3     GetoptLong_1.0.5   
+## [22] broom_0.7.12        haven_2.4.3         scales_1.2.0       
+## [25] tzdb_0.2.0          generics_0.1.2      farver_2.1.1       
+## [28] IRanges_2.28.0      ellipsis_0.3.2      withr_2.5.0        
+## [31] BiocGenerics_0.40.0 cli_3.3.0           magrittr_2.0.3     
+## [34] crayon_1.5.1        readxl_1.3.1        evaluate_0.14      
+## [37] fs_1.5.2            fansi_1.0.3         doParallel_1.0.17  
+## [40] xml2_1.3.3          tools_4.1.2         hms_1.1.1          
+## [43] GlobalOptions_0.1.2 lifecycle_1.0.1     matrixStats_0.61.0 
+## [46] S4Vectors_0.32.0    munsell_0.5.0       reprex_2.0.1       
+## [49] cluster_2.1.2       compiler_4.1.2      jquerylib_0.1.4    
+## [52] rlang_1.0.3         iterators_1.0.14    rstudioapi_0.13    
+## [55] circlize_0.4.15     rjson_0.2.21        rmarkdown_2.11     
+## [58] gtable_0.3.0        codetools_0.2-18    DBI_1.1.3          
+## [61] R6_2.5.1            lubridate_1.8.0     knitr_1.37         
+## [64] fastmap_1.1.0       utf8_1.2.2          clue_0.3-61        
+## [67] shape_1.4.6         stringi_1.7.6       parallel_4.1.2     
+## [70] Rcpp_1.0.8.3        vctrs_0.4.1         png_0.1-7          
+## [73] dbplyr_2.1.1        tidyselect_1.1.1    xfun_0.29</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

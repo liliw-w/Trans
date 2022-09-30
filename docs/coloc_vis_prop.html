@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Colocalization proportion of trans-eQTLs with GWAS loci</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Trans-PCO</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Vignettes
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="sim_null.html">Null simulations</a>
+    </li>
+    <li>
+      <a href="sim_alt.html">Power comparison in simulations</a>
+    </li>
+    <li>
+      <a href="rna_seq.html">Analyze a RNA-seq dataset</a>
+    </li>
+    <li>
+      <a href="vis_distri_sig.html">Visualize trans signals</a>
+    </li>
+    <li>
+      <a href="signal_cis.html">Cis genes of trans signals</a>
+    </li>
+    <li>
+      <a href="coloc_gwas.html">Colocalization analysis of trans loci and GWAS</a>
+    </li>
+    <li>
+      <a href="coloc_vis_prop.html">Colocalization proportion of trans-eQTLs</a>
+    </li>
+    <li>
+      <a href="sldsc.html">Perform S-LDSC</a>
+    </li>
+    <li>
+      <a href="vis_sldsc.html">Visualize the trait heritability enrichment</a>
+    </li>
+    <li>
+      <a href="coloc_cis.html">Colocalization analysis of trans loci and cis genes</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="ref.html">Reference</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/liliw-w/Trans">
+    <span class="fa fa-github"></span>
+     
+    Source
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Colocalization proportion of trans-eQTLs with GWAS loci</h1>
+
+</div>
+
+
+<div id="goal" class="section level2">
+<h2>Goal</h2>
+<p>To look at what the proportion of trans-eQTLs that are colocalized with each of the traits analyzed.</p>
+</div>
+<div id="proportion-of-trans-eqtls-coloc-with-traits" class="section level2">
+<h2>Proportion of trans-eQTLs coloc with traits</h2>
+<pre class="r"><code># I/O &amp; paras -----
+file_res_coloc_reg_prop1 &lt;- &#39;/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data/coloc_region_prop_merged.txt&#39;
+file_res_coloc_reg_prop2 &lt;- &#39;/project2/xuanyao/llw/coloc/immune_traits/pmid_all/coloc_region_prop_merged.txt&#39;
+file_res_coloc_reg_prop3 &lt;- &#39;/project2/xuanyao/llw/coloc/ukbb_coloc_more_traits/all_trait/data/coloc_region_prop_merged.txt&#39;
+
+
+# read files -----
+res_coloc_reg_prop1 &lt;- fread(file_res_coloc_reg_prop1, header = TRUE)
+res_coloc_reg_prop2 &lt;- fread(file_res_coloc_reg_prop2, header = TRUE)
+res_coloc_reg_prop3 &lt;- fread(file_res_coloc_reg_prop3, header = TRUE)
+
+res_coloc_reg_prop2$trait &lt;- res_coloc_reg_prop2$Phenocode
+res_coloc_reg_prop &lt;- rbind(res_coloc_reg_prop1, res_coloc_reg_prop2, res_coloc_reg_prop3)
+
+
+df_plt1 &lt;- res_coloc_reg_prop1 %&gt;%
+  arrange(desc(propPvalColocMerg)) %&gt;%
+  pivot_longer(cols = c(nRegionPvalMerg), names_to = &quot;if_merge&quot;, values_to = &quot;Num_reg&quot;) %&gt;%
+  pivot_longer(cols = c(nRegionPvalColocMerg), names_to = &quot;if_merge_coloc&quot;, values_to = &quot;Num_reg_coloc&quot;) %&gt;%
+  pivot_longer(cols = c(propPvalColocMerg), names_to = &quot;if_merge_prop&quot;, values_to = &quot;prop&quot;) %&gt;%
+  mutate(if_merge = replace(if_merge, if_merge == &quot;nRegionPvalMerg&quot;, &quot;(trans)&quot;),
+         if_merge_coloc = replace(if_merge_coloc, if_merge_coloc == &quot;nRegionPvalColocMerg&quot;, &quot;(coloc)&quot;),
+         trait_type = paste(&quot;Blood&quot;, if_merge),
+         trait_type_coloc = paste(&quot;Blood&quot;, if_merge_coloc),
+         trait_type_prop = paste(&quot;Blood&quot;, if_merge_prop))
+
+df_plt2 &lt;- res_coloc_reg_prop2 %&gt;%
+  arrange(desc(propPvalColocMerg)) %&gt;%
+  pivot_longer(cols = c(nRegionPvalMerg), names_to = &quot;if_merge&quot;, values_to = &quot;Num_reg&quot;) %&gt;%
+  pivot_longer(cols = c(nRegionPvalColocMerg), names_to = &quot;if_merge_coloc&quot;, values_to = &quot;Num_reg_coloc&quot;) %&gt;%
+  pivot_longer(cols = c(propPvalColocMerg), names_to = &quot;if_merge_prop&quot;, values_to = &quot;prop&quot;) %&gt;%
+  mutate(if_merge = replace(if_merge, if_merge == &quot;nRegionPvalMerg&quot;, &quot;(trans)&quot;),
+         if_merge_coloc = replace(if_merge_coloc, if_merge_coloc == &quot;nRegionPvalColocMerg&quot;, &quot;(coloc)&quot;),
+         trait_type = paste(&quot;Autoimmune&quot;, if_merge),
+         trait_type_coloc = paste(&quot;Autoimmune&quot;, if_merge_coloc),
+         trait_type_prop = paste(&quot;Autoimmune&quot;, if_merge_prop))
+
+df_plt3 &lt;- res_coloc_reg_prop3 %&gt;%
+  arrange(desc(propPvalColocMerg)) %&gt;%
+  pivot_longer(cols = c(nRegionPvalMerg), names_to = &quot;if_merge&quot;, values_to = &quot;Num_reg&quot;) %&gt;%
+  pivot_longer(cols = c(nRegionPvalColocMerg), names_to = &quot;if_merge_coloc&quot;, values_to = &quot;Num_reg_coloc&quot;) %&gt;%
+  pivot_longer(cols = c(propPvalColocMerg), names_to = &quot;if_merge_prop&quot;, values_to = &quot;prop&quot;) %&gt;%
+  mutate(if_merge = replace(if_merge, if_merge == &quot;nRegionPvalMerg&quot;, &quot;(trans)&quot;),
+         if_merge_coloc = replace(if_merge_coloc, if_merge_coloc == &quot;nRegionPvalColocMerg&quot;, &quot;(coloc)&quot;),
+         trait_type = paste(&quot;Other&quot;, if_merge),
+         trait_type_coloc = paste(&quot;Other&quot;, if_merge_coloc),
+         trait_type_prop = paste(&quot;Other&quot;, if_merge_prop))
+
+df_plt &lt;- rbind(df_plt1, df_plt2, df_plt3)
+
+
+# add trait order
+df_plt$trait &lt;- fct_inorder(factor(df_plt$trait))
+
+
+y_lim &lt;- max(unique(df_plt$Num_reg))
+y_nudge &lt;- 2
+
+
+base_plt &lt;- ggplot(df_plt, aes(x = trait)) +
+  geom_bar(aes(y = Num_reg, fill = trait_type), stat = &quot;identity&quot;, position = position_dodge(width = 1)) +
+  geom_bar(aes(y = Num_reg_coloc, fill = trait_type_coloc), stat = &quot;identity&quot;, position = position_dodge(width = 1)) +
+  geom_point(aes(y = prop*y_lim, color = trait_type_prop),
+             #position = position_dodge(width = 1),
+             show.legend = FALSE,
+             shape = 18, size = 2,
+             position = position_nudge(y = y_nudge)) +
+  geom_line(aes(y = prop*y_lim, group = trait_type_prop, color = trait_type_prop),
+            #position = position_dodge(width = 1),
+            show.legend = FALSE,
+            position = position_nudge(y = y_nudge)) +
+  labs(x = NULL, y = &quot;Number of regions&quot;, fill = &quot;Region&quot;, color = NULL)
+
+base_plt +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  scale_y_continuous(limits = c(0, y_lim),
+                     sec.axis = sec_axis(~./y_lim, name = &quot;Coloc Proportion&quot;)) +
+  #scale_fill_brewer(palette = &quot;Paired&quot;, direction = -1)
+  scale_fill_manual(
+    breaks = c(
+      &quot;Blood (trans)&quot;, &quot;Blood (coloc)&quot;,
+      &quot;Autoimmune (trans)&quot;, &quot;Autoimmune (coloc)&quot;, 
+      &quot;Other (trans)&quot;, &quot;Other (coloc)&quot;
+    ),
+    values = c(&quot;Blood (trans)&quot; = &quot;#d9eaf3&quot;, &quot;Autoimmune (trans)&quot; = &quot;#e2f3d4&quot;, &quot;Other (trans)&quot; = &quot;#fde0e0&quot;,
+               &quot;Blood (coloc)&quot; = &quot;#186191&quot;, &quot;Autoimmune (coloc)&quot; = &quot;#24731f&quot;, &quot;Other (coloc)&quot; = &quot;#9e1213&quot;)
+  ) +
+  scale_color_manual(
+    breaks = c(&quot;Blood propPvalColocMerg&quot;, &quot;Autoimmune propPvalColocMerg&quot;, &quot;Other propPvalColocMerg&quot;),
+    values = c(&quot;Blood propPvalColocMerg&quot; = &quot;blue&quot;,
+               &quot;Autoimmune propPvalColocMerg&quot; = &quot;#18e518&quot;,
+               &quot;Other propPvalColocMerg&quot; = &quot;#ff0000&quot;)
+  ) +
+  theme_classic() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10, face = &quot;bold&quot;),
+        #legend.background = element_rect(color = &quot;black&quot;, linetype = &quot;dashed&quot;),
+        legend.key.size= unit(0.5, &quot;cm&quot;),
+        
+        axis.line = element_line(colour=&quot;black&quot;),
+        plot.margin=unit(c(10,5,5,5),&quot;mm&quot;),
+        
+        #legend.margin = margin(-0.5,0,0,0, unit=&quot;cm&quot;),
+        
+        axis.text.x = element_text(angle = 60, hjust=1, vjust = 1, size = 8, color = &quot;black&quot;),
+        axis.text.y = element_text(colour = &quot;black&quot;, size = 10),
+        axis.title.y = element_text(size = 12),
+        axis.title.y.right = element_text(angle = 90),
+        axis.title.x = element_text(size = 12))</code></pre>
+<p><img src="coloc_vis_prop_files/figure-html/unnamed-chunk-1-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>Dots show the proportion. Light shade bars show the number of trans-eQTL loci for coloc. Dark shade bars show the coloc regions with the corresponding traits on x-axis. Color for trait types.</p>
+</div>
+<div id="look-into-the-coloc-regions-for-each-module" class="section level2">
+<h2>Look into the coloc regions for each module</h2>
+<p>Next, I further looked into what are those coloc regions for each trait exactly, in terms of what are the correpsonding module that coloc with the trait, and how many coloc regions for each (module, trait) pair.</p>
+<pre class="r"><code># I/O &amp; paras -----
+file_list_resColoc &lt;- c(
+  list.files(
+    &quot;/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits&quot;,
+    &quot;^.*coloc_reg_w_merged.txt$&quot;,
+    full.names = TRUE, recursive = TRUE
+  ) %&gt;% set_names(&quot;blood&quot;),
+  list.files(
+    &quot;/project2/xuanyao/llw/coloc/immune_traits&quot;,
+    &quot;^.*coloc_reg_w_merged.txt$&quot;,
+    full.names = TRUE, recursive = TRUE
+  ) %&gt;% set_names(&quot;immune&quot;),
+  list.files(
+    &quot;/project2/xuanyao/llw/coloc/ukbb_coloc_more_traits&quot;,
+    &quot;^.*coloc_reg_w_merged.txt$&quot;,
+    full.names = TRUE, recursive = TRUE
+  ) %&gt;% set_names(&quot;other&quot;)
+)
+file_trait_type &lt;- &#39;/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv&#39;
+
+# read files -----
+resColoc_all &lt;- lapply(file_list_resColoc, fread, header = TRUE, drop = &quot;Phenocode&quot;)
+resColoc_all &lt;- bind_rows(resColoc_all[(lapply(resColoc_all, nrow) %&gt;% unlist()) &gt; 0],
+                          .id = &quot;trait_type&quot;)
+trait_type_blood &lt;- fread(file_trait_type, header = TRUE, sep = &quot;,&quot;)
+
+
+# Figure data prep -----
+## assign more specific blood traits groups -----
+resColoc_all[resColoc_all$trait_type == &quot;blood&quot;, &quot;trait_type&quot;] &lt;- resColoc_all %&gt;%
+  filter(trait_type == &quot;blood&quot;) %&gt;%
+  left_join(trait_type_blood, by = c(&quot;trait&quot; = &quot;Trait Abbreviation&quot;)) %&gt;%
+  pull(`GWAS Group`)
+
+## summarize the number of un-merged and merged coloc regions for (module, trait) -----
+resPlot &lt;- resColoc_all %&gt;%
+  group_by(trait_type, trait, Module) %&gt;%
+  summarise(num_of_regions = n_distinct(Region),
+            num_of_regions_merg = n_distinct(merged_region)) %&gt;%
+  ungroup()</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;trait_type&#39;, &#39;trait&#39;. You can override
+## using the `.groups` argument.</code></pre>
+<pre class="r"><code>## set module order by num of coloc regions and change labels -----
+Module_order = resPlot %&gt;%
+  separate(Module, into = c(NA, &quot;module_num&quot;), sep = &quot;module&quot;, remove = FALSE, convert = TRUE) %&gt;%
+  group_by(Module, module_num) %&gt;%
+  summarise(n_coloc_regions = sum(num_of_regions),
+            n_coloc_regions_merg = sum(num_of_regions_merg),
+            n_coloc_trait = n()) %&gt;%
+  ungroup() %&gt;%
+  arrange(desc(n_coloc_trait), desc(n_coloc_regions_merg), desc(n_coloc_regions))</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;Module&#39;. You can override using the
+## `.groups` argument.</code></pre>
+<pre class="r"><code>resPlot$Module = factor(resPlot$Module,
+                        levels = Module_order$Module,
+                        labels = paste0(Module_order$module_num))
+
+## set phenotype order within each trait type by num of coloc regions -----
+pheno_order &lt;- resPlot %&gt;%
+  group_by(trait_type, trait) %&gt;%
+  summarise(n_coloc_regions = sum(num_of_regions),
+            n_coloc_regions_merg = sum(num_of_regions_merg),
+            n_coloc_m = n()) %&gt;%
+  ungroup() %&gt;%
+  group_by(trait_type) %&gt;%
+  arrange(n_coloc_m, n_coloc_regions_merg, n_coloc_regions, .by_group = TRUE) %&gt;%
+  ungroup()</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;trait_type&#39;. You can override using the
+## `.groups` argument.</code></pre>
+<pre class="r"><code>resPlot$trait = factor(resPlot$trait,
+                           levels = pheno_order$trait)
+
+## assign colocs to trait type -----
+resPlot &lt;- mutate(resPlot,
+                  &quot;trait_color&quot; = recode(trait_type,
+                                         &quot;Platelets&quot; = &quot;#0028a1&quot;,
+                                         &quot;Red blood cells&quot; = &quot;#85192d&quot;,
+                                         &quot;White blood cells&quot; = &quot;#e89c31&quot;,
+                                         &quot;immune&quot; = &quot;#339900&quot;,
+                                         &quot;other&quot; = &quot;black&quot;))
+axis_text_color &lt;- resPlot %&gt;% slice(match(levels(trait), trait))
+
+
+# tile plot of merged coloc regions for (module, trait) -----
+base_plt &lt;- ggplot(resPlot, aes(Module, trait)) +
+  geom_tile(aes(fill = num_of_regions_merg)) +
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  scale_fill_gradientn(colors = RColorBrewer::brewer.pal(8, &quot;Blues&quot;)[3:8],
+                       na.value = &quot;red&quot;,
+                       limits = c(0, max(c(resPlot$num_of_regions, resPlot$num_of_regions_merg)))) +
+  labs(y = NULL, x = &quot;Module&quot;, fill = &quot;Number of \n Coloc Regions&quot;)
+
+base_plt +
+  theme_classic() +
+  theme(
+    legend.title = element_text(size = 10, face = &quot;bold&quot;),
+    legend.background = element_rect(color = &quot;black&quot;, linetype = &quot;dashed&quot;),
+    axis.text.y = element_text(colour = axis_text_color$trait_color, size = 8),
+    axis.text.x = element_text(colour = &quot;black&quot;, size = 8,
+                               angle = 60, hjust = 1, vjust = 1)
+  )</code></pre>
+<pre><code>## Warning: Vectorized input to `element_text()` is not officially supported.
+## Results may be unexpected or may change in future versions of ggplot2.</code></pre>
+<p><img src="coloc_vis_prop_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 4.1.2 (2021-11-01)
+## Platform: x86_64-conda-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.3 LTS
+## 
+## Matrix products: default
+## BLAS/LAPACK: /scratch/midway2/liliw1/conda_env/rstudio-server/lib/libopenblasp-r0.3.18.so
+## 
+## locale:
+##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+##  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+##  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] data.table_1.14.2 forcats_0.5.1     stringr_1.4.0     dplyr_1.0.7      
+##  [5] purrr_0.3.4       readr_2.1.2       tidyr_1.2.0       tibble_3.1.7     
+##  [9] ggplot2_3.3.6     tidyverse_1.3.1  
+## 
+## loaded via a namespace (and not attached):
+##  [1] tidyselect_1.1.1   xfun_0.29          bslib_0.3.1        haven_2.4.3       
+##  [5] colorspace_2.0-3   vctrs_0.4.1        generics_0.1.2     htmltools_0.5.2   
+##  [9] yaml_2.2.2         utf8_1.2.2         rlang_1.0.3        jquerylib_0.1.4   
+## [13] pillar_1.7.0       withr_2.5.0        glue_1.6.2         DBI_1.1.3         
+## [17] RColorBrewer_1.1-3 dbplyr_2.1.1       modelr_0.1.8       readxl_1.3.1      
+## [21] lifecycle_1.0.1    cellranger_1.1.0   munsell_0.5.0      gtable_0.3.0      
+## [25] rvest_1.0.2        evaluate_0.14      labeling_0.4.2     knitr_1.37        
+## [29] tzdb_0.2.0         fastmap_1.1.0      fansi_1.0.3        highr_0.9         
+## [33] broom_0.7.12       Rcpp_1.0.8.3       backports_1.4.1    scales_1.2.0      
+## [37] jsonlite_1.7.3     farver_2.1.1       fs_1.5.2           hms_1.1.1         
+## [41] digest_0.6.29      stringi_1.7.6      grid_4.1.2         cli_3.3.0         
+## [45] tools_4.1.2        magrittr_2.0.3     sass_0.4.0         crayon_1.5.1      
+## [49] pkgconfig_2.0.3    ellipsis_0.3.2     xml2_1.3.3         reprex_2.0.1      
+## [53] lubridate_1.8.0    assertthat_0.2.1   rmarkdown_2.11     httr_1.4.2        
+## [57] rstudioapi_0.13    R6_2.5.1           compiler_4.1.2</code></pre>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

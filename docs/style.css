@@ -7,13 +7,25 @@ body {
 
 
 /* Header font */
+h1 {
+  font-size: 22pt;
+}
+h2 {
+  font-size: 20pt;
+}
+h3 {
+  font-size: 16pt;
+}
+h4 {
+  font-size: 12pt;
+}
+
 h1,
 h2,
 h3,
 h4 {
   color: #323232;
   font-family: 'Helvetica', 'Helvetica','Helvetica';
-  font-size: 20pt;
 }
 
 

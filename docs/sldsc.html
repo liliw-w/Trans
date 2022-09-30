@@ -11,7 +11,7 @@
 
 
 
-<title>Partitioned LD score regression</title>
+<title>Enrichment of trait heritability in gene modules</title>
 
 <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -331,19 +331,34 @@ div.tocify {
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="mini_example.html">A minimal example</a>
+      <a href="sim_null.html">Null simulations</a>
     </li>
     <li>
-      <a href="simulation.html">A simple simulation</a>
+      <a href="sim_alt.html">Power comparison in simulations</a>
     </li>
     <li>
-      <a href="vis.html">Visualization</a>
+      <a href="rna_seq.html">Analyze a RNA-seq dataset</a>
     </li>
     <li>
-      <a href="coloc.html">Colocalization</a>
+      <a href="vis_distri_sig.html">Visualize trans signals</a>
     </li>
     <li>
-      <a href="sldsc.html">Partitioned LD score regression</a>
+      <a href="signal_cis.html">Cis genes of trans signals</a>
+    </li>
+    <li>
+      <a href="coloc_gwas.html">Colocalization analysis of trans loci and GWAS</a>
+    </li>
+    <li>
+      <a href="coloc_vis_prop.html">Colocalization proportion of trans-eQTLs</a>
+    </li>
+    <li>
+      <a href="sldsc.html">Perform S-LDSC</a>
+    </li>
+    <li>
+      <a href="vis_sldsc.html">Visualize the trait heritability enrichment</a>
+    </li>
+    <li>
+      <a href="coloc_cis.html">Colocalization analysis of trans loci and cis genes</a>
     </li>
   </ul>
 </li>
@@ -368,12 +383,440 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Partitioned LD score regression</h1>
+<h1 class="title toc-ignore">Enrichment of trait heritability in gene modules</h1>
 
 </div>
 
 
+<div id="goal" class="section level2">
+<h2>Goal</h2>
+<p>To evaluate the enrichment of trait heritability in gene modules by stratified LD score regression (S_LDSC).</p>
+</div>
+<div id="perform-s-ldsc" class="section level2">
+<h2>Perform S-LDSC</h2>
+<p>I compiled the workflow to perform S-LDSc into a snakemake file. Specifically, there are a few main steps,</p>
+<ol style="list-style-type: decimal">
+<li><p>Prepare gene sets for each module.</p></li>
+<li><p>Make annotations for genes in each module by using SNPs within genes and an additional buffer region (100kb) around genes.</p></li>
+<li><p>Calcualte LD scores for annotations.</p></li>
+<li><p>Reformat GWAS sum stats.</p></li>
+<li><p>Calculate the partitioned heritability enrichment for each pair of (module, trait).</p></li>
+</ol>
+<pre class="bash"><code>Nmodule=166
 
+module_seq=list(range(1, Nmodule+1))
+module_seq.remove(4)
+module_seq.remove(66)
+
+MODULE=[&#39;M&#39; + str(x) for x in module_seq]
+CHR=list(range(1, 23))
+
+
+path=&#39;/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv&#39;
+with open(path) as f:
+    lines = [x.split(&quot;,&quot;)[1] for x in f]
+trait_seq=lines[1:]
+
+
+rule all:
+  input:
+    expand(&#39;h2_enrich_par/{gwasPhenocode}_{module}_baseline.results&#39;, module=MODULE, gwasPhenocode=trait_seq)
+
+
+rule prep_gene_set:
+  input:
+    file_gene_meta=&#39;/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/gene.meta.txt&#39;
+    file_coexp_module=&#39;/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/coexp.module.rds&#39;
+  output:
+    expand(&#39;geneset/{module}.GeneSet&#39;, module=MODULE)
+  script:
+    &#39;/home/liliw1/Trans/ldsc/1_prep_gene_set.R&#39;
+
+
+rule make_annot:
+  input:
+    expand(&#39;geneset/{module}.GeneSet&#39;, module=MODULE)
+  output:
+    expand(&#39;ldsc_annot/{module}.{chr}.annot.gz&#39;, chr=CHR, allow_missing=True)
+  shell:
+    &quot;&quot;&quot;
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/2_make_annot.sh {wildcards.module}
+    &quot;&quot;&quot;
+
+rule ldsc_annot:
+  input:
+    expand(&#39;ldsc_annot/{module}.{chr}.annot.gz&#39;, chr=CHR, allow_missing=True)
+  output:
+    expand(&#39;ldsc_annot/{module}.{chr}.l2.ldscore.gz&#39;, chr=CHR, allow_missing=True)
+  shell:
+    &quot;&quot;&quot;
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/3_ldsc_annot.sh {wildcards.module}
+    &quot;&quot;&quot;
+
+rule prep_gwas:
+  input:
+  params:
+    gwasPhenocode=&#39;{gwasPhenocode}&#39;
+  output:
+    &#39;gwas/{gwasPhenocode}.tsv.gz&#39;
+  script:
+    &#39;/home/liliw1/Trans/ldsc/5_1_prep_gwas.R&#39;
+
+rule convert_gwas:
+  input:
+    &#39;gwas/{gwasPhenocode}.tsv.gz&#39;
+  output:
+    &#39;gwas/{gwasPhenocode}.sumstats.gz&#39;
+  shell:
+    &quot;&quot;&quot;
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/5_2_convert_gwas.sh {wildcards.gwasPhenocode}
+    &quot;&quot;&quot;
+
+rule par_h2:
+  input:
+    expand(&#39;ldsc_annot/{module}.{chr}.annot.gz&#39;, chr=CHR, allow_missing=True),
+    expand(&#39;ldsc_annot/{module}.{chr}.l2.ldscore.gz&#39;, chr=CHR, allow_missing=True),
+    expand(&#39;gwas/{gwasPhenocode}.sumstats.gz&#39;, gwasPhenocode=trait_seq)
+  output:
+    expand(&#39;h2_enrich_par/{gwasPhenocode}_{module}_baseline.results&#39;, gwasPhenocode=trait_seq, allow_missing=True)
+  shell:
+    &quot;&quot;&quot;
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/6_1_ldsc_h2.sh {wildcards.module}
+    &quot;&quot;&quot;</code></pre>
+</div>
+<div id="assemble-heritability-enrichment-in-a-module-across-all-traits" class="section level2">
+<h2>Assemble heritability enrichment in a module across all traits</h2>
+<p>Next, I compiled the S-LDSC results of a module for all traits into one file. In total, there are 166 modules. Here, I take one module (module 4) for an example.</p>
+<pre class="r"><code># paras and I/O -----
+module &lt;- 4
+
+files_par_h2 &lt;- list.files(&#39;/project2/xuanyao/llw/ldsc/h2_enrich_par&#39;, paste0(&quot;^\\d+_M&quot;, module, &quot;_baseline.results&quot;), full.names = TRUE)
+file_gwasTraitInfo &lt;- &#39;/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv&#39;
+
+# read data -----
+par_h2 &lt;- map_dfr(
+  files_par_h2,
+  ~fread(cmd = paste(&quot;sed -n -e 1p -e 99p&quot;, .x), sep = &quot;\t&quot;)
+)
+if(!all(par_h2$Category == &quot;L2_1&quot;)) stop(&quot;Not all extracted rows are from custom annotation.&quot;)
+
+gwasTraitInfo &lt;- fread(file_gwasTraitInfo, sep = &quot;,&quot;, header = TRUE)
+
+
+# re-arrange data -----
+# add annotation name &amp; trait info
+par_h2 &lt;- par_h2 %&gt;%
+  mutate(Category = str_extract(basename(!!files_par_h2), paste0(&quot;^\\d+_M&quot;, !!module))) %&gt;%
+  separate(Category, c(&quot;trait_id&quot;, &quot;module&quot;), sep = &quot;_&quot;, remove = FALSE, convert = TRUE) %&gt;%
+  separate(module, c(NA, &quot;module&quot;), sep = &quot;M&quot;, convert = TRUE) %&gt;%
+  left_join(gwasTraitInfo, by = c(&quot;trait_id&quot; = &quot;GWAS ID&quot;)) %&gt;%
+  relocate(`GWAS Group`, `GWAS Trait`, `Trait Abbreviation`, .after = trait_id)</code></pre>
+<p>The enrichment of module 4 across traits,</p>
+<pre class="r"><code>filter(par_h2, complete.cases(par_h2)) %&gt;%
+  select(trait_id, `GWAS Group`, `GWAS Trait`, Enrichment, Enrichment_std_error, Enrichment_p) %&gt;%
+  arrange(Enrichment_p) %&gt;%
+  knitr::kable()</code></pre>
+<table>
+<colgroup>
+<col width="7%" />
+<col width="15%" />
+<col width="37%" />
+<col width="9%" />
+<col width="18%" />
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">trait_id</th>
+<th align="left">GWAS Group</th>
+<th align="left">GWAS Trait</th>
+<th align="right">Enrichment</th>
+<th align="right">Enrichment_std_error</th>
+<th align="right">Enrichment_p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">30100</td>
+<td align="left">Platelets</td>
+<td align="left">Mean platelet volume</td>
+<td align="right">6.6765352</td>
+<td align="right">1.2648330</td>
+<td align="right">0.0000122</td>
+</tr>
+<tr class="even">
+<td align="right">30080</td>
+<td align="left">Platelets</td>
+<td align="left">Platelet count</td>
+<td align="right">3.9722416</td>
+<td align="right">0.6876781</td>
+<td align="right">0.0000149</td>
+</tr>
+<tr class="odd">
+<td align="right">30110</td>
+<td align="left">Platelets</td>
+<td align="left">Platelet distribution width</td>
+<td align="right">6.4866017</td>
+<td align="right">1.3775005</td>
+<td align="right">0.0000703</td>
+</tr>
+<tr class="even">
+<td align="right">30000</td>
+<td align="left">White blood cells</td>
+<td align="left">White blood cell count</td>
+<td align="right">1.7044407</td>
+<td align="right">0.2371545</td>
+<td align="right">0.0031285</td>
+</tr>
+<tr class="odd">
+<td align="right">30090</td>
+<td align="left">Platelets</td>
+<td align="left">Platelet crit</td>
+<td align="right">2.6319136</td>
+<td align="right">0.5896392</td>
+<td align="right">0.0054441</td>
+</tr>
+<tr class="even">
+<td align="right">30070</td>
+<td align="left">Red blood cells</td>
+<td align="left">Red blood cell distribution width</td>
+<td align="right">2.4668573</td>
+<td align="right">0.5518419</td>
+<td align="right">0.0086231</td>
+</tr>
+<tr class="odd">
+<td align="right">30180</td>
+<td align="left">White blood cells</td>
+<td align="left">Lymphocyte percentage</td>
+<td align="right">1.9901747</td>
+<td align="right">0.3821117</td>
+<td align="right">0.0096199</td>
+</tr>
+<tr class="even">
+<td align="right">30140</td>
+<td align="left">White blood cells</td>
+<td align="left">Neutrophill count</td>
+<td align="right">1.7197007</td>
+<td align="right">0.2894397</td>
+<td align="right">0.0136088</td>
+</tr>
+<tr class="odd">
+<td align="right">30010</td>
+<td align="left">Red blood cells</td>
+<td align="left">Red blood cell count</td>
+<td align="right">2.0065541</td>
+<td align="right">0.4148286</td>
+<td align="right">0.0150241</td>
+</tr>
+<tr class="even">
+<td align="right">30120</td>
+<td align="left">White blood cells</td>
+<td align="left">Lymphocyte count</td>
+<td align="right">1.8146372</td>
+<td align="right">0.3372063</td>
+<td align="right">0.0177686</td>
+</tr>
+<tr class="odd">
+<td align="right">30250</td>
+<td align="left">Red blood cells</td>
+<td align="left">Reticulocyte count</td>
+<td align="right">2.7844407</td>
+<td align="right">0.7293367</td>
+<td align="right">0.0202140</td>
+</tr>
+<tr class="even">
+<td align="right">30200</td>
+<td align="left">White blood cells</td>
+<td align="left">Neutrophill percentage</td>
+<td align="right">1.9836064</td>
+<td align="right">0.4284491</td>
+<td align="right">0.0209660</td>
+</tr>
+<tr class="odd">
+<td align="right">30240</td>
+<td align="left">Red blood cells</td>
+<td align="left">Reticulocyte percentage</td>
+<td align="right">2.9140927</td>
+<td align="right">0.7922800</td>
+<td align="right">0.0219897</td>
+</tr>
+<tr class="even">
+<td align="right">30300</td>
+<td align="left">Red blood cells</td>
+<td align="left">High light scatter reticulocyte count</td>
+<td align="right">2.6861645</td>
+<td align="right">0.7292037</td>
+<td align="right">0.0274268</td>
+</tr>
+<tr class="odd">
+<td align="right">30290</td>
+<td align="left">Red blood cells</td>
+<td align="left">High light scatter reticulocyte percentage</td>
+<td align="right">2.7459781</td>
+<td align="right">0.7675678</td>
+<td align="right">0.0300567</td>
+</tr>
+<tr class="even">
+<td align="right">30020</td>
+<td align="left">Red blood cells</td>
+<td align="left">Haemoglobin concentration</td>
+<td align="right">1.6980012</td>
+<td align="right">0.3276797</td>
+<td align="right">0.0317306</td>
+</tr>
+<tr class="odd">
+<td align="right">30270</td>
+<td align="left">Red blood cells</td>
+<td align="left">Mean sphered cell volume</td>
+<td align="right">1.9486126</td>
+<td align="right">0.4529099</td>
+<td align="right">0.0363589</td>
+</tr>
+<tr class="even">
+<td align="right">30030</td>
+<td align="left">Red blood cells</td>
+<td align="left">Haematocrit percentage</td>
+<td align="right">1.7133299</td>
+<td align="right">0.3475986</td>
+<td align="right">0.0385278</td>
+</tr>
+<tr class="odd">
+<td align="right">30260</td>
+<td align="left">Red blood cells</td>
+<td align="left">Mean reticulocyte volume</td>
+<td align="right">2.2668847</td>
+<td align="right">0.6506316</td>
+<td align="right">0.0490014</td>
+</tr>
+<tr class="even">
+<td align="right">30050</td>
+<td align="left">Red blood cells</td>
+<td align="left">Mean corpuscular haemoglobin</td>
+<td align="right">2.7048509</td>
+<td align="right">0.8835458</td>
+<td align="right">0.0561511</td>
+</tr>
+<tr class="odd">
+<td align="right">30040</td>
+<td align="left">Red blood cells</td>
+<td align="left">Mean corpuscular volume</td>
+<td align="right">2.5563837</td>
+<td align="right">0.8236809</td>
+<td align="right">0.0617733</td>
+</tr>
+<tr class="even">
+<td align="right">30280</td>
+<td align="left">Red blood cells</td>
+<td align="left">Immature reticulocyte fraction</td>
+<td align="right">2.7713588</td>
+<td align="right">0.9290462</td>
+<td align="right">0.0666886</td>
+</tr>
+<tr class="odd">
+<td align="right">30190</td>
+<td align="left">White blood cells</td>
+<td align="left">Monocyte percentage</td>
+<td align="right">1.4886842</td>
+<td align="right">0.3374385</td>
+<td align="right">0.1352258</td>
+</tr>
+<tr class="even">
+<td align="right">30130</td>
+<td align="left">White blood cells</td>
+<td align="left">Monocyte count</td>
+<td align="right">1.3673806</td>
+<td align="right">0.2700425</td>
+<td align="right">0.1624942</td>
+</tr>
+<tr class="odd">
+<td align="right">30060</td>
+<td align="left">Red blood cells</td>
+<td align="left">Mean corpuscular haemoglobin concentration</td>
+<td align="right">1.7191593</td>
+<td align="right">0.6399688</td>
+<td align="right">0.2597777</td>
+</tr>
+<tr class="even">
+<td align="right">30210</td>
+<td align="left">White blood cells</td>
+<td align="left">Eosinophill percentage</td>
+<td align="right">0.7715102</td>
+<td align="right">0.2304061</td>
+<td align="right">0.3313856</td>
+</tr>
+<tr class="odd">
+<td align="right">30150</td>
+<td align="left">White blood cells</td>
+<td align="left">Eosinophill count</td>
+<td align="right">0.8082552</td>
+<td align="right">0.2608841</td>
+<td align="right">0.4680572</td>
+</tr>
+<tr class="even">
+<td align="right">30220</td>
+<td align="left">White blood cells</td>
+<td align="left">Basophill percentage</td>
+<td align="right">1.1889507</td>
+<td align="right">0.4896314</td>
+<td align="right">0.6946688</td>
+</tr>
+<tr class="odd">
+<td align="right">30160</td>
+<td align="left">White blood cells</td>
+<td align="left">Basophill count</td>
+<td align="right">0.8833706</td>
+<td align="right">0.4909206</td>
+<td align="right">0.8118197</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 4.1.2 (2021-11-01)
+## Platform: x86_64-conda-linux-gnu (64-bit)
+## Running under: Ubuntu 20.04.3 LTS
+## 
+## Matrix products: default
+## BLAS/LAPACK: /scratch/midway2/liliw1/conda_env/rstudio-server/lib/libopenblasp-r0.3.18.so
+## 
+## locale:
+##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+##  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+##  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] data.table_1.14.2 forcats_0.5.1     stringr_1.4.0     dplyr_1.0.7      
+##  [5] purrr_0.3.4       readr_2.1.2       tidyr_1.2.0       tibble_3.1.7     
+##  [9] ggplot2_3.3.6     tidyverse_1.3.1  
+## 
+## loaded via a namespace (and not attached):
+##  [1] tidyselect_1.1.1 xfun_0.29        bslib_0.3.1      haven_2.4.3     
+##  [5] colorspace_2.0-3 vctrs_0.4.1      generics_0.1.2   htmltools_0.5.2 
+##  [9] yaml_2.2.2       utf8_1.2.2       rlang_1.0.3      jquerylib_0.1.4 
+## [13] pillar_1.7.0     withr_2.5.0      glue_1.6.2       DBI_1.1.3       
+## [17] dbplyr_2.1.1     modelr_0.1.8     readxl_1.3.1     lifecycle_1.0.1 
+## [21] cellranger_1.1.0 munsell_0.5.0    gtable_0.3.0     rvest_1.0.2     
+## [25] evaluate_0.14    knitr_1.37       tzdb_0.2.0       fastmap_1.1.0   
+## [29] fansi_1.0.3      highr_0.9        broom_0.7.12     Rcpp_1.0.8.3    
+## [33] backports_1.4.1  scales_1.2.0     jsonlite_1.7.3   fs_1.5.2        
+## [37] hms_1.1.1        digest_0.6.29    stringi_1.7.6    grid_4.1.2      
+## [41] cli_3.3.0        tools_4.1.2      magrittr_2.0.3   sass_0.4.0      
+## [45] crayon_1.5.1     pkgconfig_2.0.3  ellipsis_0.3.2   xml2_1.3.3      
+## [49] reprex_2.0.1     lubridate_1.8.0  assertthat_0.2.1 rmarkdown_2.11  
+## [53] httr_1.4.2       rstudioapi_0.13  R6_2.5.1         compiler_4.1.2</code></pre>
+</div>
 
 
 
