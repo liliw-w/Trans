@@ -8,9 +8,10 @@ library(tidyverse)
 
 
 ### paras and I/O
+ratio <- 50
 thre_p_z <- 1e-4
-ratio <- 100
 n_SNP <- 9918
+fdr_level <- 0.1
 
 
 file_p_all <- 'p/p.module_all.Sigma_nullz.rds'
@@ -32,7 +33,7 @@ module_use <- pull(module_use, module)
 
 ### use Bonforroni correction based on the remained modules
 n_module <- length(module_use)
-p_thre <- 0.05/n_SNP/n_module
+p_thre <- fdr_level/n_SNP/n_module
 
 
 ### extract signals
