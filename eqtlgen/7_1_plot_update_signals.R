@@ -8,7 +8,7 @@ source("~/Trans/plot/theme_my_pub.R")
 
 
 ### paras and I/O
-ratio <- 100
+ratio <- 50
 file_signal <- paste0('postanalysis/signal_rm_infl_ratio_', ratio, '.txt')
 
 file_plot_module <- paste0('plot/signal_module_rm_infl_ratio_', ratio, '.pdf')
