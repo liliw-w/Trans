@@ -21,25 +21,14 @@ rule all:
     expand('h2_enrich_par/{gwasPhenocode}_{module}_baseline.results', module=MODULE, gwasPhenocode=trait_seq)
 
 
-rule prep_gwas:
+rule prep_gene_set:
   input:
-  params:
-    gwasPhenocode='{gwasPhenocode}'
+    file_gene_meta='/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/gene.meta.txt'
+    file_coexp_module='/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/coexp.module.rds'
   output:
-    'gwas/{gwasPhenocode}.tsv.gz'
+    expand('geneset/{module}.GeneSet', module=MODULE)
   script:
-    '/home/liliw1/Trans/ldsc/5_1_prep_gwas.R'
-
-rule convert_gwas:
-  input:
-    'gwas/{gwasPhenocode}.tsv.gz'
-  output:
-    'gwas/{gwasPhenocode}.sumstats.gz'
-  shell:
-    """
-    source activate ldsc
-    bash /home/liliw1/Trans/ldsc/5_2_convert_gwas.sh {wildcards.gwasPhenocode}
-    """
+    '/home/liliw1/Trans/ldsc/1_prep_gene_set.R'
 
 
 rule make_annot:
@@ -64,6 +53,26 @@ rule ldsc_annot:
     bash /home/liliw1/Trans/ldsc/3_ldsc_annot.sh {wildcards.module}
     """
 
+rule prep_gwas:
+  input:
+  params:
+    gwasPhenocode='{gwasPhenocode}'
+  output:
+    'gwas/{gwasPhenocode}.tsv.gz'
+  script:
+    '/home/liliw1/Trans/ldsc/5_1_prep_gwas.R'
+
+rule convert_gwas:
+  input:
+    'gwas/{gwasPhenocode}.tsv.gz'
+  output:
+    'gwas/{gwasPhenocode}.sumstats.gz'
+  shell:
+    """
+    source activate ldsc
+    bash /home/liliw1/Trans/ldsc/5_2_convert_gwas.sh {wildcards.gwasPhenocode}
+    """
+
 rule par_h2:
   input:
     expand('ldsc_annot/{module}.{chr}.annot.gz', chr=CHR, allow_missing=True),
@@ -74,5 +83,5 @@ rule par_h2:
   shell:
     """
     source activate ldsc
-    bash /home/liliw1/Trans/ldsc/6_ldsc_par_h2.sh {wildcards.module}
+    bash /home/liliw1/Trans/ldsc/6_1_ldsc_h2.sh {wildcards.module}
     """
