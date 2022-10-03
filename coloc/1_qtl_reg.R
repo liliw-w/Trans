@@ -7,16 +7,15 @@ library(data.table)
 library(tidyverse)
 
 # I/O & paras -----
-script_cal_maf <- "cal_maf.sh"
-dir_geno <- "/project2/xuanyao/llw/DGN/data/"
+script_cal_maf <- "/home/liliw1/Trans/followup/cal_maf.sh"
+dir_geno <- " /project2/xuanyao/llw/DGN_data/geno/"
 dir_p <- "/project2/xuanyao/llw/MODULES/MSigDB/p/"
 Nmodule <- 50
-module_seq <- 1:Nmodule
 p_included_thre <- 1e-5
 dis_reg <- 1e5
 
 file_snp_meta_qtl <- "/project2/xuanyao/llw/coloc/snp.meta.qtl.txt.gz"
-file_qtlMaf <- "/project2/xuanyao/llw/DGN/data/chr_all.frq"
+file_qtlMaf <- " /project2/xuanyao/llw/DGN_data/geno/chr_all.frq"
 
 ## output -----
 file_qtlColocReg <- "/scratch/midway2/liliw1/coloc_MSigDB/qtlColocReg.txt.gz"
@@ -24,7 +23,7 @@ file_qtlColocReg <- "/scratch/midway2/liliw1/coloc_MSigDB/qtlColocReg.txt.gz"
 
 # Define regions -----
 qtlColocReg <- NULL
-for(module in module_seq){
+for(module in 1:Nmodule){
   ## read p -----
   file.p <- as.character(outer(module, 1:22, FUN = function(x, y) paste0("p.module", x, ".chr", y, ".rds")))
   
@@ -46,8 +45,7 @@ for(module in module_seq){
     unite(col = "SNP_ID", c("Chr", "Pos"), sep = ":", remove = FALSE) %>%
     arrange(Pval) %>%
     mutate(Region = "") %>% mutate(Included = FALSE)
-  # tmpqtlColocReg <- tmpqtlColocReg %>% filter(Pval < p_included_thre)
-
+  
   ## Find the lead SNP of a region and define the region -----
   lSignal <- tmpqtlColocReg[1, ]
   while (lSignal$Pval <= p_included_thre) {
@@ -62,9 +60,8 @@ for(module in module_seq){
 
   }
   
-  #fwrite(qtlColocReg, file_qtlColocReg, quote = FALSE, sep = "\t")
+  
   cat("coloc region defined for module", module, ", out of", Nmodule, "modules.", "\n")
-
 }
 
 
@@ -73,7 +70,7 @@ snp_meta_qtl <- fread(file_snp_meta_qtl)
 qtlColocReg <- left_join(x = qtlColocReg, y = snp_meta_qtl, by = c("SNP_ID", "Chr", "Pos"))
 
 
-# add MAF column, MAF calcualted from plink -----
+# add MAF column, MAF calculated by plink -----
 if(!file.exists(file_qtlMaf)){
   cmd <- paste("bash", script_cal_maf, dir_geno)
   system(cmd)
