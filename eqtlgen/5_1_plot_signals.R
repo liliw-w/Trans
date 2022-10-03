@@ -4,7 +4,7 @@
 rm(list = ls())
 library(data.table)
 library(tidyverse)
-source("~/Trans/followup/theme_my_pub.R")
+source("~/Trans/plot/theme_my_pub.R")
 
 
 file_signal <- 'postanalysis/signal.txt'
