@@ -7,8 +7,8 @@ library(tidyverse)
 
 
 # I/O & paras -----
-file.qtl <- 'FDR/signals.chr.module.perm10.fdr10.txt'
-file.gene.meta <- '/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt'
+file_qtl <- 'FDR/signals.chr.module.perm10.fdr10.txt'
+file_gene_meta <- '/project2/xuanyao/data/mappability/gencode.v19.annotation.table.txt'
 dis_cis <- 1e+6
 
 ## output -----
@@ -17,8 +17,8 @@ file_signal_cis_genes <- 'postanalysis/signal_cis_genes.txt'
 
 
 # read files -----
-qtl <- fread(file.qtl, header = FALSE, col.names = c("signal", "p", "q"))
-gene.meta <- fread(file.gene.meta, header = TRUE)
+qtl <- fread(file_qtl, header = FALSE, col.names = c("signal", "p", "q"))
+gene.meta <- fread(file_gene_meta, header = TRUE)
 
 
 # organize data -----
