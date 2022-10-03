@@ -10,7 +10,7 @@ file_signal <- 'postanalysis/signal.txt'
 file_signal_uniq <- 'postanalysis/signal_uniq.txt'
 
 ### use Bonforroni correction
-p_thre <- 0.05/9918/166
+p_thre <- 0.1/9918/166
 
 
 ### read data
