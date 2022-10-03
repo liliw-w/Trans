@@ -14,7 +14,7 @@ file_list_resColoc <- list.files(
 )
 file_reg_merged <- "/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data/qtl_region_merged.txt"
 
-file_res_coloc_reg_prop <- 'coloc_region_prop_merged.txt'
+file_res_coloc_reg_prop <- 'data/coloc_region_prop_merged.txt'
 
 
 # read files -----
