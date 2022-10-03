@@ -50,7 +50,8 @@ ratio <- n_nullz_seq / K
 
 
 ## assign names to p's with their correspoding sigma -----
-colnames(p_all)[-1] <- paste0("Nnull", n_nullz_seq, "_Ratio", ratio)
+#colnames(p_all)[-1] <- paste0("Nnull", n_nullz_seq, "_Ratio", ratio)
+colnames(p_all)[-1] <- paste0("Ratio=", ratio)
 colnames(p_all)[1] <- paste0("Real Sigma")
 
 ## format plt title -----
@@ -93,15 +94,20 @@ saveRDS(plt_obj, paste0(file_plot_hist, ".rds"))
 
 ## 2. QQ-plot -----
 fig <- qqplot(p_all,
+              is_group_numerical_order = TRUE,
               group_title = "Sigma",
               group_order = colnames(p_all)[c(1, order(ratio, decreasing = TRUE) + 1)])
 plt_obj <- fig +
   labs(title = plt_title) +
   theme(text = element_text(size = 6),
         plot.title = element_text(size = 16),
+        legend.position = "none",
         legend.title = element_text(angle = 90),
         legend.text = element_text(size = 10)) +
   guides(shape = guide_legend(ncol = 3, override.aes = list(size = 3)))
+
+ggsave("tmp.pdf", plt_obj, width = 4, height = 4, useDingbats = TRUE)
+
 
 ggsave(file_plot_qq, plt_obj, width = 6, height = 6, useDingbats = TRUE)
 saveRDS(plt_obj, paste0(file_plot_qq, ".rds"))
