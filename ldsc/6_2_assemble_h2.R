@@ -12,6 +12,7 @@ module <- 66
 files_par_h2 <- list.files('h2_enrich_par', paste0("^\\d+_M", module, "_baseline.results"), full.names = TRUE)
 file_gwasTraitInfo <- '/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv'
 
+## output -----
 file_out <- paste0('h2_enrich_par/M', module, '_all_traits.results')
 
 
