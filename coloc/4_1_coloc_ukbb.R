@@ -18,18 +18,24 @@ pop <- "EUR"
 pp4Thre <- 0.75
 csThre <- 0.95
 
-file_qtlColocReg_gwas <- paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".qtlColocReg_gwas.txt.gz")
-file_gwasColocReg <- paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasColocReg.txt.gz")
-file_gwasRegTruncPthre <- paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".gwasRegTruncPthre.txt")
-file_gwasTraitInfo <- "/scratch/midway2/liliw1/UKB_nealelab/phenotype_manifest.tsv.bgz"
+## coloc directory for the trait
+dir_coloc_gwas <- list.files(
+  "/scratch/midway2/liliw1/coloc_MSigDB",
+  pattern = paste0("ukbb_continuous_", gwasPhenocode),
+  full.names = TRUE
+)
+file_qtlColocReg_gwas <- paste(dir_coloc_gwas, "data/qtlColocReg_gwas.txt.gz", sep = '/')
+file_gwasColocReg <- paste(dir_coloc_gwas, "data/gwasColocReg.txt.gz", sep = '/')
+file_gwasRegTruncPthre <- paste(dir_coloc_gwas, "data/gwasRegTruncPthre.txt", sep = '/')
+file_gwasTraitInfo <- "/project2/xuanyao/llw/GWAS/UKB_nealelab/phenotype_manifest.tsv.bgz"
 
-# Add p-value and trait info
-file_qtlColocReg <- "/scratch/midway2/liliw1/coloc/data/qtlColocReg.txt.gz"
-file_trait_info <- "/scratch/midway2/liliw1/coloc/ukbb_blood_traits.csv"
+## Add p-value and trait info
+file_qtlColocReg <- "/scratch/midway2/liliw1/coloc_MSigDB/qtlColocReg.txt.gz"
+file_blood_trait_info <- "/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/ukbb_blood_traits.csv"
 
 ## output -----
-file_resColoc <- paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".resColoc.txt.gz")
-file_resColocSNP <- paste0("/scratch/midway2/liliw1/coloc/data/pheno", gwasPhenocode, ".resColocSNP.txt.gz")
+file_resColoc <- paste(dir_coloc_gwas, "data/resColoc.txt.gz", sep = '/')
+file_resColocSNP <- paste(dir_coloc_gwas, "data/resColocSNP.txt.gz", sep = '/')
 
 
 # read files -----
@@ -42,7 +48,7 @@ gwasTraitInfoCol <- c("trait_type", "phenocode", "pheno_sex", "description",
 gwasTraitInfo <- fread(cmd = paste("gunzip -c", file_gwasTraitInfo), select = gwasTraitInfoCol)
 
 qtlColocReg <- fread(file_qtlColocReg, header = TRUE)
-trait_info <- fread(file_trait_info, sep = ",", header = TRUE)
+trait_info <- fread(file_blood_trait_info, sep = ",", header = TRUE)
 
 
 # GWAS trait info, sample size -----
@@ -120,12 +126,11 @@ resColoc <- qtlColocReg %>% select(c(Signal, Pval)) %>%
   mutate("Phenocode" = gwasPhenocode)
 resColoc <- trait_info %>% select(c("GWAS ID", "Trait Abbreviation")) %>%
   right_join(y = resColoc, by = c("GWAS ID" = "Phenocode")) %>%
-  rename("Phenocode" = "GWAS ID", "trait" = "Trait Abbreviation")
+  rename("Phenocode" = "GWAS ID", "trait" = "Trait Abbreviation") %>%
+  arrange(desc(PP.H4.abf))
 
 
 # print out key message or write out -----
-resColoc <- resColoc %>% arrange(desc(PP.H4.abf))
 fwrite(resColoc, file_resColoc, quote = FALSE, sep = "\t")
 if(!is.null(resColocSNP)) fwrite(resColocSNP, file_resColocSNP, quote = FALSE, sep = "\t")
 
-cat(i, '-th out of', n_gwas, "GWASs is done. Trait is", gwas_trait, ".\n")
