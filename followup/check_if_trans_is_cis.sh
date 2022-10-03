@@ -1,8 +1,8 @@
 ######## BASH ###########
 ######## Check if trans-eQTLs are cis-eQTLs ###########
 file_trans=/project2/xuanyao/llw/DGN_no_filter_on_mappability/postanalysis/LD.prun.in.chr.module.perm10.fdr10.txt
-file_cis=/project2/xuanyao/llw/DGN_PCO.lambda.01/DGN_sQTL_signif_variant_gene_pairs.txt.gz
-prefix='sQTL'
+file_cis=/project2/xuanyao/llw/DGN_data/DGN_sumstat/DGN_eQTL/DGN_eQTL_signif_variant_gene_pairs.txt.gz
+prefix='eQTL'
 if_GTEx_cis='no'
 
 # cd /scratch/midway2/liliw1/trans_cis/
