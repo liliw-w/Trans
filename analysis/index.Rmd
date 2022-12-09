@@ -11,7 +11,13 @@ knitr::opts_knit$set(root.dir = '../')
 ```
 
 
-**If any figures don't show, try opening this website in Safari.**
+<span style="color: maroon;"><font size="4"><u>**If any figures don't show, try opening this website in Safari.**</u></font></span>
+
+
+## Updates
+
+Our paper has been online! See <u>[bioarxiv preprint](https://www.biorxiv.org/content/10.1101/2022.11.11.516189v1)</u> and <u>[the site with downloadable results](http://networks-liulab.org/transPCO)</u>.
+
 
 
 ## Introduction
