@@ -17,30 +17,26 @@ require(data.table)
 
 p.obs = rbindlist(lapply(input1, function(x)
 {tmp_y=readRDS(x);
-if(!is.null(tmp_y)){
+ tmp_y = tmp_y[tmp_y < 1e-5]
+if(!is.null(tmp_y) & length(tmp_y) > 0){
   as.data.table(setNames(tmp_y, paste0(strsplit(x, '.', fixed = T)[[1]][2], ":", names(tmp_y))), keep.rownames=T)
 }
 }))
 
 p.null = rbindlist(lapply(input2, function(x)
 {tmp_y=readRDS(x);
-if(!is.null(tmp_y)){
+ tmp_y = tmp_y[tmp_y < 1e-5]
+if(!is.null(tmp_y) & length(tmp_y) > 0){
   as.data.table(setNames(tmp_y, paste0("n", strsplit(x, '.', fixed = T)[[1]][3], ":", names(tmp_y))), keep.rownames=T)
 }
 }))
 
 
 p.obs.rank = frank(p.obs, V2)
-names(p.obs.rank) = p.obs$V1
-name.obs.smallp = p.obs$V1[p.obs$V2 < 10^(-4)]
-
-
 all.rank = frank(rbindlist(list(p.obs, p.null)), V2)
-names(all.rank) = c(p.obs$V1, p.null$V1)
+q = pmin(all.rank[1:length(p.obs.rank)]/p.obs.rank - 1, 1)
 
-q = pmin(all.rank[name.obs.smallp]/p.obs.rank[name.obs.smallp]-1, 1)
-
-res = data.frame("snp" = name.obs.smallp, "p" = p.obs$V2[p.obs$V2 < 10^(-4)], "q" = q)
+res = data.frame("snp" = p.obs$V1, "p" = p.obs$V2, "q" = q)
 
 saveRDS(res, output1)
 
