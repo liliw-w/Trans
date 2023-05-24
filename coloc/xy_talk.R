@@ -11,7 +11,8 @@ file_res_coloc_reg_prop1 <- '/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits
 file_res_coloc_reg_prop2 <- '/project2/xuanyao/llw/coloc/immune_traits/pmid_all/coloc_region_prop_merged.txt'
 file_res_coloc_reg_prop3 <- '/project2/xuanyao/llw/coloc/ukbb_coloc_more_traits/all_trait/data/coloc_region_prop_merged.txt'
 
-#file_plt_prop <- "coloc_region_prop_merged_blood_immu_other.pdf"
+## output -----
+file_plt_prop <- "/project2/xuanyao/llw/coloc/coloc_prop_all.pdf"
 
 
 
@@ -26,7 +27,7 @@ res_coloc_reg_prop <- rbind(res_coloc_reg_prop1, res_coloc_reg_prop2, res_coloc_
 
 
 df_plt1 <- res_coloc_reg_prop1 %>%
-  arrange(desc(propPvalColocMerg)) %>%
+  arrange(propPvalColocMerg) %>%
   pivot_longer(cols = c(nRegionPvalMerg), names_to = "if_merge", values_to = "Num_reg") %>%
   pivot_longer(cols = c(nRegionPvalColocMerg), names_to = "if_merge_coloc", values_to = "Num_reg_coloc") %>%
   pivot_longer(cols = c(propPvalColocMerg), names_to = "if_merge_prop", values_to = "prop") %>%
@@ -37,7 +38,7 @@ df_plt1 <- res_coloc_reg_prop1 %>%
          trait_type_prop = paste("Blood", if_merge_prop))
 
 df_plt2 <- res_coloc_reg_prop2 %>%
-  arrange(desc(propPvalColocMerg)) %>%
+  arrange(propPvalColocMerg) %>%
   pivot_longer(cols = c(nRegionPvalMerg), names_to = "if_merge", values_to = "Num_reg") %>%
   pivot_longer(cols = c(nRegionPvalColocMerg), names_to = "if_merge_coloc", values_to = "Num_reg_coloc") %>%
   pivot_longer(cols = c(propPvalColocMerg), names_to = "if_merge_prop", values_to = "prop") %>%
@@ -48,7 +49,7 @@ df_plt2 <- res_coloc_reg_prop2 %>%
          trait_type_prop = paste("Autoimmune", if_merge_prop))
 
 df_plt3 <- res_coloc_reg_prop3 %>%
-  arrange(desc(propPvalColocMerg)) %>%
+  arrange(propPvalColocMerg) %>%
   pivot_longer(cols = c(nRegionPvalMerg), names_to = "if_merge", values_to = "Num_reg") %>%
   pivot_longer(cols = c(nRegionPvalColocMerg), names_to = "if_merge_coloc", values_to = "Num_reg_coloc") %>%
   pivot_longer(cols = c(propPvalColocMerg), names_to = "if_merge_prop", values_to = "prop") %>%
@@ -58,35 +59,35 @@ df_plt3 <- res_coloc_reg_prop3 %>%
          trait_type_coloc = paste("Other", if_merge_coloc),
          trait_type_prop = paste("Other", if_merge_prop))
 
-df_plt <- rbind(df_plt1, df_plt2, df_plt3)
+df_plt <- rbind(df_plt3, df_plt2, df_plt1)
 
 
 # add trait order
 df_plt$trait <- fct_inorder(factor(df_plt$trait))
 
 
-y_lim <- max(unique(df_plt$Num_reg))
-y_nudge <- 2
+x_lim <- max(unique(df_plt$Num_reg))
+x_nudge <- 2
 
 
-base_plt <- ggplot(df_plt, aes(x = trait)) +
-  geom_bar(aes(y = Num_reg, fill = trait_type), stat = "identity", position = position_dodge(width = 1)) +
-  geom_bar(aes(y = Num_reg_coloc, fill = trait_type_coloc), stat = "identity", position = position_dodge(width = 1)) +
-  geom_point(aes(y = prop*y_lim, color = trait_type_prop),
-             #position = position_dodge(width = 1),
-             show.legend = FALSE,
-             shape = 18, size = 2,
-             position = position_nudge(y = y_nudge)) +
-  geom_line(aes(y = prop*y_lim, group = trait_type_prop, color = trait_type_prop),
-            #position = position_dodge(width = 1),
-            show.legend = FALSE,
-            position = position_nudge(y = y_nudge)) +
-  labs(x = NULL, y = "Number of regions", fill = "Region", color = NULL)
+base_plt <- ggplot(df_plt, aes(y = trait)) +
+  geom_bar(aes(x = Num_reg, fill = trait_type), stat = "identity", position = position_dodge(width = 1)) +
+  geom_bar(aes(x = Num_reg_coloc, fill = trait_type_coloc), stat = "identity", position = position_dodge(width = 1)) +
+  #geom_point(aes(x = prop*y_lim, color = trait_type_prop),
+  #           #position = position_dodge(width = 1),
+  #           show.legend = FALSE,
+  #           shape = 18, size = 2,
+  #           position = position_nudge(x = x_nudge)) +
+  #geom_line(aes(x = prop*x_lim, group = trait_type_prop, color = trait_type_prop),
+  #          #position = position_dodge(width = 1),
+  #          show.legend = FALSE,
+  #          position = position_nudge(x = x_nudge)) +
+  labs(y = NULL, x = "Number of regions", fill = "Region", color = NULL)
 
 base_plt +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
-  scale_y_continuous(limits = c(0, y_lim),
-                     sec.axis = sec_axis(~./y_lim, name = "Coloc Proportion")) +
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 30)) +
+  scale_x_continuous(limits = c(0, x_lim),
+                     sec.axis = sec_axis(~./x_lim, name = "Coloc Proportion")) +
   #scale_fill_brewer(palette = "Paired", direction = -1)
   scale_fill_manual(
     breaks = c(
@@ -94,8 +95,8 @@ base_plt +
       "Autoimmune (trans)", "Autoimmune (coloc)", 
       "Other (trans)", "Other (coloc)"
     ),
-    values = c("Blood (trans)" = "#d9eaf3", "Autoimmune (trans)" = "#e2f3d4", "Other (trans)" = "#fde0e0",
-               "Blood (coloc)" = "#186191", "Autoimmune (coloc)" = "#24731f", "Other (coloc)" = "#9e1213")
+    values = c("Blood (trans)" = "#f7eff7", "Autoimmune (trans)" = "#dbe8d5", "Other (trans)" = "#e5e5e5",
+               "Blood (coloc)" = "#730073", "Autoimmune (coloc)" = "#008000", "Other (coloc)" = "black")
   ) +
   scale_color_manual(
     breaks = c("Blood propPvalColocMerg", "Autoimmune propPvalColocMerg", "Other propPvalColocMerg"),
@@ -104,26 +105,16 @@ base_plt +
                "Other propPvalColocMerg" = "#ff0000")
   ) +
   theme_classic() +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        
-        legend.text = element_text(size = 10),
-        legend.title = element_text(size = 10, face = "bold"),
-        #legend.background = element_rect(color = "black", linetype = "dashed"),
-        legend.key.size= unit(0.5, "cm"),
-        
-        axis.line = element_line(colour="black"),
-        plot.margin=unit(c(10,5,5,5),"mm"),
-        
-        #legend.margin = margin(-0.5,0,0,0, unit="cm"),
-        
-        axis.text.x = element_text(angle = 60, hjust=1, vjust = 1, size = 8, color = "black"),
-        axis.text.y = element_text(colour = "black", size = 10),
-        axis.title.y = element_text(size = 12),
-        axis.title.y.right = element_text(angle = 90),
-        axis.title.x = element_text(size = 12))
+  theme(
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 10, face = "bold"),
+    
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10, color = "black")
+  )
 
 ggsave(
-  "coloc_prop_xy.pdf",
-  width = 9, height = 3
+  file_plt_prop,
+  width = 6, height = 6
 )
+
