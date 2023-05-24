@@ -3,11 +3,19 @@
 ##############################################
 # load packages -----
 rm(list = ls())
-library(data.table)
 library(tidyverse)
 
 
 # I/O & paras -----
+if(interactive()){
+  args <- scan(
+    text = '',
+    what = 'character'
+  )
+} else{
+  args <- commandArgs(trailingOnly = TRUE)
+}
+
 
 ## output -----
 
