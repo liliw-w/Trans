@@ -37,7 +37,7 @@ ModifiedSigmaOEstimate = function(Sigma,p.method="TruncPCO",simNum=2000,method =
     PC.std = (PC.vec)^2/lambdas
     PC.p = pchisq(PC.std,df=1,lower.tail = FALSE)
     p.min = min(PC.p)
-    p.PCMinP = 1- (1-p.min)^K
+    p.PCMinP = -expm1(K*log1p(-p.min))
     
     ## 2: PCFisher
     PC.Fisher.stat = -2*sum(log(PC.p))
