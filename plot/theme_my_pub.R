@@ -1,19 +1,23 @@
 theme_my_pub <- function(
-                         base_size = 16,
+                         base_size = 14,
                          base_family = "Helvetica",
                          
+			 # title
+			 title.size = 12,
+			 
                          # panel
                          panel.grid.major.y.linetype = "blank",
                          
                          # legend
-                         legend.position = "right",
-                         legend.text.size = 12,
-                         
+                         legend.position = "bottom",
+                         legend.text.size = 10,
+			 legend_linetype = "blank",
+      
                          # axis
                          ## axis title
-                         axis.title.size = 16,
+                         axis.title.size = 14,
                          ## axis tick labels
-                         axis.text.size = 14,
+                         axis.text.size = 12,
                          axis.text.x.angle = 0,
                          axis.text.x.vjust = 0.5,
                          ## axis line
@@ -31,7 +35,7 @@ theme_my_pub <- function(
                                       face = "bold"),
           legend.text = element_text(size = legend.text.size),
           legend.background = element_rect(color = "black",
-                                           linetype = "dashed"),
+                                           linetype = legend_linetype),
           legend.key.size= unit(0.5, "cm"),
 
           
@@ -49,11 +53,11 @@ theme_my_pub <- function(
                                      vjust = axis.text.x.vjust),
           
           ## axis line
-          axis.line = element_line(colour = "black", size = axis.line.size),
+          axis.line = element_line(colour = "black", linewidth = axis.line.size),
           
           
           # plot
-          plot.title = element_text(hjust = 0.5, face = "bold"),
+          plot.title = element_text(size = title.size, hjust = 0.5, face = "bold"),
           plot.margin = unit(c(10,5,5,5), "mm")
           )
 }
