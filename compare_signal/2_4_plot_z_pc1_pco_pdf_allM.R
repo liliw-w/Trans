@@ -4,6 +4,7 @@
 ########### detected by methods only by trans-PCO, PC1, or both ###########
 ##############################################
 rm(list = ls())
+library(data.table)
 library(tidyverse)
 library(ggpubr)
 
@@ -12,7 +13,10 @@ source('~/Trans/plot/theme_my_pub.R')
 
 # paras and I/O -----
 # use already saved data from previous cdf plot
-file_z_list <- list.files("pc1", "^M\\d+_z.rds$", full.names = TRUE)
+file_z_list <- list.files("/project2/xuanyao/llw/compare_signal/pc1", "^M\\d+_z.rds$", full.names = TRUE)
+
+## output -----
+file_plt <- "/project2/xuanyao/llw/compare_signal/pc1/M_all_z_pdf.pdf"
 
 
 # combine z's of signals of all modules & extract the max abs z for each module -----
@@ -48,8 +52,7 @@ base_plt <- ggplot(df_z, aes(x = type, y = abs(z), color = type, fill = type)) +
   stat_compare_means(comparisons = my_comparisons,
                      vjust = 2, show.legend = FALSE) +
   #stat_compare_means() +
-  labs(title = paste0("All modules"),
-       x = NULL, y = quote(~"|Z|"))
+  labs(x = NULL, y = quote(~"|Z|"))
 
 plt <- base_plt +
   scale_x_discrete(
@@ -83,4 +86,5 @@ plt <- base_plt +
     strip.text.x = element_blank()
   )
 
-ggsave(paste0("pc1/M_all_z_pdf.pdf"), plt, height = 4, width = 5)
+ggsave(file_plt, plt, height = 3, width = 3.5)
+
