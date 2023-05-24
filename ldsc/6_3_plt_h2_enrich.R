@@ -10,7 +10,7 @@ source('~/Trans/plot/theme_my_pub.R')
 # paras and I/O -----
 module <- 4
 
-file_h2_enrich <- paste0('/project2/xuanyao/llw/ldsc/h2_enrich_par/M', module, '_all_traits.results')
+file_h2_enrich <- paste0('/project2/xuanyao/llw/ldsc/h2_enrich_comb/M', module, '_blood_traits.results')
 file_num_coloc <- '/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data_enrich/all.traits.enrich.module_QTL_sig.txt'
 
 file_fig <- paste0("/project2/xuanyao/llw/ldsc/plots/", basename(file_h2_enrich), ".pdf")
