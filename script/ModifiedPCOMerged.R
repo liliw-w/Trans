@@ -23,7 +23,7 @@ ModifiedPCOMerged = function(Z.mat,Sigma,SigmaO,p.method="TruncPCO",method = "da
   PC.std = (PC.vec)^2 * w.vec
   PC.p = pchisq(PC.std,df=1,lower.tail = FALSE)
   p.min = apply(PC.p, 2, min)
-  p.PCMinP = 1- (1-p.min)^K
+  p.PCMinP = -expm1(K*log1p(-p.min))
   cat("PCMinP done.", "\n")
   
   ## 2: PCFisher
