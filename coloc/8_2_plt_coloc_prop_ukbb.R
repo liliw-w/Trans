@@ -1,18 +1,43 @@
-######################################################
-########## 2. visualize the proportions ##########
-######################################################
+##############################################
+########## visualize the proportions ##########
+##############################################
+# load packages -----
+rm(list = ls())
+library(data.table)
+library(tidyverse)
 
-### number regions whose lead-SNPs are trans-eQTLs. Don't consider traits' p-values in this region
-### Previously, I draw those light regions if their min p of trait < 1e-5.
-n_region_pval_all_trait = 255
 
+# I/O & paras -----
+pp4Thre <- 0.75
+pvalThre <- 'module_QTL_sig'
+nsnpsThre <- 5
+
+file_qtlColocReg <- "/scratch/midway2/liliw1/coloc_MSigDB/qtlColocReg.txt.gz"
+file_module_QTL_signals <- '/project2/xuanyao/llw/MODULES/MSigDB/FDR/signals.chr.module.perm10.fdr10.txt'
+file_res_coloc_reg_prop <- paste0("ukbb_all/coloc_region_prop_pvalThre-", pvalThre, ".txt")
+
+
+## output -----
+file_plt_coloc_prop <- 'ukbb_all/coloc_region_prop.pdf'
+
+
+# read files -----
+qtlColocReg <- fread(file_qtlColocReg)
+module_QTL_signals <- fread(file_module_QTL_signals, col.names = c("signal", "p", "q"))
 res_coloc_reg_prop = fread(file_res_coloc_reg_prop)
-res_coloc_reg_prop$nRegionPval_all_trait = n_region_pval_all_trait
 
-# order the traits based on the number of corresponding regions
-#res_coloc_reg_prop$Phenocode = with(res_coloc_reg_prop, reorder(Phenocode, -nRegion))
 
-# figure 1: draw bar plot on number of reigons
+# number regions whose lead-SNPs are trans-eQTLs -----
+# Don't consider traits' p-values in this region
+# Previously, I draw those light regions if their min p of trait < 1e-5.
+n_region_pval_all_trait <- filter(qtlColocReg, Region %in% !!module_QTL_signals$signal) %>%
+  distinct(Region) %>%
+  nrow()
+
+res_coloc_reg_prop$nRegionPval_all_trait <- n_region_pval_all_trait
+
+
+# figure 1: draw bar plot on number of reigons -----
 dat_fig_bar_prop = res_coloc_reg_prop %>%
   pivot_longer(c(nRegion, nRegionPval), names_to = "regionType", values_to = "n") %>%
   pivot_longer(c(nRegionColoc, nRegionPvalColoc), names_to = "regionTypeColoc", values_to = "nColoc") %>%
@@ -25,11 +50,11 @@ dat_fig_bar_prop$Phenocode = with(dat_fig_bar_prop,
                                                         sep = ";"))
 )
 
-### Don't draw blue regions, only draw green regions, i.e. regions whose lead-SNPs are trans-eQTLs
+## Don't draw blue regions, only draw green regions, i.e. regions whose lead-SNPs are trans-eQTLs
 dat_fig_bar_prop <- dat_fig_bar_prop %>% filter(regionType == "nRegionPval" & regionTypeColoc == "nRegionPvalColoc")
 
 
-### Draw bar plot (with dual y-axis)
+## Draw bar plot (with dual y-axis) -----
 y_lim <- n_region_pval_all_trait
 fig_bar_prop <- ggplot(dat_fig_bar_prop, aes(x = Phenocode)) +
   geom_bar(aes(y = n_region_pval_all_trait), stat = "identity", fill = "#edf5f9") +
@@ -57,7 +82,8 @@ fig_bar_prop <- ggplot(dat_fig_bar_prop, aes(x = Phenocode)) +
         axis.title.y.right = element_text(angle = 90) )
 
 
-# figure 2: draw line plot on the colocalized region proportion
+
+# figure 2: draw line plot on the colocalized region proportion -----
 dat_fig_line_prop = res_coloc_reg_prop %>% select(c(Phenocode, trait, propColoc, propPvalColoc)) %>%
   arrange(desc(propPvalColoc), desc(propColoc)) %>%
   pivot_longer(c(propColoc, propPvalColoc), names_to = "Type", values_to = "proportion")
@@ -69,11 +95,11 @@ dat_fig_line_prop$Phenocode = with(dat_fig_line_prop,
                                                          sep = ";"))
 )
 
-### Don't draw blue regions, only draw green regions, i.e. regions whose lead-SNPs are trans-eQTLs
+## Don't draw blue regions, only draw green regions, i.e. regions whose lead-SNPs are trans-eQTLs
 dat_fig_line_prop <- dat_fig_line_prop %>% filter(Type == "propPvalColoc")
 
 
-### Add the proportion line on the second y-axis of the above bar plot
+## Add the proportion line on the second y-axis of the above bar plot -----
 fig_combined <- fig_bar_prop +
   geom_line(data = dat_fig_line_prop,
             aes(x = Phenocode,
@@ -84,28 +110,10 @@ fig_combined <- fig_bar_prop +
   theme(axis.text.x = element_text(color = "black"))
 
 
-### save figure object and figure
-saveRDS(fig_combined, 'fig4b_ukbb.rds')
-
-ggsave('plot/fig4b.png', fig_combined, width = 8, height = 6)
 
 
-### Draw line plot
-#fig_line_prop <- ggplot(dat_fig_line_prop,
-#                        aes(x = Phenocode,
-#                            y = proportion, group = Type, color = Type)) +
-#  geom_line() +
-#  geom_point() +
-#  labs(x = NULL, y = "Coloc Proportion", color = "Region type") +
-#  scale_colour_manual(values = c("blue", "green")) +
-#  theme_bw() + theme(text = element_text(size = 4),
-#                     axis.text.x = element_text(angle = 60, size = 3),
-#                     panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-#                     legend.position = "top")
+# print out key message or write out -----
+ggsave(file_plt_coloc_prop, fig_combined, width = 6, height = 3)
 
+cat("There are", n_region_pval_all_trait, "trans-eQTLs regions used for coloc. \n\n")
 
-# combine the bar plot and the line plots
-#fig <- plot_grid(fig_bar_prop, fig_line_prop, labels = c('A', "B"), ncol = 1)
-
-# save plot
-#ggsave(file_plot, fig, width = 10, height = 7)

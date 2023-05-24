@@ -9,7 +9,6 @@ setwd('/project2/xuanyao/llw/coloc/immune_traits/')
 pp4Thre = 0.75
 pvalThre = 'module_QTL_sig'
 nsnpsThre = 5
-#gwasPhenocode_seq = c(30080, 30090, 30100, 30110, 30010, 30020, 30030, 30040, 30050, 30060, 30070, 30270, 30240, 30250, 30260, 30280, 30290, 30300, 30000, 30120, 30130, 30140, 30150, 30160, 30180, 30190, 30200, 30210, 30220)
 
 file_resColoc = list.files(".", "resColoc.txt.gz", recursive = TRUE)
 

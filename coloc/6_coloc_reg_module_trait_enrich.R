@@ -1,40 +1,45 @@
+##############################################
 ### update to using regions whose lead-SNP are module-QTL signals
 ### previously, I used a pre-specified p threshold, e.g. 1e-8
-
-setwd('/project2/xuanyao/llw/coloc/immune_traits')
-
+##############################################
+# load packages -----
 rm(list = ls())
 library(data.table)
 library(tidyverse)
 library(cowplot)
 
-file_module_QTL_signals = '~/xuanyao_llw/DGN_no_filter_on_mappability/FDR/signals.chr.module.perm10.fdr10.txt'
-module_QTL_signals = fread(file_module_QTL_signals, col.names = c("signal", "p", "q"))
-range(module_QTL_signals$p)
-range(module_QTL_signals$q)
 
-
-########## files and parameters, read files ##########
+# I/O & paras -----
 pp4Thre = 0.75
 pvalThre = 'module_QTL_sig'
 nsnpsThre = 5
-#gwasPhenocode_seq = c(30080, 30090, 30100, 30110, 30010, 30020, 30030, 30040, 30050, 30060, 30070, 30270, 30240, 30250, 30260, 30280, 30290, 30300, 30000, 30120, 30130, 30140, 30150, 30160, 30180, 30190, 30200, 30210, 30220)
 
-file_coexp_module = "/project2/xuanyao/llw/DGN_no_filter_on_mappability/result/coexp.module.rds"
-dir_data_enrich = "pmid_all/data_enrich"
-file_resEnrich = paste0("pmid_all/data_enrich/all.traits.enrich.", pvalThre, ".txt")
+file_module_QTL_signals <- '/project2/xuanyao/llw/MODULES/MSigDB/FDR/signals.chr.module.perm10.fdr10.txt'
+file_coexp_module = "/project2/xuanyao/llw/MODULES/MSigDB/result/coexp.module.rds"
+dir_coloc_gwas <- list.files(
+  "/scratch/midway2/liliw1/coloc_MSigDB",
+  pattern = paste0("^ukbb_continuous_\\d+"),
+  full.names = TRUE
+)
+file_resColoc <- sapply(
+  dir_coloc_gwas,
+  list.files,
+  pattern = "^resColoc.txt.gz$", full.names = TRUE, recursive = TRUE
+)
 
+
+## output -----
+dir_data_enrich = "ukbb_all/data_enrich"
+file_resEnrich = paste0("ukbb_all/data_enrich/all.traits.enrich.", pvalThre, ".txt")
+
+
+# read files -----
+module_QTL_signals = fread(file_module_QTL_signals, col.names = c("signal", "p", "q"))
 coexp_module = readRDS(file_coexp_module)$moduleLabels
-
-
-########## loop over all traits, region v.s. module ##########
-#file_resColoc = paste0("/project2/xuanyao/llw/coloc/ukbb_coloc_blood_traits/data/pheno", gwasPhenocode_seq, ".resColoc.txt.gz")
-file_resColoc = list.files(".", "resColoc.txt.gz", recursive = TRUE)
 resColoc_all = rbindlist(lapply(file_resColoc, fread, header = TRUE), use.names = TRUE)
 
+
 resColoc_all = resColoc_all %>% mutate('if_module_QTL' = Region %in% module_QTL_signals$signal )
-
-
 resEnrich = resColoc_all %>%
   filter(if_module_QTL & PP.H4.abf > pp4Thre & nsnps >= nsnpsThre) %>%
   select(c(Phenocode, trait, Region, Pval, nsnps, PP.H4.abf)) %>%
