@@ -22,6 +22,10 @@ file_plt_signal_module_chr_pos <- paste0('plot/signal_module_chr_rm_infl_ratio_'
 chr_pos <- readRDS(file_chr_pos)
 qtl <- fread(file_qtl, header = TRUE)
 
+# change signal FDR level to 0.05, to be consistent with the paper -----
+thre_p <- 0.05/9918/129
+qtl <- filter(qtl, p < thre_p)
+
 
 # organize data -----
 qtl <- qtl %>%
@@ -33,36 +37,41 @@ plt_dat <- qtl %>%
 
 
 # plot -logp for (cht pos, module) -----
-ggplot(plt_dat, aes(y = def_pos, x = factor(module))) +
+ggplot(plt_dat) +
   geom_rect(
-    aes(ymin = tot, ymax = xmax,
-        xmin = -Inf, xmax = Inf,
-        fill = factor(chr))
+    data = chr_pos,
+    aes(xmin = tot, xmax = xmax,
+        ymin = -Inf, ymax = Inf,
+        fill = factor(CHR))
   ) +
-  geom_vline(aes(xintercept = factor(module)),
-             linetype = "dotted", color = "#e5e5e5") +
-  geom_point(aes(size = -log10(p), color = factor(chr)),
-             alpha = 0.5, shape = 1) +
-  labs(x = "Module", y = "Chromosome", size = quote(-Log[10](P))) +
-  scale_y_continuous(
+  geom_hline(
+    aes(yintercept = factor(module)),
+    linetype = "dotted", color = "#e5e5e5") +
+  geom_point(
+    aes(
+      x = def_pos, y = factor(module),
+      size = -log10(p), color = factor(chr)
+    ),
+    alpha = 0.5, shape = 1) +
+  labs(y = "Gene modules", x = "Chromosome", size = quote(-Log[10](P))) +
+  scale_x_continuous(
     limits = c(0, max(chr_pos$center)*2 - max(chr_pos$tot)),
     label = chr_pos$CHR,
     breaks = chr_pos$center,
     expand = c(0, 0)
   ) +
   scale_size(guide = guide_legend(override.aes = list(alpha = 1)), range = c(0.5, 3)) +
-  scale_color_manual(values = rep(c("#843232", "#000099"), 22), guide = "none") +
+  scale_color_manual(values = rep(c("#800080", "#daa520"), 22), guide = "none") +
   scale_fill_manual(values = rep(c("#e5e5e5", "#ffffff"), 22), guide = "none") +
   theme_my_pub() +
   theme(
-    axis.text.x = element_text(angle = 90, size = 8)
+    axis.text.y = element_text(size = 8)
   )
 
 
 # print out key message or write out -----
 ggsave(
   file_plt_signal_module_chr_pos,
-  width = 12, height = 5
+  width = 6.5, height = 9.5
 )
-
 
