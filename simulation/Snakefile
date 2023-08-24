@@ -28,5 +28,6 @@ localrules:
 rule all:
   input:
     expand('/scratch/midway3/liliw1/paper1_sim/simulation_alt_lowCaus_highb_change'+change+'_varb{varb}_N'+N+'_K101.rds', varb = VARB),
-    expand('/scratch/midway3/liliw1/paper1_sim/power_lowCaus_highb_change'+change+'_varb{varb}_N'+N+'_K101.rds', varb = VARB)
+    expand('/scratch/midway3/liliw1/paper1_sim/power_lowCaus_highb_change'+change+'_varb{varb}_N'+N+'_K101.rds', varb = VARB),
+    expand('/scratch/midway3/liliw1/paper1_sim/plt_power_lowCaus_highb_change'+change+'_varb{varb}_N'+N+'_K101.pdf', varb = VARB)
 
