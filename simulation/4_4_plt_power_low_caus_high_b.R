@@ -83,7 +83,7 @@ ggplot(data = res.alt, aes(x = model, y = power, color = method)) +
     
     plot.margin=unit(c(10,5,5,5),"mm")
   ) +
-  coord_cartesian(xlim = c(1.2, n_distinct(res.alt$model)-0.2))
+  coord_cartesian(xlim = c(1.2, n_distinct(res.alt$model)-0.2), ylim = c(0, 1))
 
 
 # save figure -----
