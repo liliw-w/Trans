@@ -9,13 +9,14 @@ library(tidyverse)
 # I/O & paras -----
 if(interactive()){
   args <- scan(
-    text = '',
+    text = '
+
+    ',
     what = 'character'
   )
 } else{
   args <- commandArgs(trailingOnly = TRUE)
 }
-
 
 ## output -----
 
@@ -27,4 +28,3 @@ if(interactive()){
 
 
 # print out key message or write out -----
-
