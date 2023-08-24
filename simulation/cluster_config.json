@@ -1,0 +1,29 @@
+{
+  "__default__" :
+    {
+      "partition": "xuanyao-hm",
+      "account": "pi-xuanyao",
+      "qos": "xuanyao",
+      "job-name": "{rule}",
+      "time": "1:00:00",
+      "mem": "5G",
+      "nodes": "1",
+      "output": "logs/{rule}.%J.log",
+      "error": "logs/{rule}.%J.log",
+      "email-type": "FAIL",
+      "email": "liliw1@uchicago.edu",
+      "ntasks-per-node": "1",
+      "cpus-per-task": "1"
+    },
+  "sim_alt_low_caus_high_b":
+    {
+      "time": "36:00:00",
+      "mem": "50G"
+    },
+  "cal_power":
+    {
+      "mem": "100G",
+      "cpus-per-task": "20"
+    }
+}
+

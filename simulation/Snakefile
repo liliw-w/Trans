@@ -1,0 +1,32 @@
+change = 'caus'
+oracle_thre = '0.1'
+dir_pco = '~/Trans/simulation/script_lambda0.1/'
+
+caus = '0.3'
+N = '500'
+N_sample = '10000'
+N_sim = '1000'
+fdr_level = '0.05'
+
+
+VARB = ['0.005', '0.01', '0.05', '0.1', '0.2']
+
+dir_env_r='/software/R-4.1.0-el8-x86_64'
+
+
+include: "rules/alt.smk"
+
+
+wildcard_constraints:
+  varb="0\.\d+"
+
+
+localrules:
+  all
+
+
+rule all:
+  input:
+    expand('/scratch/midway3/liliw1/paper1_sim/simulation_alt_lowCaus_highb_change'+change+'_varb{varb}_N'+N+'_K101.rds', varb = VARB),
+    expand('/scratch/midway3/liliw1/paper1_sim/power_lowCaus_highb_change'+change+'_varb{varb}_N'+N+'_K101.rds', varb = VARB)
+
