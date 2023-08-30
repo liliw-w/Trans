@@ -1,5 +1,5 @@
 theme_my_pub <- function(
-                         base_size = 14,
+                         base_size = 12,
                          base_family = "Helvetica",
                          
 			 # title
@@ -15,9 +15,9 @@ theme_my_pub <- function(
       
                          # axis
                          ## axis title
-                         axis.title.size = 14,
+                         axis.title.size = 12,
                          ## axis tick labels
-                         axis.text.size = 12,
+                         axis.text.size = 10,
                          axis.text.x.angle = 0,
                          axis.text.x.vjust = 0.5,
                          ## axis line
@@ -58,6 +58,7 @@ theme_my_pub <- function(
           
           # plot
           plot.title = element_text(size = title.size, hjust = 0.5, face = "bold"),
-          plot.margin = unit(c(10,5,5,5), "mm")
+          plot.margin = unit(c(10, 5, 5, 5), "mm")
           )
 }
+
