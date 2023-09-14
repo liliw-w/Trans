@@ -9,8 +9,8 @@ library(mvtnorm)
 library(optparse)
 
 
-source("ARCHIE/codes/helper.R")
-source("ARCHIE/codes/main.R")
+source("/project2/xuanyao/llw/compare_to_archie/ARCHIE/codes/helper.R")
+source("/project2/xuanyao/llw/compare_to_archie/ARCHIE/codes/main.R")
 
 
 # I/O & paras -----
