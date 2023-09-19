@@ -16,10 +16,10 @@ if(interactive()){
   args <- scan(
     text = '
     TRUE
-    archie_null_cc_value_z.rds
-    archie_null_selected_gene_z.rds
-    plt_archie_null_cc_value_z.pdf
-    plt_archie_null_selected_gene_z.pdf
+    /project2/xuanyao/llw/compare_to_archie/archie_null_cc_value_z.rds
+    /project2/xuanyao/llw/compare_to_archie/archie_null_selected_gene_z.rds
+    /project2/xuanyao/llw/compare_to_archie/plt_archie_null_cc_value_z.pdf
+    /project2/xuanyao/llw/compare_to_archie/plt_archie_null_selected_gene_z.pdf
     ',
     what = 'character'
   )
@@ -68,7 +68,7 @@ if(if_null){
       aes(x = factor("Null"), y = num_gene),
       outlier.shape = 4, outlier.size = 1, outlier.alpha = 0.2
     ) +
-    geom_hline(yintercept = 30, linetype = "dashed", color = "maroon") +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "maroon") +
     labs(x = NULL, y = "Number of selected genes")
   
   ggsave(
