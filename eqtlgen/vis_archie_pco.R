@@ -16,7 +16,7 @@ if(interactive()){
   args <- scan(
     text = '
     /project2/xuanyao/llw/compare_to_archie/archie_results.xlsx
-    /project2/xuanyao/llw/compare_to_archie/null_SNP/p_all_archie.txt.gz
+    /project2/xuanyao/llw/compare_to_archie/null_SNP/p_all_archie_snp.txt.gz
     /project2/xuanyao/llw/compare_to_archie/null_SNP/module_archie.rds
     0.05
     /project2/xuanyao/llw/compare_to_archie/null_SNP/plt_archie_pco.pdf
