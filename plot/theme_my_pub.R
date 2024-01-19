@@ -3,7 +3,7 @@ theme_my_pub <- function(
                          base_family = "Helvetica",
                          
 			 # title
-			 title.size = 12,
+			 title.size = 10,
 			 
                          # panel
                          panel.grid.major.y.linetype = "blank",
@@ -60,5 +60,15 @@ theme_my_pub <- function(
           plot.title = element_text(size = title.size, hjust = 0.5, face = "bold"),
           plot.margin = unit(c(10, 5, 5, 5), "mm")
           )
+}
+
+
+integer_breaks <- function(n = 5, ...) {
+  fxn <- function(x) {
+    breaks <- floor(pretty(x, n, ...))
+    names(breaks) <- attr(breaks, "labels")
+    breaks
+  }
+  return(fxn)
 }
 
