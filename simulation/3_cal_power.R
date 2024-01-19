@@ -10,10 +10,10 @@ library(tidyverse)
 if(interactive()){
   args <- scan(
     text = '
-    /scratch/midway3/liliw1/paper1_sim/simulation_alt_lowCaus_highb_changecaus_varb0.2_N500_K101.rds
+    /project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/simulation_alt_lowCaus_highb_changecaus_varb0.2_N500_K101.rds
     /project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/simulation.null.lambda0.1.K101.rds
     0.05
-    /scratch/midway3/liliw1/paper1_sim/power_lowCaus_highb_changecaus_varb0.2_N500_K101.rds
+    /project2/xuanyao/llw/simulation_lambda0.1/new_Sigma/power_lowCaus_highb_changecaus_varb0.2_N500_K101.rds
     ',
     what = 'character'
   )
