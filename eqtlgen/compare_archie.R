@@ -26,7 +26,7 @@ if(interactive()){
 # file_snp_all <- '/project2/xuanyao/llw/eQTLGen/eqtlgen_snps.txt'
 # file_gene_all <- '/project2/xuanyao/llw/eQTLGen/eqtlgen_genes.txt'
 
-file_signal_archie <- 'archie_results.xlsx'
+file_signal_archie <- '/project2/xuanyao/llw/compare_to_archie/archie_results.xlsx'
 file_signal_us <- '/project2/xuanyao/llw/eQTLGen/DGN_est_Sigma/postanalysis/qtl_table.txt'
 
 
