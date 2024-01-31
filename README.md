@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/311437102.svg)](https://zenodo.org/doi/10.5281/zenodo.10602558)
+
 # Trans-eQTL mapping in gene sets identifies network effects of genetic variants
 
 All trans-eQTLs that are associated with gene co-expression networks and biological pathways can be found [here](http://www.networks-liulab.org/transPCO). 
