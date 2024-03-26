@@ -1,6 +1,6 @@
 qqplot <- function(input,
                    ci_level = 0.95,
-                   my_theme = "/home/liliw1/Trans/followup/theme_my_pub.R"){
+                   my_theme = "/project2/xuanyao/llw/Trans/plot/theme_my_pub.R"){
   require(tidyverse)
   source(my_theme)
   
@@ -32,8 +32,8 @@ qqplot <- function(input,
   return(
     ggplot(df_plt, aes(x = x, y = y)) +
       geom_ribbon(aes(ymin = ci_l, ymax = ci_r), fill = "grey80", color="grey80") +
-      geom_abline(slope = 1, intercept = 0, color = "black", size = 1) +
-      geom_point(aes(color = y), size = 0.5) +
+      geom_abline(slope = 1, intercept = 0, color = "black") +
+      geom_point(aes(color = y), size = 0.3) +
       labs(x = bquote(Expected -log[10]~italic((P))), y = bquote(Observed -log[10]~italic((P)))) +
       scale_color_gradientn(colors = RColorBrewer::brewer.pal(8, "Reds")[3:8]) +
       theme_my_pub(legend.position = "none")
