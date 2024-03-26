@@ -49,6 +49,7 @@ theme_my_pub <- function(
           # plot
           plot.title = element_text(size = title.size, hjust = 0.5, face = "bold"),
           plot.margin = unit(c(5, 5, 5, 5), "mm")
+          
           )
 }
 
@@ -61,4 +62,32 @@ integer_breaks <- function(n = 5, ...) {
   }
   return(fxn)
 }
+
+
+## palette
+mypalette <- list(
+  'paired' = c(
+    "#8AACAA", "#2295A2", # blue (dark)
+    "#E5D2A2", "#E3A031", # red
+    "#DBC6E4", "#8D6E97", # yellow
+    "#EFCAD3", "#DD7C83", # purple
+    "#C6DBD7", "#87B2AC"  # blue (light)
+  ),
+  
+  "contrast1" = c(
+    "#4D9490", # blue
+    "#d28b84", # red
+    "#EDAD6D", # yellow
+    "#AB6CAD", # purple
+    "#91BC6B" # green
+  ),
+  
+  "contrast2" = c(
+    "#76758B", # blue
+    "#DDACAA", # red
+    "#B783BD", # purple
+    "#F2A869", # yellow
+    "#AFB59B" # green
+  )
+)
 
